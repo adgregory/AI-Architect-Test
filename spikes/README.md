@@ -26,3 +26,4 @@ uv run python spikes/NN-short-name/<script>.py
 
 | # | Question | Status | Decision |
 |---|----------|--------|----------|
+| 01 | [OCR engine selection](01-ocr/README.md): Tesseract vs PaddleOCR (native/ONNX) vs Docling | planned | — |
