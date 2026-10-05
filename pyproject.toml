@@ -17,6 +17,8 @@ dependencies = [
     "sentence-transformers==3.0.0",
     "qdrant-client==1.11.0",
     "pydantic==2.9.0",
+    # spaCy 3.7.x (thinc 8.2) is compiled against the NumPy 1.x ABI
+    "numpy<2",
 ]
 
 [dependency-groups]
