@@ -168,3 +168,5 @@ cython_debug/
 
 # Spike artefacts
 spikes/*/data/
+spikes/*/results/raw/
+spikes/*/results/*-smoke.json
