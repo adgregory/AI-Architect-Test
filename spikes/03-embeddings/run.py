@@ -29,7 +29,29 @@ from models import MODELS  # noqa: E402
 RESULTS = HERE / "results"
 
 
+class FastEmbedModel:
+    """Adapter giving fastembed's TextEmbedding the subset of the SentenceTransformer API we use."""
+
+    def __init__(self, name: str):
+        from fastembed import TextEmbedding
+
+        self._model = TextEmbedding(name)
+        self.max_seq_length = None
+
+    def encode(self, texts, batch_size=32, normalize_embeddings=True, **_):
+        vecs = np.array(list(self._model.embed(texts, batch_size=batch_size)), dtype=np.float32)
+        if normalize_embeddings:
+            vecs /= np.linalg.norm(vecs, axis=1, keepdims=True)
+        return vecs
+
+    def get_sentence_embedding_dimension(self) -> int:
+        return int(self.encode(["x"]).shape[1])
+
+
 def load_model(spec, backend: str, device: str):
+    if backend == "fastembed":
+        return FastEmbedModel(spec.hf_name)
+
     from sentence_transformers import SentenceTransformer
 
     kwargs = {"device": device, "trust_remote_code": spec.trust_remote_code}
@@ -193,14 +215,14 @@ def model_disk_mb(spec, backend: str) -> float | None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, choices=sorted(MODELS))
-    ap.add_argument("--backend", default="torch", choices=["torch", "onnx"])
+    ap.add_argument("--backend", default="torch", choices=["torch", "onnx", "fastembed"])
     ap.add_argument("--device", default="cpu", choices=["cpu", "mps"])
     ap.add_argument("--reps", type=int, default=10)
     ap.add_argument("--cold-start-runs", type=int, default=3)
     ap.add_argument("--cold-start-once", metavar="OUT_JSON", help=argparse.SUPPRESS)
     args = ap.parse_args()
-    if args.backend == "onnx" and args.device != "cpu":
-        ap.error("onnx backend is benchmarked on cpu only")
+    if args.backend in ("onnx", "fastembed") and args.device != "cpu":
+        ap.error(f"{args.backend} backend is benchmarked on cpu only")
 
     if args.cold_start_once:
         cold_start_once(args, args.cold_start_once)

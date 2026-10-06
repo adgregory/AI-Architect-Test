@@ -162,3 +162,18 @@ BGE query instruction on questions and no prefix on chunks:
   size and slightly lower Recall@3 (0.97).
 - **Rejected:** MiniLM (current; weakest on hard negatives), Nomic and Arctic-M (score hard
   negatives above paraphrases), MPNet (lower Recall@1, no advantage over bge-base).
+
+### Runtime: fastembed (follow-up, 2026-10-05)
+
+To keep PyTorch out of the embedding path, the same model was re-measured through
+**fastembed** (`Qdrant/bge-small-en-v1.5-onnx-Q`, ONNX Runtime, no torch):
+
+| bge-small-en-v1.5 | ρ | AUC | Triplet | R@1 | R@3 | MRR | Query p50 / p99 | Batch (33) | RSS | torch |
+|-------------------|---|-----|---------|-----|-----|-----|-----------------|------------|-----|-------|
+| sentence-transformers ONNX | 0.453 | 0.58 | 54% | 0.87 | 1.00 | 0.92 | 2.4 / 3.4 ms | 88 ms | 710 MB | yes |
+| **fastembed** | 0.453 | 0.58 | 54% | 0.87 | 1.00 | 0.92 | 2.7 / 3.5 ms | 146 ms | **460 MB** | **no** |
+
+Identical quality, equivalent query latency, ~35% less memory and no PyTorch dependency; batch
+encoding is slower (relevant only for bulk ingestion, which runs in the worker). **The app serves
+bge-small-en-v1.5 through fastembed.**
+

@@ -10,6 +10,7 @@ dependencies = [
     "scikit-learn",
     "psutil",
     "pillow",        # chunks.py imports the sample-PDF generator
+    "fastembed>=0.5",
 ]
 
 [tool.uv]

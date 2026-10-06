@@ -28,5 +28,5 @@ uv run python spikes/NN-short-name/<script>.py
 |---|----------|--------|----------|
 | 01 | [OCR engine selection](01-ocr/README.md): Tesseract vs PaddleOCR (native/ONNX) vs Docling | decided | PaddleOCR PP-OCRv5 mobile on ONNX Runtime CPU |
 | 02 | [Person-name NER](02-ner/README.md): spaCy sm/trf vs BERT-NER vs GLiNER (local, no LLM call) | decided | GLiNER small, ONNX int8 on CPU, threshold 0.3 |
-| 03 | [Text embeddings](03-embeddings/README.md): 7 English models, semantic separation + retrieval | decided | bge-small-en-v1.5, ONNX CPU |
+| 03 | [Text embeddings](03-embeddings/README.md): 7 English models, semantic separation + retrieval | decided | bge-small-en-v1.5, ONNX CPU (served via fastembed) |
 | 04 | Semantic answer cache: Qdrant similarity threshold, calibrated on spike 03 pairs | planned | — |
