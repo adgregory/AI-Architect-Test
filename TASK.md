@@ -112,38 +112,57 @@ As part of your submission, fill in the tables below documenting every bug you f
 
 ### Bugs Found & Fixed
 
+Baseline: 30 failed / 19 passed before any app change ([docs/baseline-test-failures.md](docs/baseline-test-failures.md)).
+Now: all 49 provided tests pass, plus 156 added tests (205 total).
+
 | # | File | Bug Description | How You Fixed It |
 |---|------|-----------------|------------------|
-| 1 |      |                 |                  |
-| 2 |      |                 |                  |
-| 3 |      |                 |                  |
-| 4 |      |                 |                  |
-| 5 |      |                 |                  |
-| 6 |      |                 |                  |
-| 7 |      |                 |                  |
-| 8 |      |                 |                  |
-
-(add more rows as needed)
+| 1 | `app/services/ocr_service.py` | `range(1, len(doc))` skipped page 0, so single-page PDFs returned no text (also caused 4 integration failures) | Iterate every page; per-page OCR now shared by every engine (`0cc6b52`) |
+| 2 | `app/services/ocr_service.py` | `fitz` documents never closed (resource leak) | Close in `finally` / context manager (`0cc6b52`) |
+| 3 | `app/services/ocr_service.py` | Word boxes returned in 150-DPI pixel space, not PDF points | Scale by 72/DPI; text and boxes rendered at the same DPI (`0cc6b52`) |
+| 4 | `app/services/ner_service.py` | `PERSON` **and** `ORG` entities kept, so companies were returned as people (both functions) | Person-only filter; later replaced spaCy `sm` with GLiNER, which has 0 false positives on the spike set (`b6a7c2e`) |
+| 5 | `app/services/bbox_service.py` | Case-sensitive comparison (`JOHN` ≠ `John`), and punctuation broke matches | Case-fold and strip edge punctuation (`0b97a82`) |
+| 6 | `app/services/bbox_service.py` | *(not covered by a test)* Name parts matched independently anywhere in the document, so a box could span unrelated words; an early `break` returned only the first occurrence | Match consecutive words on the same page; return every occurrence in order (`0b97a82`) |
+| 7 | `app/services/fuzzy_service.py` | Threshold 70 instead of 90 | Threshold 90, configurable (`7bee72e`) |
+| 8 | `app/services/fuzzy_service.py` | `partial_ratio` scores substrings, so partial names passed and full-name typos were under-scored | `token_sort_ratio` on normalised names (`7bee72e`) |
+| 9 | `app/services/rag_service.py` | Escaped `{{question}}` in the f-string, so the LLM never saw the question | Interpolate the question (`4e5235a`) |
+| 10 | `app/services/vector_service.py` | Point IDs = chunk index, so each document overwrote the previous one | UUID5(document_id:chunk) with the document ID in the payload (`f5fcb60`); document IDs later made content-addressed so re-uploads don't duplicate (`de05dc1`) |
+| 11 | `app/api/extract.py` | Non-PDF upload raised `FileDataError` → 500; bad `names` JSON → 500 | 400 on missing `%PDF-` signature, 413 over the size limit, 422 on bad names (`c9e70ee`) |
+| 12 | `app/api/*`, `app/models/schemas.py` | Missing features: no `fuzzy_matches`, no `page_number` on boxes, no `sources` on answers, no `/health` | Added to the schemas and routes (`c9e70ee`, `e4af849`) |
+| 13 | `pyproject.toml` | *(environment)* NumPy 2 ABI break with spaCy 3.7 stopped the suite from importing | Pinned `numpy<2` while spaCy was in use (`fbf3763`) |
+| 14 | agent (new code) | *(found while testing live)* Duplicate passages filled the top-k; a refusal cached before a document was indexed kept being served | Dedupe before top-k (`9b7850c`); never cache refusals, and scope cache entries to the corpus version (`4e113cf`) |
 
 ### Architecture & Design Improvements
 
 | # | What You Changed | Why |
 |---|------------------|-----|
-| 1 |                  |     |
-| 2 |                  |     |
-| 3 |                  |     |
-
-(add more rows as needed)
+| 1 | Every service is a class behind a `Protocol` (`OCRService`, `NERService`, `NameLocator`, `NameMatcher`, `EmbeddingService`, `VectorStore`, `LLMClient`, `SemanticCache`, `JobRepository`, `ObjectStorage`, `JobOrchestrator`) | Swappable engines and test doubles without patching (Dependency Inversion / Open-Closed) |
+| 2 | Composition root (`app/core/container.py`) built in the FastAPI lifespan; routes get dependencies via `Depends` | Models and clients load once per process, not per request; tests use `dependency_overrides` |
+| 3 | Factory registries + uv extras `chosen` / `fallback` (`app/core/factories.py`) | Engine choice is configuration; the fallback stack (Tesseract, spaCy, MiniLM) installs without the chosen one |
+| 4 | Engines chosen by measured spikes: PaddleOCR on ONNX (RapidOCR), GLiNER int8, bge-small via fastembed | Evidence in `spikes/01-04`: e.g. OCR CER 14.9% → 2.4%; NER false positives 178 → 0 |
+| 5 | `ExtractionSession`: OCR each PDF once per request; NER → box location → fuzzy match share that result | The original code OCR'd the same document several times per request |
+| 6 | Async jobs on Temporal (`/api/jobs` → 202, SSE events), separate `cpu` / `io` task queues, per-page parallel OCR, reconciler schedule | Large and batch PDFs no longer block HTTP; durable retries; CPU workers scale without growing DB connections |
+| 7 | Agent service (Strands, AgentCore contract) with a Qdrant semantic answer cache + `QuestionGuard` | Answering scales and deploys independently; provider is per environment (Gemini/Vertex locally, Bedrock in AWS); cache has 0 false hits in spike 04 |
+| 8 | One `DocumentIndexer`; content-addressed document IDs; `/api/extract` indexes in the background | No duplicated chunk/embed/store code; each PDF indexed once; anything extracted is answerable |
+| 9 | Postgres with pooled psycopg + LISTEN/NOTIFY; only `api` and the `io` worker own pools | A fixed, predictable connection budget |
+| 10 | `infra/` Pulumi (Python): VPC, RDS, S3, ECS Fargate, AgentCore, outbox → Debezium → Kinesis → Lambda | Production target, validated offline (mocked unit tests, CrossGuard policies, previews) |
 
 ### Engineering Best Practices Added
 
 | # | Practice | Where / How You Implemented It |
 |---|----------|-------------------------------|
-| 1 |          |                               |
-| 2 |          |                               |
-| 3 |          |                               |
-
-(add more rows as needed)
+| 1 | Typed configuration, no hard-coded values | `app/core/config.py` (pydantic-settings, env / `.env`, validated ranges) |
+| 2 | Structured logging with request IDs | structlog JSON (`app/core/logging.py`); request-ID middleware binds context to every log line |
+| 3 | Input validation | `app/api/uploads.py`: PDF signature, size limit (413), names schema (422); `max_pages` rejected as non-retryable |
+| 4 | Resilience | Temporal retry policies (transient vs non-retryable), heartbeats, reconciler; HTTP/Qdrant/LLM timeouts; bounded DB pools → 503 + `Retry-After`; background work is best effort |
+| 5 | Error handling | Dependency failures (engine missing, agent down, DB pool exhausted) mapped to 503 + `Retry-After` in `app/main.py`; anything else is a generic 500 with the detail in the logs only |
+| 6 | Tests (bonus) | 156 added: unit (fakes), API (dependency overrides), contract (every engine against the same expectations), workflows (Temporal time-skipping server), Postgres repository, end-to-end pipeline, Pulumi mocks |
+| 7 | Dependency management | uv + `pyproject.toml` with a lockfile; extras per stack; `uv.lock` checked in pre-commit |
+| 8 | Static checks | pre-commit: ruff (lint + format), mypy (pydantic plugin), detect-secrets, hygiene hooks |
+| 9 | Containerisation | Multi-stage `Dockerfile` (`STACK` build arg, models baked in, non-root, healthcheck, offline); `Dockerfile.agent`; `docker-compose.yml` with the full stack and migrations |
+| 10 | Database migrations | Alembic (`migrations/`), run by a one-shot compose service |
+| 11 | Secrets hygiene | ADC mounted read-only, never in images; no GCP credentials in AWS; least-privilege IAM enforced by policy |
+| 12 | Developer workflow | `Taskfile.dist.yaml` (`setup`, `test:*`, `lint`, `stack:up/down`, `job:demo`, `infra:check`); ADR + spike write-ups + `DESIGN.md` |
 
 ## Submission
 
