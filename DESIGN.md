@@ -102,7 +102,7 @@ storage keys, never document contents.
 | Answer cache | Qdrant, cosine ≥ 0.90 **and** QuestionGuard | No threshold alone is safe (role swaps score 0.99). With the guard: 0 false hits, 94% of repeated questions hit. Refusals are never cached, and entries are scoped to the corpus version. |
 | Orchestration | Temporal, separate `cpu` / `io` queues | Durable retries, per-page fan-out, heartbeats. CPU workers scale without adding DB connections. |
 | Data | Postgres (psycopg pools, LISTEN/NOTIFY), Qdrant | One relational engine for jobs and Temporal; the vector store the tests target. |
-| Agent | Strands on the AgentCore contract | Gemini on Vertex via read-only ADC locally; Bedrock on AgentCore in AWS. No GCP credentials in AWS. |
+| Agent | Strands on the AgentCore contract | Gemini on Vertex via read-only ADC locally (opt-in); Bedrock on AgentCore in AWS. With no credentials it answers with the closest retrieved sentence, so `docker compose up` works anywhere. |
 | Packaging | uv extras `chosen` / `fallback`; models baked into images | Reproducible, offline start; `STACK` build arg. |
 
 **Trade-offs accepted:** more moving parts than one FastAPI process. The synchronous endpoint is

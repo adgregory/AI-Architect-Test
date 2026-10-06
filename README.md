@@ -2,6 +2,59 @@
 
 > **Start here: read [TASK.md](TASK.md) for full instructions.** The repo contains a partially implemented application with bugs and missing features. Your job is to fix, refactor, and complete it.
 
+## Running the solution
+
+> Submission notes: [DESIGN.md](DESIGN.md) (design) · [TASK.md](TASK.md#findings-report) (findings tables) ·
+> [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md) (decisions) · [spikes/](spikes/) (model benchmarks).
+
+**Requirements:** Docker with Compose v2. No cloud account or API key is needed.
+
+```bash
+docker compose up -d --build        # postgres, temporal (+UI), qdrant, migrations, api, agent, workers
+docker compose ps                   # wait until api and agent are healthy (the first build bakes the models in)
+```
+
+| URL | What |
+|---|---|
+| http://localhost:8000/docs | API (Swagger UI) |
+| http://localhost:8233 | Temporal UI: async jobs and their workflows |
+| http://localhost:6333/dashboard | Qdrant |
+
+```bash
+# 1. Extract names + bounding boxes and fuzzy-match (≥ 90%); the PDF is also indexed for /api/ask
+curl -s -X POST localhost:8000/api/extract \
+  -F "pdf_file=@sample_pdfs/meeting_minutes.pdf;type=application/pdf" \
+  -F 'names=[{"first_name":"Richard","last_name":"Hernandez"}]'
+
+# 2. Ask a question (RAG over everything extracted or ingested)
+curl -s -X POST localhost:8000/api/ask -H 'content-type: application/json' \
+  -d '{"question":"Who introduced the NovaTech partnership proposal?"}'
+
+# Async job for large PDFs: 202 + job id, then stream the result
+curl -s -X POST localhost:8000/api/jobs -F "pdf_file=@sample_pdfs/research_report.pdf;type=application/pdf" -F 'names=[]'
+curl -sN localhost:8000/api/jobs/<job_id>/events
+
+# Index without extracting; health
+curl -s -X POST localhost:8000/api/ingest -F "pdf_file=@sample_pdfs/company_memo.pdf;type=application/pdf"
+curl -s localhost:8000/health
+
+docker compose down                 # add -v to drop the data volumes
+```
+
+**LLM for /api/ask.** Without credentials the agent answers with the retrieved sentence closest to the
+question, marked `[extract — no LLM configured]`. Retrieval and sources work the same either way.
+For generated answers with Gemini on Vertex AI, run `gcloud auth application-default login` and start
+with `GOOGLE_CLOUD_PROJECT=<project> docker compose -f docker-compose.yml -f docker-compose.gcp.yml up -d --build`.
+See [.env.example](.env.example) for every setting.
+
+**Tests and tooling** use [uv](https://docs.astral.sh/uv/), which replaces `requirements.txt` and the
+venv steps in TASK.md. [go-task](https://taskfile.dev) wraps the common commands (`task --list`).
+
+```bash
+uv sync --all-extras && uv run python scripts/prepare_models.py   # or: task setup
+uv run pytest                                                     # or: task test (task test:fast: no models needed)
+```
+
 ## Task Description:
 The task is to build a system that can extract names and last names from a scanned
 PDF document, identify their bounding box locations, and provide an API endpoint to perform fuzzy
