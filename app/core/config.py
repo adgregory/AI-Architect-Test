@@ -1,26 +1,45 @@
 """Typed application settings, read from environment variables (and an optional .env file)."""
 
 from functools import lru_cache
+from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # frozen: settings are immutable after startup and hashable (factories cache per settings)
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", frozen=True)
 
-    # OCR
+    # Logging
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    log_json: bool = Field(False, description="JSON lines (containers) instead of console rendering")
+
+    # Model artifacts generated locally (e.g. GLiNER ONNX export)
+    models_dir: Path = Path(".models")
+
+    # OCR — `chosen` engine by default (spike 01); `tesseract` is the fallback
+    ocr_engine: Literal["rapidocr", "tesseract"] = "rapidocr"
     ocr_dpi: int = Field(150, ge=72, le=600, description="Render resolution for OCR")
+    ocr_tighten_boxes: bool = Field(True, description="Shrink word boxes vertically to the ink they contain")
 
-    # NER
+    # NER — GLiNER int8 by default (spike 02); `spacy` is the fallback
+    ner_engine: Literal["gliner", "spacy"] = "gliner"
+    gliner_model: str = "urchade/gliner_small-v2.1"
+    gliner_quantized: bool = True
+    gliner_threshold: float = Field(0.3, ge=0.0, le=1.0, description="Calibrated for the int8 model")
     spacy_model: str = "en_core_web_sm"
 
     # Fuzzy matching (the requirement is 90%)
     similarity_threshold: int = Field(90, ge=0, le=100)
 
-    # Embeddings
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    # Embeddings — bge-small via fastembed by default (spike 03)
+    embedding_engine: Literal["fastembed", "sentence-transformers"] = "fastembed"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
     embedding_dim: int = 384
+    embedding_query_prefix: str = "Represent this sentence for searching relevant passages: "
+    embedding_document_prefix: str = ""
 
     # Vector store
     qdrant_host: str = "localhost"

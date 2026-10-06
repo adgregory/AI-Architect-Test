@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from app.core.factories import default_sentence_transformer
+import numpy as np
+
+from app.core.factories import default_embedding_service
 from app.core.lazy import Lazy
 
 
@@ -17,8 +19,30 @@ class EmbeddingService(Protocol):
     def embed_query(self, query: str) -> list[float]: ...
 
 
+class FastEmbedEmbeddingService:
+    """fastembed TextEmbedding on ONNX Runtime, no torch (chosen in spike 03). Model injected."""
+
+    def __init__(self, model: Any, query_prefix: str = "", document_prefix: str = ""):
+        self._model = model
+        self._query_prefix = query_prefix
+        self._document_prefix = document_prefix
+
+    @staticmethod
+    def _normalize(vectors) -> np.ndarray:
+        arr = np.asarray(list(vectors), dtype=np.float32)
+        return arr / np.linalg.norm(arr, axis=1, keepdims=True)
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        return self._normalize(self._model.embed([self._document_prefix + t for t in texts])).tolist()
+
+    def embed_query(self, query: str) -> list[float]:
+        return self._normalize(self._model.embed([self._query_prefix + query]))[0].tolist()
+
+
 class SentenceTransformerEmbeddingService:
-    """sentence-transformers model, injected. Optional prefixes for models that need them."""
+    """sentence-transformers model (fallback). Model injected."""
 
     def __init__(self, model: Any, query_prefix: str = "", document_prefix: str = ""):
         self._model = model
@@ -26,6 +50,8 @@ class SentenceTransformerEmbeddingService:
         self._document_prefix = document_prefix
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
         vectors = self._model.encode([self._document_prefix + t for t in texts], normalize_embeddings=True)
         return vectors.tolist()
 
@@ -34,11 +60,20 @@ class SentenceTransformerEmbeddingService:
 
 
 # --------------------------------------------------------------------------- #
-# Functional API (backwards compatible). The model is loaded once, lazily, by
-# the composition root — not on every call.
+# Functional API (backwards compatible), backed by the embedding service the
+# factory builds from Settings — loaded once, lazily, never per call.
 # --------------------------------------------------------------------------- #
-model = Lazy(default_sentence_transformer)
-_default_embeddings = SentenceTransformerEmbeddingService(model)
+model = Lazy(default_embedding_service)
 
-get_embeddings = _default_embeddings.embed_documents
-get_query_embedding = _default_embeddings.embed_query
+
+class _ModuleEmbeddings:
+    def get_embeddings(self, texts: list[str]) -> list[list[float]]:
+        return model.get().embed_documents(texts)
+
+    def get_query_embedding(self, query: str) -> list[float]:
+        return model.get().embed_query(query)
+
+
+_module_embeddings = _ModuleEmbeddings()
+get_embeddings = _module_embeddings.get_embeddings
+get_query_embedding = _module_embeddings.get_query_embedding
