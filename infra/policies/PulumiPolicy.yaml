@@ -1,0 +1,5 @@
+description: Guardrails for the PDF name extractor stack (evaluated offline during preview)
+runtime:
+  name: python
+  options:
+    virtualenv: ../.venv
