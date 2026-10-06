@@ -61,10 +61,13 @@ ENV PATH=/app/.venv/bin:$PATH \
     HF_HOME=/app/.models/hf \
     HF_HUB_OFFLINE=1 \
     LOG_JSON=true
-RUN useradd --create-home --uid 10001 app
+RUN useradd --create-home --uid 10001 app \
+ && mkdir -p /data && chown app:app /data   # shared storage volume (api + workers)
 COPY --from=deps /app/.venv /app/.venv
 COPY --from=models --chown=app:app /app/.models /app/.models
 COPY --from=models /app/.env /app/.env
+COPY alembic.ini ./
+COPY migrations ./migrations
 COPY app ./app
 USER app
 EXPOSE 8000

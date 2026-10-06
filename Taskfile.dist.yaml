@@ -52,6 +52,57 @@ tasks:
     cmds:
       - uv run uvicorn app.main:app --reload --port {{.PORT}}
 
+  # ------------------------------------------------------------------ local stack (docker compose)
+  stack:up:
+    desc: "Build and start the full stack: postgres, temporal(+ui), qdrant, migrate, api, workers (STACK, CPU_WORKERS)"
+    cmds:
+      - STACK={{.STACK}} CPU_WORKERS={{.CPU_WORKERS | default "1"}} docker compose up -d --build
+      - docker compose ps
+
+  stack:infra:
+    desc: Start only the infrastructure (run api/workers from the host with `task run` / `task worker:*`)
+    cmds:
+      - docker compose up -d postgres temporal temporal-ui qdrant
+      - task: db:migrate
+
+  stack:down:
+    desc: Stop the stack (keeps volumes; add -- -v to drop them)
+    cmds:
+      - docker compose down {{.CLI_ARGS}}
+
+  stack:logs:
+    desc: Follow logs (e.g. task stack:logs -- worker-cpu)
+    cmds:
+      - docker compose logs -f {{.CLI_ARGS}}
+
+  db:migrate:
+    desc: Apply database migrations
+    cmds:
+      - uv run alembic upgrade head
+
+  worker:cpu:
+    desc: Run a CPU worker on the host
+    cmds:
+      - uv run python -m app.workers.cpu
+
+  worker:io:
+    desc: Run the IO/workflow worker on the host
+    cmds:
+      - uv run python -m app.workers.io
+
+  job:demo:
+    desc: "Submit sample_pdfs/meeting_minutes.pdf as a job and stream its events (API_URL)"
+    vars:
+      API_URL: '{{.API_URL | default "http://localhost:8000"}}'
+    cmds:
+      - |
+        job=$(curl -fsS -X POST {{.API_URL}}/api/jobs \
+          -F "pdf_file=@sample_pdfs/meeting_minutes.pdf;type=application/pdf" \
+          -F 'names=[{"first_name":"Richard","last_name":"Hernandez"},{"first_name":"Jenifer","last_name":"Liu"}]' \
+          | uv run python -c "import json,sys; print(json.load(sys.stdin)['job_id'])")
+        echo "job $job"
+        curl -sN {{.API_URL}}/api/jobs/$job/events
+
   # ------------------------------------------------------------------ docker
   docker:build:
     desc: "Build the image (STACK=chosen|fallback)"
