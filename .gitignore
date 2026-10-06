@@ -170,3 +170,5 @@ cython_debug/
 spikes/*/data/
 spikes/*/results/raw/
 spikes/*/results/*-smoke.json
+spikes/*/results/*.log
+spikes/*/results/gpu/*.powermetrics.txt
