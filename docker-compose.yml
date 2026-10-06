@@ -94,7 +94,7 @@ services:
       QDRANT_HOST: qdrant
       LOG_JSON: "true"
       # auto: Gemini when GOOGLE_CLOUD_PROJECT and credentials are present (see
-      # docker-compose.gcp.yml); otherwise answers are extracts of the retrieved passages, no LLM.
+      # docker-compose.gcp.yml); otherwise the answer is the retrieved sentence closest to the question.
       LLM_PROVIDER: ${LLM_PROVIDER:-auto}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}

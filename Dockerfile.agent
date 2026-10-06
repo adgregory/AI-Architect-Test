@@ -2,7 +2,8 @@
 #
 # Agent service: Strands agent on the AgentCore Runtime contract
 # (POST /invocations, GET /ping, port 8080). The same image runs locally in docker compose
-# (Gemini on Vertex via ADC, mounted read-only at runtime) and on AgentCore Runtime in AWS
+# (Gemini on Vertex when ADC is mounted via docker-compose.gcp.yml, otherwise answers without an LLM)
+# and on AgentCore Runtime in AWS
 # (Bedrock, via the runtime's IAM role). No OCR/NER models, no torch.
 #
 #   docker build -f Dockerfile.agent -t pdf-name-extractor-agent .

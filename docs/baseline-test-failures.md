@@ -1,8 +1,7 @@
 # Baseline Test Failures
 
-Snapshot of the test suite **before any application code was changed**, so we
-can track every failure to resolution and fill in the findings tables in
-`TASK.md`.
+Snapshot of the test suite **before any application code was changed**. Every row is now
+resolved; each one feeds the findings tables in `TASK.md`.
 
 - **Commit:** `f2e9ac9` (uv migration + `numpy<2` pin, app code untouched)
 - **Environment:** Python 3.12.13, Tesseract 5.5.3 (Homebrew), macOS arm64
@@ -13,7 +12,6 @@ can track every failure to resolution and fill in the findings tables in
 > NumPy 2 ABI mismatch with spaCy 3.7 (`fbf3763`), and Tesseract not installed.
 
 "Suspected cause" is a first reading of the code, not a decision on the fix.
-Update **Status** as each item is resolved (`open` → `fixed in <sha>`).
 
 **Current status (2026-10-05): all 30 resolved — 49 passed, 0 failed.**
 

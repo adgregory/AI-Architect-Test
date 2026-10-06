@@ -1,6 +1,6 @@
 # ADR 0001 — Solution architecture
 
-- **Status:** accepted (model choices pending spikes 01–04)
+- **Status:** accepted (model choices decided by spikes 01–04)
 - **Date:** 2026-10-05
 
 ## Context
@@ -9,10 +9,10 @@ The service extracts person names and their bounding boxes from scanned PDFs,
 fuzzy-matches them against names supplied in the request, indexes document
 text for retrieval, and answers questions with RAG. Constraints:
 
-- Runs locally with Docker Compose for now; infrastructure-as-code comes later.
+- Runs locally with Docker Compose; the AWS target is modelled in `infra/` (Pulumi).
 - Production targets AWS: the agent runs on AgentCore Runtime with a Bedrock model. The only
-  account available for local testing is GCP, so locally the agent uses Gemini on Vertex AI
-  via Application Default Credentials (ADC).
+  account available for local testing is GCP, so locally the agent can use Gemini on Vertex AI
+  via Application Default Credentials (ADC); without credentials it answers without an LLM.
 - The test suite fixes part of the contract: a synchronous `POST /api/extract`
   response shape, and a Qdrant-backed `VectorStore`.
 - Every backend sits behind an interface so it can be swapped (e.g. hybrid search).
@@ -35,7 +35,9 @@ text for retrieval, and answers questions with RAG. Constraints:
 
 - `POST /api/extract` — synchronous extraction (kept: test contract, small files).
 - `POST /api/jobs` → `202 {job_id}`; `GET /api/jobs/{id}`; `GET /api/jobs/{id}/events` (SSE).
-- `POST /api/ask` — streamed answer (SSE) with sources.
+- `POST /api/ask` — JSON `{answer, sources}`; `POST /api/ask/stream` — the same answer as SSE
+  (`sources`, `token`…, `done`).
+- `POST /api/ingest` — synchronous OCR + indexing of a PDF for `/api/ask`.
 - `GET /health`.
 
 Sync and async extraction call the same service classes; only the entry point differs.
@@ -52,7 +54,7 @@ Sync and async extraction call the same service classes; only the entry point di
    workflow-ID uniqueness makes re-starts idempotent. This covers the "row written, workflow
    never started" gap without extra infrastructure.
 3. The workflow's last activity writes the result to `jobs.result` (jsonb), sets the status,
-   and issues `NOTIFY job_done`; open SSE connections push the result.
+   and issues `NOTIFY job_events` (sent on every status change); open SSE connections push it.
 
 **Production target (modelled in `infra/` Pulumi, not run locally):** transactional outbox —
 the job row and an `outbox` row in one transaction; **Debezium Server** reads the outbox via
@@ -68,13 +70,12 @@ safety at a fraction of the cost.
 
 ```
 ExtractNamesWorkflow(job_id)
-  1. mark_running                      (io)
-  2. prepare_document → page refs      (cpu)  load PDF, validate, render pages, store
-  3. ocr_page × N, in parallel         (cpu)  text + word boxes per page → stored ref
-  4. extract_names                     (cpu)  NER → person spans
-  5. locate_and_match                  (cpu)  name → word boxes (PDF space) + fuzzy match (≥ 90%)
-  6. complete_job                      (io)   jobs.result, status, NOTIFY
-  child IndexDocumentWorkflow(job_id)  (abandon on parent close)  chunk + embed (cpu) → upsert Qdrant (io)
+  1. prepare_document                  (cpu)  validate the PDF, count pages, content-addressed document id
+  2. mark_running                      (io)
+  3. ocr_page × N, in parallel         (cpu)  render + OCR one page: text + word boxes → stored ref
+  4. extract_and_match                 (cpu)  NER → name boxes (PDF space) → fuzzy match (≥ 90%)
+  5. complete_job                      (io)   jobs.result, status, NOTIFY   (any failure → fail_job)
+  child IndexDocumentWorkflow(index-<document id>)  (abandon on parent close)  chunk + embed (cpu) → upsert Qdrant (io)
 ```
 
 - **References, not payloads:** page images, OCR words and intermediate results are
@@ -94,7 +95,7 @@ ExtractNamesWorkflow(job_id)
 
   | Environment | Provider | Credentials |
   |-------------|----------|-------------|
-  | Local (compose) | `GeminiModel` (`strands-agents[gemini]`) with a pre-built `google.genai.Client(vertexai=True, project, location="global")` | ADC file mounted read-only |
+  | Local (compose) | `GeminiModel` (`strands-agents[gemini]`) with a pre-built `google.genai.Client(vertexai=True, project, location="global")` | Opt-in: ADC mounted read-only via `docker-compose.gcp.yml`. Without credentials, `LLM_PROVIDER=auto` answers with the retrieved sentence closest to the question (no LLM) |
   | AWS (AgentCore Runtime) | `BedrockModel` — the production model | AgentCore runtime execution role (`bedrock:InvokeModel`, `bedrock:InvokeModelWithResponseStream` scoped to the configured model ARN) |
 
   No GCP credentials exist in AWS (no Workload Identity Federation needed). Prompts and
@@ -106,25 +107,25 @@ ExtractNamesWorkflow(job_id)
   spike 04) → retrieve top-k chunks from Qdrant → stream a grounded answer from a fresh Strands
   `Agent` per request → cache complete answers. **Retrieve-then-generate** rather than retrieval
   as a Strands tool: one model call, predictable latency, sources = the retrieved chunks; tool-based
-  agentic retrieval is the upgrade path for multi-step questions. The embedding model lives in a shared internal package used by both the
+  agentic retrieval is the upgrade path for multi-step questions. The embedding service (`app/services/embedding_service.py`) is shared by the
   worker (indexing) and the agent (queries) so vectors stay identical.
 - **Streaming is passed through:** client ← SSE ← `api` ← streamed HTTP ← `agent`.
   No broker. Trade-off: no resume after disconnect; one open connection per answer.
   A broker (Valkey/Redis Streams) behind an `EventStream` interface is the upgrade path
   for resumable streams or cross-replica fan-out.
-- Known Strands Gemini issues to handle explicitly: `RECITATION`/missing finish reasons
-  surfaced as `end_turn` (inspect `stop_reason`), and some 429s not retried (own retry).
+- Known Strands Gemini issues, not yet handled beyond caching only `end_turn` answers:
+  `RECITATION`/missing finish reasons surfaced as `end_turn`, and some 429s not retried.
   See `docs/research/strands-vertex-gemini.md`.
 
 ### Data and storage
 
-- **Postgres:** `jobs` (status, timestamps, owner, retry count as columns; result as
+- **Postgres:** `jobs` (status, timestamps, attempts as columns; result as
   `jsonb`) and Temporal's persistence — one database engine (plus `outbox` in the production target).
   In AWS (outbox target) logical replication is enabled for Debezium via an RDS parameter
   group (`rds.logical_replication=1`).
-- **Qdrant:** `chunks` collection (cosine) and `answer_cache` collection. The cache stores
-  `created_at` in the payload; lookups filter expired entries and a periodic job deletes
-  them (Qdrant has no TTL). Hybrid (sparse + dense with fusion) is available when needed.
+- **Qdrant:** `pdf_documents` collection (cosine) and `answer_cache` collection. The cache stores
+  `created_at` in the payload and lookups filter out expired entries (Qdrant has no TTL;
+  `purge_expired` exists but isn't scheduled yet). Hybrid (sparse + dense with fusion) is available when needed.
 - **Object storage:** local volume behind an `ObjectStorage` interface (MinIO/S3 later).
 
 ### Connection management
@@ -146,11 +147,11 @@ gives the same predictability with concurrency.
 
 | Resource | Approach |
 |----------|----------|
-| Postgres pools | Async pool per process (`psycopg_pool.AsyncConnectionPool` or SQLAlchemy async engine) in `api` and the `io` worker only, with `min_size`/`max_size`, acquire `timeout`, `max_waiting`, `max_lifetime`, `max_idle` and a reset/health check on checkout — all from config |
+| Postgres pools | Async pool per process (`psycopg_pool.AsyncConnectionPool`) in `api` and the `io` worker only, with `min_size`/`max_size`, acquire `timeout`, `max_waiting`, `max_lifetime`, `max_idle` and a reset/health check on checkout — all from config |
 | Postgres budget | `api` replicas × (`api` pool + 1 `LISTEN`) + `io` replicas × `io` pool (+ 1 Debezium replication connection in the outbox target) + Temporal server `maxConns` + admin headroom < `max_connections`; independent of `cpu` worker count |
 | Query hygiene | `statement_timeout` and `idle_in_transaction_session_timeout` on the app role; connections acquired late and released early — never held across OCR, NER or LLM calls |
 | Backpressure | Pool exhaustion → fast `503` + `Retry-After` from the API (bounded `max_waiting`); async jobs absorb bursts in Temporal's task queues |
-| Observability | Pool stats (in use, idle, waiting, acquire wait, timeouts) exported with the service metrics |
+| Observability | Not implemented yet: export `pool.get_stats()` (in use, idle, waiting, acquire wait, timeouts) with the service metrics |
 | `LISTEN/NOTIFY` | `api` only (job-completion SSE): one dedicated long-lived connection per process, outside the pool (LISTEN is session-scoped) |
 | PgBouncer | Added in transaction mode when replica count makes the budget tight; `LISTEN` connections bypass it |
 | Qdrant | One client per process (pooled HTTP keep-alive / gRPC channel), reused |
@@ -162,19 +163,20 @@ Pools are closed on shutdown; pool sizes, timeouts and limits come from configur
 
 ### Interfaces
 
-`OCREngine`, `NERModel`, `EmbeddingModel`, `VectorStore` (`QdrantVectorStore`),
-`SemanticCache`, `JobRepository`, `ObjectStorage`, `AgentClient`.
+`OCRService`, `NERService`, `NameLocator`, `NameMatcher`, `EmbeddingService`,
+`VectorStore` (`QdrantVectorStore`), `SemanticCache`, `LLMClient`, `JobRepository`,
+`ObjectStorage`, `JobOrchestrator`.
 
-## Pending (decided by spikes)
+## Model choices (decided by spikes)
 
-| Choice | Spike |
-|--------|-------|
-| ~~OCR engine~~ → **PaddleOCR PP-OCRv5 mobile on ONNX Runtime CPU (RapidOCR)** | 01 (decided) |
-| ~~NER model~~ → **GLiNER small v2.1, ONNX int8 on CPU, threshold 0.3 (configurable)** | 02 (decided) |
-| ~~Embedding model~~ → **bge-small-en-v1.5 (384-d), ONNX Runtime CPU via fastembed** | 03 (decided) |
-| ~~Answer-cache similarity threshold~~ → **cosine ≥ 0.90 + QuestionGuard** | 04 (decided) |
-| ~~Gemini model ID (local)~~ → **gemini-3.8-flash** (verified on Vertex; `GEMINI_MODEL`) | console (decided) |
-| Bedrock model ID (AWS) | stack configuration |
+| Choice | Decision | Evidence |
+|--------|----------|----------|
+| OCR engine | **PaddleOCR PP-OCRv5 mobile on ONNX Runtime CPU (RapidOCR)** | spike 01 |
+| NER model | **GLiNER small v2.1, ONNX int8 on CPU, threshold 0.3 (configurable)** | spike 02 |
+| Embedding model | **bge-small-en-v1.5 (384-d), ONNX Runtime CPU via fastembed** | spike 03 |
+| Answer-cache rule | **cosine ≥ 0.90 + QuestionGuard** | spike 04 |
+| Gemini model (local) | **gemini-3.8-flash** (`GEMINI_MODEL`) | verified on Vertex |
+| Bedrock model (AWS) | stack configuration | — |
 
 ## Consequences
 

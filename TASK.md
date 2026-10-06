@@ -113,7 +113,7 @@ As part of your submission, fill in the tables below documenting every bug you f
 ### Bugs Found & Fixed
 
 Baseline ([docs/baseline-test-failures.md](docs/baseline-test-failures.md)): 30 of the 49 provided tests failed before any
-app change: 17 from 11 bugs (rows 1–5, 7–10), 5 from missing features (rows 11–12) and 8 from architecture checks
+app change: 17 from the bugs in rows 1–5 and 7–10 (11 unit tests, plus 6 integration tests that depended on them), 5 from missing features (rows 11–12) and 8 from architecture checks
 (Architecture table, rows 1–2). Rows 6, 13 and 14 were found outside the provided tests.
 Now: all 49 pass, plus 166 added tests (215 total).
 
@@ -131,7 +131,7 @@ Now: all 49 pass, plus 166 added tests (215 total).
 | 10 | `app/services/vector_service.py` | Point IDs = chunk index, so each document overwrote the previous one | UUID5(document_id:chunk) with the document ID in the payload (`f5fcb60`); document IDs later made content-addressed so re-uploads don't duplicate (`de05dc1`) |
 | 11 | `app/api/extract.py` | Non-PDF upload raised `FileDataError` → 500; bad `names` JSON → 500 | 400 on missing `%PDF-` signature, 413 over the size limit, 422 on bad names (`c9e70ee`) |
 | 12 | `app/api/*`, `app/models/schemas.py` | Missing features: no `fuzzy_matches`, no `page_number` on boxes, no `sources` on answers, no `/health` | Added to the schemas and routes (`c9e70ee`, `e4af849`) |
-| 13 | `pyproject.toml` | *(environment)* NumPy 2 ABI break with spaCy 3.7 stopped the suite from importing | Pinned `numpy<2` while spaCy was in use (`fbf3763`) |
+| 13 | `pyproject.toml` | *(environment)* NumPy 2 ABI break with spaCy 3.7 stopped the suite from importing | Pinned `numpy<2` (`fbf3763`) until the upgrade to spaCy 3.8 (`7d9d584`) |
 | 14 | agent (new code) | *(found while testing live)* Duplicate passages filled the top-k; a refusal cached before a document was indexed kept being served | Dedupe before top-k (`9b7850c`); never cache refusals, and scope cache entries to the corpus version (`4e113cf`) |
 
 ### Architecture & Design Improvements
@@ -140,7 +140,7 @@ Now: all 49 pass, plus 166 added tests (215 total).
 |---|------------------|-----|
 | 1 | Every service is a class behind a `Protocol` (`OCRService`, `NERService`, `NameLocator`, `NameMatcher`, `EmbeddingService`, `VectorStore`, `LLMClient`, `SemanticCache`, `JobRepository`, `ObjectStorage`, `JobOrchestrator`) | Swappable engines and test doubles without patching (Dependency Inversion / Open-Closed) |
 | 2 | Composition root (`app/core/container.py`) built in the FastAPI lifespan; routes get dependencies via `Depends` | Models and clients load once per process, not per request; tests use `dependency_overrides` |
-| 3 | Factory registries + uv extras `chosen` / `fallback` (`app/core/factories.py`) | Engine choice is configuration; the fallback stack (Tesseract, spaCy, MiniLM) installs without the chosen one |
+| 3 | Factory registries + uv extras `chosen` / `fallback` (`app/core/factories.py`) | Engine choice is configuration; the fallback stack (Tesseract, spaCy, sentence-transformers) installs without the chosen one |
 | 4 | Engines chosen by measured spikes: PaddleOCR on ONNX (RapidOCR), GLiNER int8, bge-small via fastembed | Evidence in `spikes/01-04`: e.g. OCR CER 14.9% → 2.4%; NER false positives 178 → 0 |
 | 5 | `ExtractionSession`: OCR each PDF once per request; NER → box location → fuzzy match share that result | The original code OCR'd the same document several times per request |
 | 6 | Async jobs on Temporal (`/api/jobs` → 202, SSE events), separate `cpu` / `io` task queues, per-page parallel OCR, reconciler schedule | Large and batch PDFs no longer block HTTP; durable retries; CPU workers scale without growing DB connections |
@@ -158,7 +158,7 @@ Now: all 49 pass, plus 166 added tests (215 total).
 | 3 | Input validation | `app/api/uploads.py`: PDF signature, size limit (413), names schema (422); `max_pages` rejected as non-retryable |
 | 4 | Resilience | Temporal retry policies (transient vs non-retryable), heartbeats, reconciler; HTTP/Qdrant/LLM timeouts; bounded DB pools → 503 + `Retry-After`; background work is best effort |
 | 5 | Error handling | Dependency failures (engine missing, agent down, DB pool exhausted) mapped to 503 + `Retry-After` in `app/main.py`; anything else is a generic 500 with the detail in the logs only |
-| 6 | Tests (bonus) | 166 added: unit (fakes), API (dependency overrides), contract (every engine against the same expectations), workflows (Temporal time-skipping server), Postgres repository, end-to-end pipeline, Pulumi mocks |
+| 6 | Tests (bonus) | 166 added: unit (fakes), API (dependency overrides), contract (every engine against the same expectations), workflows (Temporal time-skipping server), Postgres repository, end-to-end pipeline; plus 20 Pulumi-mock tests in `infra/tests` (run separately) |
 | 7 | Dependency management | uv + `pyproject.toml` with a lockfile; extras per stack; `uv.lock` checked in pre-commit |
 | 8 | Static checks | pre-commit: ruff (lint + format), mypy (pydantic plugin), detect-secrets, hygiene hooks |
 | 9 | Containerisation | Multi-stage `Dockerfile` (`STACK` build arg, models baked in, non-root, healthcheck, offline); `Dockerfile.agent`; `docker-compose.yml` with the full stack and migrations |

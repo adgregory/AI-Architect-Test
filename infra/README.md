@@ -68,7 +68,7 @@ Build and push the `app`, `agent` and `dispatcher` images to the ECR repositorie
 
 ## App changes needed to run in AWS (not yet implemented)
 
-The infrastructure passes these settings; the local build doesn't use them yet:
+The infrastructure passes these settings, but the app doesn't support them yet, so it won't start in AWS until they exist (`ANSWER_BACKEND=agentcore` fails settings validation; the DB settings are ignored):
 
 | Setting | Needed in the app |
 |---|---|

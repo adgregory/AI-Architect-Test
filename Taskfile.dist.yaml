@@ -78,7 +78,7 @@ tasks:
 
   # ------------------------------------------------------------------ local stack (docker compose)
   stack:up:
-    desc: "Build and start the full stack: postgres, temporal(+ui), qdrant, migrate, api, workers (STACK, CPU_WORKERS)"
+    desc: "Build and start the full stack: postgres, temporal(+ui), qdrant, migrate, api, agent, workers (STACK, CPU_WORKERS)"
     cmds:
       - STACK={{.STACK}} CPU_WORKERS={{.CPU_WORKERS | default "1"}} docker compose up -d --build
       - docker compose ps

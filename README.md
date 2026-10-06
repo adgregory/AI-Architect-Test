@@ -22,6 +22,7 @@ docker compose ps                   # wait until api and agent are healthy (the 
 
 ```bash
 # 1. Extract names + bounding boxes and fuzzy-match (≥ 90%); the PDF is also indexed for /api/ask
+#    in the background, so allow a few seconds before asking about it
 curl -s -X POST localhost:8000/api/extract \
   -F "pdf_file=@sample_pdfs/meeting_minutes.pdf;type=application/pdf" \
   -F 'names=[{"first_name":"Richard","last_name":"Hernandez"}]'

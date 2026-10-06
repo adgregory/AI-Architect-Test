@@ -85,7 +85,7 @@ Large or batch work goes through **`POST /api/jobs` → 202**. The API stores th
 job row and starts `ExtractNamesWorkflow`:
 
 ```
-mark_running(io) → prepare(cpu) → ocr_page × N in parallel(cpu) → extract_and_match(cpu) → complete_job(io, NOTIFY)
+prepare_document(cpu) → mark_running(io) → ocr_page × N in parallel(cpu) → extract_and_match(cpu) → complete_job(io, NOTIFY)
 child: IndexDocumentWorkflow → chunk_and_embed(cpu) → upsert_chunks(io)
 ```
 
