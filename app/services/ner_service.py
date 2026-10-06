@@ -10,7 +10,7 @@ def extract_names(text: str) -> list[str]:
 
     names = []
     for ent in doc.ents:
-        if ent.label_ in ("PERSON", "ORG"):
+        if ent.label_ == "PERSON":
             names.append(ent.text)
 
     return names
@@ -22,7 +22,7 @@ def extract_names_with_positions(text: str) -> list[dict]:
 
     results = []
     for ent in doc.ents:
-        if ent.label_ in ("PERSON", "ORG"):
+        if ent.label_ == "PERSON":
             results.append({
                 "name": ent.text,
                 "start_char": ent.start_char,
