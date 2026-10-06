@@ -50,8 +50,12 @@ agent = [
 
 [dependency-groups]
 dev = [
+    "detect-secrets>=1.5",
+    "mypy>=1.13",
+    "pre-commit>=4",
     "pytest==8.3.0",
     "pytest-asyncio==0.24.0",
+    "ruff>=0.8",
 ]
 
 [tool.uv]
@@ -74,3 +78,37 @@ markers = [
     "contract: same behaviour checked against every engine implementation (real models)",
     "integration: end-to-end pipeline on the sample PDFs (real models)",
 ]
+
+[tool.ruff]
+line-length = 120
+force-exclude = true  # apply excludes even when paths are passed explicitly (pre-commit does)
+target-version = "py312"
+# The provided test suite (tests/test_*.py, tests/conftest.py) is kept byte-for-byte as delivered.
+extend-exclude = ["spikes", "migrations/script.py.mako", "tests/test_*.py", "tests/conftest.py",
+                  "scripts/generate_test_pdfs.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "BLE", "RUF", "ASYNC", "S"]
+ignore = [
+    "S101",    # assert is fine in tests
+    "RUF001", "RUF002", "RUF003",  # typographic quotes/dashes in docstrings are intentional
+    "B008",    # FastAPI's Depends()/File() defaults are the idiom
+    "S608",    # SQL is parameterised; the f-string is only the statement_timeout integer
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B", "BLE", "SIM117", "RUF012"]
+"scripts/**" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+files = ["app"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true

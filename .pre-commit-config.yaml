@@ -1,0 +1,54 @@
+# pre-commit install && pre-commit install --hook-type pre-push
+# Tool hooks run through `uv run`, so they use exactly the versions pinned in uv.lock.
+# The provided scaffold (original tests, conftest, PDF generator, sample PDFs) is never rewritten.
+exclude: ^(tests/test_[^/]*\.py|tests/conftest\.py|scripts/generate_test_pdfs\.py|sample_pdfs/.*)$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix --force-exclude
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy (app)
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: uv-lock
+        name: uv.lock is up to date
+        entry: uv lock --check
+        language: system
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
+      - id: detect-secrets
+        name: detect-secrets
+        entry: uv run detect-secrets-hook --baseline .secrets.baseline
+        language: system
+        exclude: ^(uv\.lock|spikes/.*/results/.*)$
+      - id: fast-tests
+        name: fast tests (no real models)
+        entry: uv run pytest -q -m "not contract and not integration"
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
