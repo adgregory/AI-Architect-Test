@@ -22,6 +22,38 @@ class ExtractionEngines:
     normalizer: PersonNameNormalizer
 
 
+class ExtractionResultBuilder:
+    """The API response shape, shared by the synchronous route and the async job workflow."""
+
+    @staticmethod
+    def build(name_boxes: list[dict], matches: list[dict]) -> dict:
+        return {
+            "extracted_names": [
+                {
+                    "name": nb["name"],
+                    "bounding_box": {"page_number": nb["page"], "x": nb["x"], "y": nb["y"],
+                                     "width": nb["width"], "height": nb["height"]},
+                }
+                for nb in name_boxes
+            ],
+            "fuzzy_matches": matches,
+        }
+
+
+class NameExtraction:
+    """NER → normalise → locate → match over an OCR result already in hand (used by the
+    workflow, which OCRs pages in parallel and combines them)."""
+
+    def __init__(self, engines: ExtractionEngines):
+        self._engines = engines
+
+    def run(self, ocr: OCRResult, query_names: list[dict]) -> dict:
+        names = self._engines.normalizer.normalize_all(self._engines.ner.extract_names(ocr.text))
+        name_boxes = self._engines.locator.locate(names, ocr.words)
+        matches = self._engines.matcher.match(list(dict.fromkeys(nb["name"] for nb in name_boxes)), query_names)
+        return ExtractionResultBuilder.build(name_boxes, matches)
+
+
 class ExtractionSession:
     """Per-request unit of work over the shared engines.
 

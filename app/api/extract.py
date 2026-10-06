@@ -8,7 +8,7 @@ from app.api.deps import get_app_settings, get_extraction_session
 from app.core.config import Settings
 from app.core.logging import get_logger
 from app.models.schemas import ExtractionResponse, NamePair
-from app.services.extraction_service import ExtractionSession
+from app.services.extraction_service import ExtractionResultBuilder, ExtractionSession
 
 router = APIRouter()
 log = get_logger(__name__)
@@ -80,21 +80,6 @@ def extract_names_from_pdf(
         )
         log.info("extract.done", names=len(name_boxes), matches=len(matches), query_names=len(query_names))
 
-        return {
-            "extracted_names": [
-                {
-                    "name": nb["name"],
-                    "bounding_box": {
-                        "page_number": nb["page"],
-                        "x": nb["x"],
-                        "y": nb["y"],
-                        "width": nb["width"],
-                        "height": nb["height"],
-                    },
-                }
-                for nb in name_boxes
-            ],
-            "fuzzy_matches": matches,
-        }
+        return ExtractionResultBuilder.build(name_boxes, matches)
     finally:
         os.unlink(tmp.name)
