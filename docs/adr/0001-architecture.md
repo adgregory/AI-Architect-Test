@@ -166,7 +166,7 @@ Pools are closed on shutdown; pool sizes, timeouts and limits come from configur
 | Choice | Spike |
 |--------|-------|
 | ~~OCR engine~~ → **PaddleOCR PP-OCRv5 mobile on ONNX Runtime CPU (RapidOCR)** | 01 (decided) |
-| NER model | 02 |
+| ~~NER model~~ → **GLiNER small v2.1, ONNX int8 on CPU, threshold 0.3 (configurable)** | 02 (decided) |
 | Embedding model | 03 |
 | Answer-cache similarity threshold | 04 |
 | Gemini model ID (local) | confirm in the Vertex console |
