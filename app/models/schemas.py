@@ -41,5 +41,11 @@ class RAGResponse(BaseModel):
     sources: list[str]
 
 
+class IngestResponse(BaseModel):
+    status: str
+    document_id: str
+    chunks_stored: int
+
+
 class HealthResponse(BaseModel):
     status: str
