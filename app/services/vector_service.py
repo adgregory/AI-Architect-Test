@@ -1,3 +1,5 @@
+import uuid
+
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 
@@ -25,25 +27,34 @@ def init_collection():
         )
 
 
-def store_document_chunks(chunks: list[str], metadata: list[dict] = None):
-    """Store text chunks with their embeddings in the vector database."""
+def store_document_chunks(
+    chunks: list[str], metadata: list[dict] = None, document_id: str | None = None
+) -> str:
+    """Store text chunks with their embeddings in the vector database.
+
+    Point IDs are UUID5(document_id, chunk index): unique across documents, and
+    stable for a document, so re-ingesting it overwrites its own points instead
+    of duplicating them. Returns the document ID.
+    """
+    document_id = document_id or str(uuid.uuid4())
     embeddings = get_embeddings(chunks)
 
     points = []
     for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-        payload = {"text": chunk}
+        payload = {"text": chunk, "document_id": document_id, "chunk_index": i}
         if metadata and i < len(metadata):
             payload.update(metadata[i])
 
         points.append(
             PointStruct(
-                id=i,
+                id=str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{i}")),
                 vector=embedding,
                 payload=payload,
             )
         )
 
     client.upsert(collection_name=COLLECTION_NAME, points=points)
+    return document_id
 
 
 def search_similar(query_embedding: list[float], top_k: int = 5) -> list[dict]:
