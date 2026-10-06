@@ -26,8 +26,8 @@ DESIGN.md routing), not the default path. No LLM is benchmarked here.
 
 | ID | Model | Type | ONNX |
 |----|-------|------|------|
-| `spacy-sm` | `en_core_web_sm` 3.7 (current app) | CNN, OntoNotes | No (thinc) |
-| `spacy-trf` | `en_core_web_trf` 3.7 | RoBERTa-base, OntoNotes | No (thinc) |
+| `spacy-sm` | `en_core_web_sm` 3.8 (app pins 3.7) | CNN, OntoNotes | No (thinc) |
+| `spacy-trf` | `en_core_web_trf` 3.8 | RoBERTa-base, OntoNotes | No (thinc) |
 | `bert-ner` | `dslim/bert-base-NER` | BERT-base token classification, CoNLL-03 | Yes — tested with/without (optimum export) |
 | `gliner` | `urchade/gliner_small-v2.1` | Zero-shot span model, label `person` | Yes — fp32 and dynamic int8, tested with/without |
 
