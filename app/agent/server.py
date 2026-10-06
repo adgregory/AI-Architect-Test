@@ -45,6 +45,7 @@ class AgentRuntime:
                     vector_size=s.embedding_dim,
                     threshold=s.answer_cache_threshold,
                     ttl_s=s.answer_cache_ttl_s,
+                    corpus_version=self._corpus_version,
                 )
             return AnswerService(
                 embed_query=self._container.embeddings.embed_query,
@@ -53,6 +54,15 @@ class AgentRuntime:
                 cache=cache,
                 top_k=s.retrieval_top_k,
             )
+
+    def _corpus_version(self) -> int:
+        """Indexed-chunk count: changes whenever new documents are indexed (re-ingesting the
+        same document keeps its point IDs, so identical content keeps the cache valid)."""
+        client = default_qdrant_client(self.settings)
+        try:
+            return client.count(collection_name=self.settings.qdrant_collection, exact=True).count
+        except Exception:  # noqa: BLE001 - no collection yet: empty corpus
+            return 0
 
     def warm_up(self) -> None:
         started = time.perf_counter()

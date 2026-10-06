@@ -97,6 +97,13 @@ class TestAnswerService:
         events = await collect(service, "Who was promoted?")
         assert events[-1]["stop_reason"] == "max_tokens" and cache.entries == {}
 
+    async def test_refusals_are_not_cached(self):
+        cache = DictCache()
+        service, _, _ = make_service(tokens=("I don't have enough information.",), cache=cache)
+        events = await collect(service, "Who has been promoted to Vice President of Engineering")
+        assert events[-1]["stop_reason"] == "end_turn"  # the model answered...
+        assert events[-1]["answer"] == "I don't have enough information." and cache.entries == {}  # ...not cached
+
     async def test_no_context_never_calls_the_model(self):
         service, prompts, agents = make_service(docs=[])
         events = await collect(service, "Anything?")

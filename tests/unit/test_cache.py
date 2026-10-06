@@ -56,12 +56,21 @@ class SearchableFakeQdrant(FakeQdrantClient):
         for p in kwargs["points"]:
             self.points[p.id] = p
 
+    @staticmethod
+    def _matches(payload, flt) -> bool:
+        for cond in flt.must:
+            value = payload.get(cond.key)
+            if cond.range is not None and not (value is not None and value >= cond.range.gte):
+                return False
+            if cond.match is not None and value != cond.match.value:
+                return False
+        return True
+
     def search(self, collection_name, query_vector, limit, score_threshold, query_filter):
-        min_created = query_filter.must[0].range.gte
         hits = []
         for p in self.points.values():
-            score = sum(x * y for x, y in zip(p.vector, query_vector))
-            if score >= score_threshold and p.payload["created_at"] >= min_created:
+            score = sum(x * y for x, y in zip(p.vector, query_vector, strict=True))
+            if score >= score_threshold and self._matches(p.payload, query_filter):
                 hits.append(SimpleNamespace(payload=p.payload, score=score))
         return sorted(hits, key=lambda h: -h.score)[:limit]
 
@@ -75,9 +84,20 @@ def clock():
 
 
 @pytest.fixture
-def cache(clock):
+def corpus():
+    return SimpleNamespace(version=12)
+
+
+@pytest.fixture
+def cache(clock, corpus):
     return QdrantSemanticCache(
-        SearchableFakeQdrant(), "answer_cache", vector_size=2, threshold=0.9, ttl_s=60, clock=lambda: clock.now
+        SearchableFakeQdrant(),
+        "answer_cache",
+        vector_size=2,
+        threshold=0.9,
+        ttl_s=60,
+        clock=lambda: clock.now,
+        corpus_version=lambda: corpus.version,
     )
 
 
@@ -119,3 +139,10 @@ def test_collection_created_once(cache):
     cache.store("Q?", [1.0, 0.0], ANSWER)
     cache.lookup("Q?", [1.0, 0.0])
     assert len(cache._client.created) == 1
+
+
+def test_indexing_new_documents_invalidates_earlier_answers(cache, corpus):
+    cache.store("What changed in the organisation?", [1.0, 0.0], ANSWER)
+    assert cache.lookup("What changed in the organisation?", [1.0, 0.0]) is not None
+    corpus.version = 14  # a new document was indexed
+    assert cache.lookup("What changed in the organisation?", [1.0, 0.0]) is None

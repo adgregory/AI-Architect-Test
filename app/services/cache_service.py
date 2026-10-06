@@ -20,6 +20,7 @@ from qdrant_client.models import (
     Distance,
     FieldCondition,
     Filter,
+    MatchValue,
     PointStruct,
     Range,
     VectorParams,
@@ -252,9 +253,11 @@ _SENTENCE_STARTERS = frozenset(
 class QdrantSemanticCache:
     """Answer cache in its own Qdrant collection.
 
-    Hit = top-1 cosine >= threshold AND QuestionGuard agrees. Entries carry `created_at`;
-    lookups ignore entries older than the TTL (Qdrant has no native TTL) and `purge_expired`
-    deletes them.
+    Hit = cosine >= threshold AND QuestionGuard agrees AND the entry was stored against the
+    current corpus. Entries carry `created_at` (lookups ignore entries older than the TTL — Qdrant
+    has no native TTL — and `purge_expired` deletes them) and `corpus_version`: an answer is only
+    valid for the documents that existed when it was produced, so indexing new documents
+    invalidates every earlier answer.
     """
 
     def __init__(
@@ -266,6 +269,7 @@ class QdrantSemanticCache:
         ttl_s: int,
         guard: QuestionGuard | None = None,
         clock: Callable[[], float] = time.time,
+        corpus_version: Callable[[], int] = lambda: 0,
     ):
         self._client = client
         self._collection = collection
@@ -274,6 +278,7 @@ class QdrantSemanticCache:
         self._ttl_s = ttl_s
         self._guard = guard or QuestionGuard()
         self._clock = clock
+        self._corpus_version = corpus_version
         self._ready = False
 
     def _ensure(self) -> None:
@@ -287,8 +292,13 @@ class QdrantSemanticCache:
             )
         self._ready = True
 
-    def _fresh(self) -> Filter:
-        return Filter(must=[FieldCondition(key="created_at", range=Range(gte=self._clock() - self._ttl_s))])
+    def _valid(self, version: int) -> Filter:
+        return Filter(
+            must=[
+                FieldCondition(key="created_at", range=Range(gte=self._clock() - self._ttl_s)),
+                FieldCondition(key="corpus_version", match=MatchValue(value=version)),
+            ]
+        )
 
     def lookup(self, question: str, vector: list[float]) -> CachedAnswer | None:
         self._ensure()
@@ -297,7 +307,7 @@ class QdrantSemanticCache:
             query_vector=vector,
             limit=3,
             score_threshold=self._threshold,
-            query_filter=self._fresh(),
+            query_filter=self._valid(self._corpus_version()),
         )
         for hit in hits:  # best first; the guard may reject the top one
             if self._guard.same_meaning(question, hit.payload["question"]):
@@ -313,7 +323,12 @@ class QdrantSemanticCache:
                 PointStruct(
                     id=point_id,
                     vector=vector,
-                    payload={"question": question, "answer": answer, "created_at": self._clock()},
+                    payload={
+                        "question": question,
+                        "answer": answer,
+                        "created_at": self._clock(),
+                        "corpus_version": self._corpus_version(),
+                    },
                 )
             ],
         )
