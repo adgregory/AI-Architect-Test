@@ -1,7 +1,9 @@
 # Design — PDF Name Extractor & RAG API
 
 Detail lives in [ADR 0001](docs/adr/0001-architecture.md), the spikes ([`spikes/`](spikes/)) and
-[`infra/`](infra/README.md). This page is the summary.
+[`infra/`](infra/README.md). This page is the summary; the
+[overview slides (PDF)](docs/presentation/pdf-name-extractor-overview.pdf) show the benchmarks,
+technologies, patterns and the proposed AWS architecture.
 
 ## 1. Components
 
