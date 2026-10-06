@@ -92,7 +92,8 @@ child: IndexDocumentWorkflow → chunk_and_embed(cpu) → upsert_chunks(io)
 ```
 
 `GET /api/jobs/{id}/events` pushes the result over SSE when the `NOTIFY` arrives. Activities pass
-storage keys, never document contents.
+storage keys, never document contents. Sequence diagrams for this path (submit and SSE, the
+workflow across queues, the reconciler, background indexing): [docs/async-jobs.md](docs/async-jobs.md).
 
 ## 3. Technology choices (each measured in a spike before it was adopted)
 

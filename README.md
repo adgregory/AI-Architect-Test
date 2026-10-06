@@ -5,7 +5,8 @@
 ## Running the solution
 
 > Submission notes: **[overview slides (PDF)](docs/presentation/pdf-name-extractor-overview.pdf)** ·
-> [DESIGN.md](DESIGN.md) (design) · [TASK.md](TASK.md#findings-report) (findings tables) ·
+> [DESIGN.md](DESIGN.md) (design) · [async jobs](docs/async-jobs.md) (sequence diagrams) ·
+> [TASK.md](TASK.md#findings-report) (findings tables) ·
 > [docs/adr/0001-architecture.md](docs/adr/0001-architecture.md) (decisions) · [spikes/](spikes/) (model benchmarks).
 
 **Requirements:** Docker with Compose v2. No cloud account or API key is needed.
