@@ -1,0 +1,15 @@
+[project]
+name = "ocr-spike-paddle"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "paddlepaddle>=3.0",
+    "paddleocr>=3.0",
+    "pillow",
+    "numpy",
+    "jiwer",
+    "psutil",
+]
+
+[tool.uv]
+package = false
