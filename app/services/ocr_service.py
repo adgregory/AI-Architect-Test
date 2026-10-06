@@ -1,55 +1,74 @@
+"""OCR: text and word bounding boxes from scanned PDFs."""
+
+from __future__ import annotations
+
+import io
+from typing import Protocol, runtime_checkable
+
 import fitz
 import pytesseract
 from PIL import Image
-import io
 
-OCR_DPI = 150
+from app.core.config import get_settings
+
 PDF_POINTS_PER_INCH = 72
 
 
-def extract_text_from_pdf(pdf_path: str) -> str:
-    """Extract text from a scanned PDF using OCR."""
-    doc = fitz.open(pdf_path)
-    try:
-        full_text = ""
-        for page_num in range(len(doc)):
-            page = doc[page_num]
-            pix = page.get_pixmap(dpi=OCR_DPI)
-            img = Image.open(io.BytesIO(pix.tobytes("png")))
-            text = pytesseract.image_to_string(img)
-            full_text += text + "\n"
-        return full_text
-    finally:
-        doc.close()
+@runtime_checkable
+class OCRService(Protocol):
+    """Swappable OCR engine. Boxes are returned in PDF coordinate space (points)."""
+
+    def extract_text(self, pdf_path: str) -> str: ...
+
+    def get_word_boxes(self, pdf_path: str) -> list[dict]: ...
 
 
-def get_word_bounding_boxes(pdf_path: str) -> list[dict]:
-    """Get bounding boxes for all words in the PDF, in PDF coordinate space (points)."""
-    doc = fitz.open(pdf_path)
-    scale = PDF_POINTS_PER_INCH / OCR_DPI
-    results = []
-    try:
-        for page_num in range(len(doc)):
-            page = doc[page_num]
-            pix = page.get_pixmap(dpi=OCR_DPI)
-            img = Image.open(io.BytesIO(pix.tobytes("png")))
+class TesseractOCRService:
+    """Tesseract (LSTM) via pytesseract, rendering pages with PyMuPDF."""
 
-            ocr_data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+    def __init__(self, dpi: int = 150):
+        self._dpi = dpi
 
-            for i in range(len(ocr_data["text"])):
-                word = ocr_data["text"][i].strip()
+    def _page_images(self, pdf_path: str):
+        """Yield (page_number, PIL image) for every page; always closes the document."""
+        doc = fitz.open(pdf_path)
+        try:
+            for page_num in range(len(doc)):
+                pix = doc[page_num].get_pixmap(dpi=self._dpi)
+                yield page_num, Image.open(io.BytesIO(pix.tobytes("png")))
+        finally:
+            doc.close()
+
+    def extract_text(self, pdf_path: str) -> str:
+        return "".join(
+            pytesseract.image_to_string(img) + "\n" for _, img in self._page_images(pdf_path)
+        )
+
+    def get_word_boxes(self, pdf_path: str) -> list[dict]:
+        scale = PDF_POINTS_PER_INCH / self._dpi
+        results = []
+        for page_num, img in self._page_images(pdf_path):
+            data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+            for i, raw in enumerate(data["text"]):
+                word = raw.strip()
                 if not word:
                     continue
-
                 results.append({
                     "word": word,
                     "page": page_num,
-                    "x": ocr_data["left"][i] * scale,
-                    "y": ocr_data["top"][i] * scale,
-                    "width": ocr_data["width"][i] * scale,
-                    "height": ocr_data["height"][i] * scale,
+                    "x": data["left"][i] * scale,
+                    "y": data["top"][i] * scale,
+                    "width": data["width"][i] * scale,
+                    "height": data["height"][i] * scale,
                 })
-    finally:
-        doc.close()
+        return results
 
-    return results
+
+# --------------------------------------------------------------------------- #
+# Functional API (backwards compatible): module-level entry points backed by
+# the reference Tesseract implementation.
+# --------------------------------------------------------------------------- #
+_default_ocr = TesseractOCRService(dpi=get_settings().ocr_dpi)
+
+extract_text_from_pdf = _default_ocr.extract_text
+get_word_bounding_boxes = _default_ocr.get_word_boxes

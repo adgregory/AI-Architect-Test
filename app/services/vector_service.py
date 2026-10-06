@@ -1,75 +1,100 @@
+"""Vector store for document chunks."""
+
+from __future__ import annotations
+
 import uuid
+from typing import Any, Protocol, runtime_checkable
 
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, PointStruct, VectorParams
 
+from app.core.config import get_settings
+from app.core.factories import default_qdrant_client
+from app.core.lazy import Lazy
 from app.services.embedding_service import get_embeddings
 
-
-client = QdrantClient(host="localhost", port=6333)
-
-COLLECTION_NAME = "pdf_documents"
-VECTOR_SIZE = 384
+_settings = get_settings()
+COLLECTION_NAME = _settings.qdrant_collection
+VECTOR_SIZE = _settings.embedding_dim
 
 
-def init_collection():
-    """Create the vector collection if it doesn't exist."""
-    collections = client.get_collections().collections
-    existing = [c.name for c in collections]
+@runtime_checkable
+class VectorStore(Protocol):
+    """Swappable vector backend (Qdrant today; hybrid or other engines later)."""
 
-    if COLLECTION_NAME not in existing:
-        client.create_collection(
-            collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(
-                size=VECTOR_SIZE,
-                distance=Distance.COSINE,
-            ),
-        )
+    def ensure_collection(self) -> None: ...
+
+    def upsert(
+        self, texts: list[str], vectors: list[list[float]], document_id: str | None = None,
+        metadata: list[dict] | None = None,
+    ) -> str: ...
+
+    def search(self, query_vector: list[float], top_k: int = 5) -> list[dict]: ...
 
 
-def store_document_chunks(
-    chunks: list[str], metadata: list[dict] = None, document_id: str | None = None
-) -> str:
-    """Store text chunks with their embeddings in the vector database.
+class QdrantVectorStore:
+    """Qdrant collection with cosine distance. The client is injected."""
 
-    Point IDs are UUID5(document_id, chunk index): unique across documents, and
-    stable for a document, so re-ingesting it overwrites its own points instead
-    of duplicating them. Returns the document ID.
-    """
-    document_id = document_id or str(uuid.uuid4())
-    embeddings = get_embeddings(chunks)
+    def __init__(self, client: Any, collection: str = COLLECTION_NAME, vector_size: int = VECTOR_SIZE,
+                 score_threshold: float = _settings.retrieval_score_threshold):
+        self._client = client
+        self._collection = collection
+        self._vector_size = vector_size
+        self._score_threshold = score_threshold
 
-    points = []
-    for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-        payload = {"text": chunk, "document_id": document_id, "chunk_index": i}
-        if metadata and i < len(metadata):
-            payload.update(metadata[i])
-
-        points.append(
-            PointStruct(
-                id=str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{i}")),
-                vector=embedding,
-                payload=payload,
+    def ensure_collection(self) -> None:
+        existing = {c.name for c in self._client.get_collections().collections}
+        if self._collection not in existing:
+            self._client.create_collection(
+                collection_name=self._collection,
+                vectors_config=VectorParams(size=self._vector_size, distance=Distance.COSINE),
             )
+
+    def upsert(self, texts, vectors, document_id=None, metadata=None) -> str:
+        """Point IDs are UUID5(document_id, chunk index): unique across documents and stable
+        for a document, so re-ingesting it overwrites its own points instead of duplicating."""
+        document_id = document_id or str(uuid.uuid4())
+        points = []
+        for i, (text, vector) in enumerate(zip(texts, vectors)):
+            payload = {"text": text, "document_id": document_id, "chunk_index": i}
+            if metadata and i < len(metadata):
+                payload.update(metadata[i])
+            points.append(PointStruct(
+                id=str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{i}")), vector=vector, payload=payload,
+            ))
+        self._client.upsert(collection_name=self._collection, points=points)
+        return document_id
+
+    def search(self, query_vector: list[float], top_k: int = 5) -> list[dict]:
+        hits = self._client.search(
+            collection_name=self._collection,
+            query_vector=query_vector,
+            limit=top_k,
+            score_threshold=self._score_threshold,
         )
-
-    client.upsert(collection_name=COLLECTION_NAME, points=points)
-    return document_id
+        return [{"text": hit.payload["text"], "score": hit.score} for hit in hits]
 
 
-def search_similar(query_embedding: list[float], top_k: int = 5) -> list[dict]:
-    """Search for similar text chunks."""
-    results = client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=query_embedding,
-        limit=top_k,
-        score_threshold=0.5,
-    )
+# --------------------------------------------------------------------------- #
+# Functional API (backwards compatible). `client` is a lazy proxy (no connection
+# at import); the adapter resolves `client` and `get_embeddings` at call time.
+# --------------------------------------------------------------------------- #
+client = Lazy(default_qdrant_client)
 
-    return [
-        {
-            "text": hit.payload["text"],
-            "score": hit.score,
-        }
-        for hit in results
-    ]
+
+class _ModuleVectorStore:
+    def init_collection(self) -> None:
+        QdrantVectorStore(client).ensure_collection()
+
+    def store_document_chunks(
+        self, chunks: list[str], metadata: list[dict] | None = None, document_id: str | None = None
+    ) -> str:
+        return QdrantVectorStore(client).upsert(chunks, get_embeddings(chunks), document_id, metadata)
+
+    def search_similar(self, query_embedding: list[float], top_k: int = 5) -> list[dict]:
+        return QdrantVectorStore(client).search(query_embedding, top_k)
+
+
+_module_store = _ModuleVectorStore()
+init_collection = _module_store.init_collection
+store_document_chunks = _module_store.store_document_chunks
+search_similar = _module_store.search_similar
