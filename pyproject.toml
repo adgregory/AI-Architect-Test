@@ -19,6 +19,7 @@ dependencies = [
     "pydantic==2.9.0",
     # spaCy 3.7.x (thinc 8.2) is compiled against the NumPy 1.x ABI
     "numpy<2",
+    "pydantic-settings>=2.5,<3",
 ]
 
 [dependency-groups]
