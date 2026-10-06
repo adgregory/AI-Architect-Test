@@ -87,15 +87,13 @@ services:
   agent:
     build:
       context: .
-      args:
-        STACK: agent
-    image: pdf-name-extractor:agent
-    command: ["python", "-m", "app.agent.server"]
+      dockerfile: Dockerfile.agent
+    image: pdf-name-extractor-agent
     environment:
       QDRANT_HOST: qdrant
       LOG_JSON: "true"
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}   # your GCP project id (agent needs it for Vertex)
       GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-global}
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/adc.json
@@ -105,13 +103,7 @@ services:
     ports: ["${AGENT_PORT:-18080}:8080"]
     depends_on:
       qdrant: {condition: service_started}
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(urllib.request.urlopen('http://127.0.0.1:8080/ping', timeout=2).status != 200)"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
+    restart: unless-stopped   # healthcheck (/ping) is defined in Dockerfile.agent
 
   worker-io:
     <<: *app
