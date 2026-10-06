@@ -24,13 +24,10 @@ text for retrieval, and answers questions with RAG. Constraints:
 | Container | Responsibility |
 |-----------|----------------|
 | `api` | FastAPI backend: validation, sync extraction, job API, SSE, relays agent stream |
-| `debezium` | Debezium Server: CDC on the `outbox` table → Kinesis (outbox event router) |
-| `localstack` | Local Kinesis stream + Lambda (event source mapping) — AWS parity |
-| `dispatcher` (Lambda) | Consumes the Kinesis stream and starts Temporal workflows |
 | `worker-cpu` | Temporal worker on the `cpu` queue: OCR, NER, box location, fuzzy matching, embedding — no DB connections |
 | `worker-io` | Temporal worker on the `io` queue: job status/result writes, `NOTIFY`, Qdrant upserts — sole owner of the worker-side DB pool |
 | `agent` | Strands agent, AgentCore runtime contract (Gemini on Vertex locally; Bedrock on AgentCore in AWS) |
-| `postgres` | `jobs`, `outbox`, Temporal persistence |
+| `postgres` | `jobs`, Temporal persistence |
 | `temporal`, `temporal-ui` | Workflow orchestration |
 | `qdrant` | Document-chunk vectors and the semantic answer cache |
 
@@ -43,25 +40,29 @@ text for retrieval, and answers questions with RAG. Constraints:
 
 Sync and async extraction call the same service classes; only the entry point differs.
 
-### Async extraction: transactional outbox + Temporal
+### Async extraction: direct orchestration (implemented) — outbox (production target)
 
-1. `POST /api/jobs` validates the upload, stores the PDF, and in **one transaction**
-   inserts the `jobs` row and an `outbox` row, then returns `202`.
-2. **Debezium Server** reads the WAL through a logical replication slot and a publication
-   on `outbox`, applies the outbox event router, and publishes each event to a **Kinesis**
-   stream (partition key `job_id`). Locally Kinesis is LocalStack; in AWS it is Kinesis
-   Data Streams. Kafka is not used.
-3. The **dispatcher Lambda** (Kinesis event source mapping) starts `ExtractNamesWorkflow`
-   with `workflow_id = job_id`. Delivery is at-least-once end to end; Temporal's workflow-ID
-   uniqueness makes duplicates harmless (`WorkflowAlreadyStarted` is treated as success).
-   Failures use partial batch responses (`ReportBatchItemFailures`), bisect-on-error,
-   bounded retry age and an on-failure destination (SQS DLQ + alarm). Locally the same
-   Lambda runs in LocalStack, so the dispatch code path is identical in both environments.
-   - **WAL retention risk:** a stalled Debezium keeps the replication slot's WAL and can
-     fill the database disk. Mitigations: `max_slot_wal_keep_size`, alarms on slot lag and
-     disk, Debezium offsets in durable storage (not an ephemeral task file).
-4. The workflow's last activity writes the result to `jobs.result` (jsonb), sets
-   the status, and issues `NOTIFY job_done`; open SSE connections push the result.
+**Implemented (local / assessment scope):**
+
+1. `POST /api/jobs` validates the upload, stores the PDF, inserts the `jobs` row
+   (`status = queued`), **starts `ExtractNamesWorkflow` directly** with `workflow_id = job_id`,
+   and returns `202 {job_id}`.
+2. If the start call fails (Temporal unreachable), the job stays `queued`. A **reconciler**
+   (a Temporal schedule) periodically re-starts `queued` jobs older than a threshold; the
+   workflow-ID uniqueness makes re-starts idempotent. This covers the "row written, workflow
+   never started" gap without extra infrastructure.
+3. The workflow's last activity writes the result to `jobs.result` (jsonb), sets the status,
+   and issues `NOTIFY job_done`; open SSE connections push the result.
+
+**Production target (modelled in `infra/` Pulumi, not run locally):** transactional outbox —
+the job row and an `outbox` row in one transaction; **Debezium Server** reads the outbox via
+logical replication and publishes to **Kinesis**; a **dispatcher Lambda** (partial batch
+failures, bisect-on-error, SQS DLQ + alarm) starts the workflow idempotently. It removes the
+dual-write window entirely and lets other consumers subscribe to job events. Its main risk is
+WAL retention when Debezium stalls (mitigations: `max_slot_wal_keep_size`, slot-lag and disk
+alarms, durable Debezium offsets). Deferred from the local build because it adds four
+components whose guarantee the assessment doesn't exercise; the reconciler gives most of the
+safety at a fraction of the cost.
 
 ### Temporal workflow
 
@@ -115,9 +116,9 @@ ExtractNamesWorkflow(job_id)
 ### Data and storage
 
 - **Postgres:** `jobs` (status, timestamps, owner, retry count as columns; result as
-  `jsonb`), `outbox`, and Temporal's persistence — one database engine.
-  Logical replication is enabled for Debezium (`wal_level=logical` locally; an RDS
-  parameter group with `rds.logical_replication=1` in AWS).
+  `jsonb`) and Temporal's persistence — one database engine (plus `outbox` in the production target).
+  In AWS (outbox target) logical replication is enabled for Debezium via an RDS parameter
+  group (`rds.logical_replication=1`).
 - **Qdrant:** `chunks` collection (cosine) and `answer_cache` collection. The cache stores
   `created_at` in the payload; lookups filter expired entries and a periodic job deletes
   them (Qdrant has no TTL). Hybrid (sparse + dense with fusion) is available when needed.
@@ -143,9 +144,9 @@ gives the same predictability with concurrency.
 | Resource | Approach |
 |----------|----------|
 | Postgres pools | Async pool per process (`psycopg_pool.AsyncConnectionPool` or SQLAlchemy async engine) in `api` and the `io` worker only, with `min_size`/`max_size`, acquire `timeout`, `max_waiting`, `max_lifetime`, `max_idle` and a reset/health check on checkout — all from config |
-| Postgres budget | `api` replicas × (`api` pool + 1 `LISTEN`) + `io` replicas × `io` pool + 1 Debezium replication connection + Temporal server `maxConns` + admin headroom < `max_connections`; independent of `cpu` worker count |
+| Postgres budget | `api` replicas × (`api` pool + 1 `LISTEN`) + `io` replicas × `io` pool (+ 1 Debezium replication connection in the outbox target) + Temporal server `maxConns` + admin headroom < `max_connections`; independent of `cpu` worker count |
 | Query hygiene | `statement_timeout` and `idle_in_transaction_session_timeout` on the app role; connections acquired late and released early — never held across OCR, NER or LLM calls |
-| Backpressure | Pool exhaustion → fast `503` + `Retry-After` from the API (bounded `max_waiting`); async jobs absorb bursts in the outbox and Temporal queues |
+| Backpressure | Pool exhaustion → fast `503` + `Retry-After` from the API (bounded `max_waiting`); async jobs absorb bursts in Temporal's task queues |
 | Observability | Pool stats (in use, idle, waiting, acquire wait, timeouts) exported with the service metrics |
 | `LISTEN/NOTIFY` | `api` only (job-completion SSE): one dedicated long-lived connection per process, outside the pool (LISTEN is session-scoped) |
 | PgBouncer | Added in transaction mode when replica count makes the budget tight; `LISTEN` connections bypass it |
