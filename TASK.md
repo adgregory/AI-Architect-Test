@@ -112,8 +112,10 @@ As part of your submission, fill in the tables below documenting every bug you f
 
 ### Bugs Found & Fixed
 
-Baseline: 30 failed / 19 passed before any app change ([docs/baseline-test-failures.md](docs/baseline-test-failures.md)).
-Now: all 49 provided tests pass, plus 156 added tests (205 total).
+Baseline ([docs/baseline-test-failures.md](docs/baseline-test-failures.md)): 30 of the 49 provided tests failed before any
+app change: 17 from 11 bugs (rows 1–5, 7–10), 5 from missing features (rows 11–12) and 8 from architecture checks
+(Architecture table, rows 1–2). Rows 6, 13 and 14 were found outside the provided tests.
+Now: all 49 pass, plus 156 added tests (205 total).
 
 | # | File | Bug Description | How You Fixed It |
 |---|------|-----------------|------------------|
