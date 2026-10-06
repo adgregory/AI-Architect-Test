@@ -36,15 +36,18 @@ class OpenAICompatibleChatClient:
     """Chat Completions over HTTP — works with OpenAI and any OpenAI-compatible endpoint."""
 
     def __init__(self, api_key: str | None, base_url: str, model: str, timeout_s: float):
-        self._api_key = api_key
         self._url = f"{base_url.rstrip('/')}/chat/completions"
         self._model = model
         self._timeout_s = timeout_s
+        # No key, no header (local OpenAI-compatible servers often need none).
+        self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
     def complete(self, prompt: str) -> str:
+        # Module-level httpx.post: the provided tests patch it. The agent service is the
+        # production answering path; this client is the in-process reference implementation.
         response = httpx.post(
             self._url,
-            headers={"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"},
+            headers=self._headers,
             json={"model": self._model, "messages": [{"role": "user", "content": prompt}]},
             timeout=self._timeout_s,
         )
