@@ -15,15 +15,39 @@ tasks:
 
   # ------------------------------------------------------------------ setup
   setup:
-    desc: Install all dependencies (both stacks + dev tools) and prepare models
+    desc: Install all dependencies (both stacks + dev tools), git hooks, and prepare models
     cmds:
       - uv sync --all-extras
+      - task: hooks:install
       - task: models:prepare
 
   models:prepare:
     desc: Download/export the models the configured engines need into MODELS_DIR
     cmds:
       - uv run python scripts/prepare_models.py
+
+  # ------------------------------------------------------------------ quality
+  hooks:install:
+    desc: Install the pre-commit and pre-push git hooks
+    cmds:
+      - uv run pre-commit install
+      - uv run pre-commit install --hook-type pre-push
+
+  lint:
+    desc: All pre-commit hooks on every file (ruff, mypy, uv lock --check, detect-secrets, ...)
+    cmds:
+      - uv run pre-commit run --all-files
+
+  format:
+    desc: Format and auto-fix with ruff
+    cmds:
+      - uv run ruff check --fix --force-exclude app tests scripts migrations
+      - uv run ruff format --force-exclude app tests scripts migrations
+
+  typecheck:
+    desc: mypy on the app package
+    cmds:
+      - uv run mypy
 
   # ------------------------------------------------------------------ tests
   test:
