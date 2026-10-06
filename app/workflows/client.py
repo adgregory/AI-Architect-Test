@@ -19,8 +19,8 @@ from temporalio.exceptions import WorkflowAlreadyStartedError
 
 from app.core.config import Settings
 from app.core.logging import get_logger
-from app.workflows.models import ExtractRequest, ReconcileRequest, TaskQueues
-from app.workflows.workflows import ExtractNamesWorkflow, ReconcileQueuedJobsWorkflow
+from app.workflows.models import ExtractRequest, IndexRequest, ReconcileRequest, TaskQueues
+from app.workflows.workflows import ExtractNamesWorkflow, IndexDocumentWorkflow, ReconcileQueuedJobsWorkflow
 
 log = get_logger(__name__)
 RECONCILE_SCHEDULE_ID = "reconcile-queued-jobs"
@@ -37,6 +37,8 @@ async def connect(settings: Settings) -> Client:
 @runtime_checkable
 class JobOrchestrator(Protocol):
     async def start_extraction(self, job_id: str, filename: str, query_names: list[dict]) -> None: ...
+
+    async def start_indexing(self, document_id: str, filename: str, page_count: int) -> None: ...
 
 
 class TemporalJobOrchestrator:
@@ -57,6 +59,18 @@ class TemporalJobOrchestrator:
         except WorkflowAlreadyStartedError:
             log.info("workflow.already_started", job_id=job_id)
 
+    async def start_indexing(self, document_id: str, filename: str, page_count: int) -> None:
+        """Index pages already stored under jobs/<document_id>/pages (same workflow as async jobs)."""
+        try:
+            await self._client.start_workflow(
+                IndexDocumentWorkflow.run,
+                IndexRequest(document_id, page_count, filename, self._queues, document_id=document_id),
+                id=f"index-{document_id}",
+                task_queue=self._queues.workflows,
+            )
+        except WorkflowAlreadyStartedError:
+            log.info("indexing.already_running", document_id=document_id)
+
 
 class LazyTemporalOrchestrator:
     """Connects on first use and reconnects after failures, so the API starts (and keeps
@@ -66,13 +80,23 @@ class LazyTemporalOrchestrator:
         self._settings = settings
         self._delegate: TemporalJobOrchestrator | None = None
 
-    async def start_extraction(self, job_id: str, filename: str, query_names: list[dict]) -> None:
+    async def _connected(self) -> TemporalJobOrchestrator:
         if self._delegate is None:
             self._delegate = TemporalJobOrchestrator(await connect(self._settings), self._settings)
+        return self._delegate
+
+    async def start_extraction(self, job_id: str, filename: str, query_names: list[dict]) -> None:
         try:
-            await self._delegate.start_extraction(job_id, filename, query_names)
+            await (await self._connected()).start_extraction(job_id, filename, query_names)
         except Exception:
             self._delegate = None  # reconnect next time
+            raise
+
+    async def start_indexing(self, document_id: str, filename: str, page_count: int) -> None:
+        try:
+            await (await self._connected()).start_indexing(document_id, filename, page_count)
+        except Exception:
+            self._delegate = None
             raise
 
 

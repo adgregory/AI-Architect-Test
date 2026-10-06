@@ -1,20 +1,19 @@
-import os
-import tempfile
+from dataclasses import asdict
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from pydantic import TypeAdapter, ValidationError
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
 
-from app.api.deps import get_app_settings, get_extraction_session
+from app.api.deps import get_app_settings, get_container, get_extraction_session
+from app.api.uploads import parse_names, read_pdf_upload, temporary_pdf
 from app.core.config import Settings
+from app.core.container import Container
 from app.core.logging import get_logger
-from app.models.schemas import ExtractionResponse, NamePair
+from app.models.schemas import ExtractionResponse
 from app.services.extraction_service import ExtractionResultBuilder, ExtractionSession
+from app.services.ocr_service import OCRResult
+from app.storage import JobArtifacts, document_id_for
 
 router = APIRouter()
 log = get_logger(__name__)
-
-PDF_SIGNATURE = b"%PDF-"
-_NAME_PAIRS = TypeAdapter(list[NamePair])
 
 
 # --------------------------------------------------------------------------- #
@@ -34,50 +33,45 @@ def fuzzy_match_names(extracted: list[str], query: list[dict], session: Extracti
     return session.match(extracted, query)
 
 
-def read_pdf_upload(pdf_file: UploadFile, max_bytes: int) -> bytes:
-    """Reject anything that is not a PDF (filename and file signature) or is too large."""
-    filename = (pdf_file.filename or "").lower()
-    content = pdf_file.file.read(max_bytes + 1)
-    if len(content) > max_bytes:
-        raise HTTPException(
-            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"PDF exceeds the {max_bytes // 2**20} MB upload limit"
-        )
-    if not filename.endswith(".pdf") or not content.startswith(PDF_SIGNATURE):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Uploaded file must be a PDF document")
-    return content
-
-
-def _parse_names(names: str) -> list[NamePair]:
+async def index_extracted_document(container: Container, document_id: str, filename: str, ocr: OCRResult) -> None:
+    """After the response: store the OCR result and start the same indexing workflow the async
+    jobs use, so documents processed here are also answerable by /api/ask. Best effort — a
+    failure here never affects the extraction response."""
     try:
-        return _NAME_PAIRS.validate_json(names)
-    except ValidationError as exc:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            "names must be a JSON list of {first_name, last_name} objects",
-        ) from exc
+        if container.orchestrator is None:
+            raise RuntimeError("orchestrator not configured")
+        art = JobArtifacts(container.storage, document_id)
+        art.put_json(art.page(0), asdict(ocr))  # the whole document as one page: indexing needs text only
+        await container.orchestrator.start_indexing(document_id, filename, page_count=1)
+        log.info("extract.index_scheduled", document_id=document_id)
+    except Exception as exc:  # noqa: BLE001 - background, best effort
+        log.warning("extract.index_failed", document_id=document_id, error=str(exc))
 
 
 @router.post("/extract", response_model=ExtractionResponse)
 def extract_names_from_pdf(
+    background: BackgroundTasks,
     pdf_file: UploadFile = File(...),
     names: str = Form(...),
     session: ExtractionSession = Depends(get_extraction_session),
     settings: Settings = Depends(get_app_settings),
+    container: Container = Depends(get_container),
 ):
     """Extract person names and their bounding boxes from a scanned PDF and fuzzy-match
-    them (≥ 90%) against the requested name pairs."""
-    content = read_pdf_upload(pdf_file, settings.max_upload_mb * 2**20)
-    query_names = _parse_names(names)
+    them (≥ 90%) against the requested name pairs. The document is also indexed for
+    /api/ask in the background, after the response is sent."""
+    content = read_pdf_upload(pdf_file, settings.max_upload_bytes)
+    query_names = parse_names(names)
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(content)
-
-    try:
-        text = extract_text_from_pdf(tmp.name, session)
-        name_boxes = find_name_bounding_boxes(tmp.name, text, session)
+    with temporary_pdf(content) as path:
+        text = extract_text_from_pdf(path, session)
+        name_boxes = find_name_bounding_boxes(path, text, session)
         matches = fuzzy_match_names([nb["name"] for nb in name_boxes], [q.model_dump() for q in query_names], session)
-        log.info("extract.done", names=len(name_boxes), matches=len(matches), query_names=len(query_names))
+        ocr = session.cached(path)
 
-        return ExtractionResultBuilder.build(name_boxes, matches)
-    finally:
-        os.unlink(tmp.name)
+    log.info("extract.done", names=len(name_boxes), matches=len(matches), query_names=len(query_names))
+    if settings.index_on_extract and container.orchestrator is not None and ocr is not None:
+        background.add_task(
+            index_extracted_document, container, document_id_for(content), pdf_file.filename or "document.pdf", ocr
+        )
+    return ExtractionResultBuilder.build(name_boxes, matches)

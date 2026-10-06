@@ -178,11 +178,17 @@ class FakeOrchestrator:
     def __init__(self, fail: bool = False):
         self.fail = fail
         self.started: list[tuple[str, str, list[dict]]] = []
+        self.indexing: list[tuple[str, str, int]] = []
 
     async def start_extraction(self, job_id: str, filename: str, query_names: list[dict]) -> None:
         if self.fail:
             raise ConnectionError("temporal unavailable")
         self.started.append((job_id, filename, query_names))
+
+    async def start_indexing(self, document_id: str, filename: str, page_count: int) -> None:
+        if self.fail:
+            raise ConnectionError("temporal unavailable")
+        self.indexing.append((document_id, filename, page_count))
 
 
 def word(text: str, page: int, x: float, y: float, w: float = 30.0, h: float = 10.0) -> dict:

@@ -15,6 +15,7 @@ from app.main import app
 from app.services.bbox_service import ConsecutiveWordNameLocator
 from app.services.extraction_service import ExtractionEngines, ExtractionSession
 from app.services.fuzzy_service import TokenSortNameMatcher
+from app.services.indexing_service import DocumentIndexer
 from app.services.ner_service import PersonNameNormalizer
 from app.services.ocr_service import OCRResult
 from app.services.rag_service import RAGService, TextChunker
@@ -44,6 +45,9 @@ class FakeContainer:
         self.vector_store = InMemoryVectorStore(score_threshold=0.1)
         self.llm = FakeLLM("Richard Hernandez chaired the meeting.")
         self.chunker = TextChunker()
+        self.indexer = DocumentIndexer(self.chunker, self.settings.chunk_size, self.embeddings, self.vector_store)
+        self.orchestrator = None  # no Temporal: /api/extract skips background indexing
+        self.storage = None
         self.rag = RAGService(self.embeddings.embed_query, self.vector_store.search, self.llm, top_k=2)
         self._engines = ExtractionEngines(
             self.ocr,
@@ -157,3 +161,53 @@ class TestOps:
     def test_request_id_is_echoed_or_generated(self, client):
         assert client.get("/health", headers={"x-request-id": "abc123"}).headers["x-request-id"] == "abc123"
         assert len(client.get("/health").headers["x-request-id"]) == 32
+
+
+class TestIndexingFromExtractAndIngest:
+    @pytest.fixture
+    def indexing_container(self, container, tmp_path):
+        from app.storage import LocalFileStorage
+        from tests.fakes import FakeOrchestrator
+
+        container.storage = LocalFileStorage(tmp_path)
+        container.orchestrator = FakeOrchestrator()
+        return container
+
+    def test_extract_schedules_indexing_under_the_content_id(self, client, indexing_container):
+        from app.storage import JobArtifacts, document_id_for
+
+        r = post_extract(client, [])
+        assert r.status_code == 200
+        document_id = document_id_for(PDF)
+        assert indexing_container.orchestrator.indexing == [(document_id, "doc.pdf", 1)]
+        art = JobArtifacts(indexing_container.storage, document_id)
+        assert "Richard Hernandez" in art.get_json(art.page(0))["text"]  # the OCR result, reused (no 2nd OCR)
+        assert len(indexing_container.ocr.reads) == 1
+
+    def test_extract_can_skip_indexing(self, client, indexing_container):
+        indexing_container.settings = Settings(_env_file=None, index_on_extract=False)
+        assert post_extract(client, []).status_code == 200
+        assert indexing_container.orchestrator.indexing == []
+
+    def test_indexing_failure_never_affects_extraction(self, client, indexing_container):
+        indexing_container.orchestrator.fail = True
+        r = post_extract(client, [{"first_name": "Richard", "last_name": "Hernandez"}])
+        assert r.status_code == 200 and r.json()["fuzzy_matches"]
+
+    def test_ingesting_the_same_pdf_twice_does_not_duplicate(self, client, container):
+        first = client.post("/api/ingest", files={"pdf_file": ("a.pdf", PDF, "application/pdf")}).json()
+        points_after_first = len(container.vector_store.points)
+        second = client.post("/api/ingest", files={"pdf_file": ("copy.pdf", PDF, "application/pdf")}).json()
+        assert first["document_id"] == second["document_id"]
+        assert len(container.vector_store.points) == points_after_first
+
+
+def test_temporary_pdf_is_always_removed():
+    import os
+
+    from app.api.uploads import temporary_pdf
+
+    with pytest.raises(RuntimeError), temporary_pdf(b"%PDF-1.7") as path:
+        assert os.path.exists(path)
+        raise RuntimeError("boom")
+    assert not os.path.exists(path)

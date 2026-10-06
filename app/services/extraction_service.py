@@ -80,6 +80,10 @@ class ExtractionSession:
             self._ocr_cache[pdf_path] = self._engines.ocr.read(pdf_path)
         return self._ocr_cache[pdf_path]
 
+    def cached(self, pdf_path: str) -> OCRResult | None:
+        """The OCR result already produced in this session, if any (never triggers OCR)."""
+        return self._ocr_cache.get(pdf_path)
+
     def extract_text(self, pdf_path: str) -> str:
         return self.read(pdf_path).text
 
