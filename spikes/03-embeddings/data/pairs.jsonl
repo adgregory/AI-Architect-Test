@@ -1,0 +1,43 @@
+{"id": "p-01", "grade": 3, "a": "Margaret Thompson is the Chief Executive Officer.", "b": "The company's CEO is Margaret Thompson."}
+{"id": "p-02", "grade": 3, "a": "David Nakamura will manage the project codenamed Atlas.", "b": "Project Atlas is going to be run by David Nakamura."}
+{"id": "p-03", "grade": 3, "a": "Questions should be directed to Patricia Okonkwo in Human Resources.", "b": "Send any questions to Patricia Okonkwo from HR."}
+{"id": "p-04", "grade": 3, "a": "Dr. Sarah Williams will join as Chief Data Scientist.", "b": "Sarah Williams is coming on board as the Chief Data Scientist."}
+{"id": "p-05", "grade": 3, "a": "Richard Hernandez adjourned the meeting at 12:25 PM.", "b": "The meeting was closed by Richard Hernandez at 12:25 in the afternoon."}
+{"id": "p-06", "grade": 3, "a": "Alexander Popov presented the cloud migration timeline.", "b": "The schedule for moving to the cloud was presented by Alexander Popov."}
+{"id": "p-07", "grade": 3, "a": "Dr. Benjamin Foster received the Young Investigator Award from the National Science Foundation.", "b": "The NSF gave Dr. Benjamin Foster its Young Investigator Award."}
+{"id": "p-08", "grade": 3, "a": "The Applied Mathematics Division achieved a breakthrough in optimization algorithms.", "b": "Applied Mathematics made a major advance in optimisation algorithms."}
+{"id": "p-09", "grade": 3, "a": "The Machine Learning Division developed a novel transformer architecture.", "b": "A new transformer architecture was created by the ML division."}
+{"id": "p-10", "grade": 3, "a": "External grants secured total $1.8M.", "b": "The department won 1.8 million dollars in outside grants."}
+{"id": "p-11", "grade": 3, "a": "The board meeting took place in Conference Room A at headquarters.", "b": "Directors met in Conference Room A in the head office."}
+{"id": "p-12", "grade": 3, "a": "Kevin O'Brien is the General Counsel.", "b": "The company's chief lawyer is Kevin O'Brien."}
+{"id": "p-13", "grade": 3, "a": "The Computational Biology Division published groundbreaking work on protein folding.", "b": "Pioneering protein-folding research came out of Computational Biology."}
+{"id": "p-14", "grade": 3, "a": "Robert Chen will oversee all technical operations.", "b": "All technical operations will fall under Robert Chen."}
+{"id": "p-15", "grade": 3, "a": "The memo announces several organizational changes.", "b": "This memorandum informs staff about a number of changes to the organization."}
+{"id": "r-01", "grade": 2, "a": "Robert Chen has been promoted to Vice President of Engineering.", "b": "Engineering has new leadership at the vice-president level."}
+{"id": "r-02", "grade": 2, "a": "Elizabeth Park presented the Q4 financial results.", "b": "The Chief Financial Officer reported on the fourth quarter."}
+{"id": "r-03", "grade": 2, "a": "Dr. Aisha Patel raised concerns about rising operational costs.", "b": "An independent director questioned the company's spending."}
+{"id": "r-04", "grade": 2, "a": "The partnership with NovaTech Solutions needs a legal review.", "b": "External counsel will look at the NovaTech deal."}
+{"id": "r-05", "grade": 2, "a": "Dr. Fatima Al-Rashidi leads the Machine Learning Division.", "b": "Dr. Fatima Al-Rashidi is the PI on a $450K NSF grant."}
+{"id": "r-06", "grade": 2, "a": "The research department has three divisions.", "b": "Computational Biology, Machine Learning and Applied Mathematics are the research divisions."}
+{"id": "r-07", "grade": 2, "a": "Thomas Muller provided an update on the AI initiative.", "b": "The machine learning team has hit significant milestones in its NLP project."}
+{"id": "r-08", "grade": 2, "a": "Prof. Michael O'Sullivan leads the Applied Mathematics Division.", "b": "A DARPA contract worth $750K is led by Prof. Michael O'Sullivan."}
+{"id": "r-09", "grade": 2, "a": "Maria Garcia has been appointed Head of Product Design.", "b": "Product design will be headed by someone from the London UX team."}
+{"id": "r-10", "grade": 2, "a": "The full migration to AWS is expected by Q3 2024.", "b": "The infrastructure team is moving systems to the cloud."}
+{"id": "t-01", "grade": 1, "a": "Robert Chen has been promoted to Vice President of Engineering.", "b": "Maria Garcia has been appointed Head of Product Design."}
+{"id": "t-02", "grade": 1, "a": "Elizabeth Park presented the Q4 financial results.", "b": "Thomas Muller provided an update on the AI initiative."}
+{"id": "t-03", "grade": 1, "a": "The NIH grant is worth $600K.", "b": "The total research budget is $4.2M."}
+{"id": "t-04", "grade": 1, "a": "Anna Kowalski was named to the Forbes 30 Under 30 list.", "b": "Christopher Wong received a best paper award at ICML."}
+{"id": "t-05", "grade": 1, "a": "Carlos Mendoza, VP of Sales, was excused from the meeting.", "b": "Jennifer Liu took the minutes as Secretary."}
+{"id": "t-06", "grade": 1, "a": "The Computational Biology Division is led by Dr. Benjamin Foster.", "b": "The Applied Mathematics Division is led by Prof. Michael O'Sullivan."}
+{"id": "t-07", "grade": 1, "a": "The cloud migration is expected to be completed by Q3 2024.", "b": "A strategic partnership with NovaTech Solutions was proposed."}
+{"id": "t-08", "grade": 1, "a": "Dr. Sarah Williams will report to the CTO.", "b": "Questions should go to Human Resources."}
+{"id": "t-09", "grade": 1, "a": "The next meeting is scheduled for March 18, 2024.", "b": "The previous minutes were from the December 2023 meeting."}
+{"id": "t-10", "grade": 1, "a": "For 2025 the department will hire a visiting scholar.", "b": "Dr. Priya Sharma co-authored a paper with ETH Zurich."}
+{"id": "u-01", "grade": 0, "a": "Robert Chen has been promoted to Vice President of Engineering.", "b": "The recipe calls for two cups of flour and a pinch of salt."}
+{"id": "u-02", "grade": 0, "a": "Revenue increased 12% year-over-year.", "b": "The hiking trail is closed after heavy snowfall."}
+{"id": "u-03", "grade": 0, "a": "Dr. Benjamin Foster received the Young Investigator Award.", "b": "Please water the plants twice a week."}
+{"id": "u-04", "grade": 0, "a": "The meeting was held in Conference Room A.", "b": "The football match ended in a draw."}
+{"id": "u-05", "grade": 0, "a": "Kevin O'Brien agreed to coordinate the legal review.", "b": "Tomatoes grow best in full sun."}
+{"id": "u-06", "grade": 0, "a": "The department produced 23 peer-reviewed publications.", "b": "The train to the airport leaves every fifteen minutes."}
+{"id": "u-07", "grade": 0, "a": "Catherine Dubois will manage the NovaTech partnership.", "b": "My cat sleeps most of the afternoon."}
+{"id": "u-08", "grade": 0, "a": "The cloud migration timeline was presented.", "b": "The museum is free on the first Sunday of the month."}

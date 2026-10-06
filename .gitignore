@@ -167,7 +167,8 @@ cython_debug/
 #.idea/
 
 # Spike artefacts
-spikes/*/data/
+# Generated OCR page images (rebuild with spikes/01-ocr/dataset/build.py)
+spikes/01-ocr/data/
 spikes/*/results/raw/
 spikes/*/results/*-smoke.json
 spikes/*/results/*.log

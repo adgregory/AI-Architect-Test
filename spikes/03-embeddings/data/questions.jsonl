@@ -1,0 +1,30 @@
+{"id": "q-01", "doc": "company_memo", "question": "Who is the new head of engineering?", "evidence": "Robert Chen has been promoted to Vice President of Engineering."}
+{"id": "q-02", "doc": "company_memo", "question": "Which person runs the data science function and who do they answer to?", "evidence": "Dr. Sarah Williams will join as Chief Data Scientist,"}
+{"id": "q-03", "doc": "company_memo", "question": "What did Maria Garcia do before her current role?", "evidence": "She previously led the UX team at our London office."}
+{"id": "q-04", "doc": "company_memo", "question": "Who is in charge of project Atlas?", "evidence": "David Nakamura and his team of senior architects."}
+{"id": "q-05", "doc": "company_memo", "question": "Who should employees contact with questions about the changes?", "evidence": "Please direct any questions to Patricia Okonkwo in Human"}
+{"id": "q-06", "doc": "company_memo", "question": "When was the memo about the restructuring sent?", "evidence": "Date: March 15, 2024"}
+{"id": "q-07", "doc": "meeting_minutes", "question": "Who was not at the board meeting?", "evidence": "Carlos Mendoza, VP of Sales (excused)"}
+{"id": "q-08", "doc": "meeting_minutes", "question": "Who confirmed there were enough members to hold the meeting?", "evidence": "Jennifer Liu confirmed quorum was present."}
+{"id": "q-09", "doc": "meeting_minutes", "question": "How much did revenue grow in the fourth quarter results?", "evidence": "Revenue increased 12% year-over-year."}
+{"id": "q-10", "doc": "meeting_minutes", "question": "What worries were raised about costs in Asia?", "evidence": "raised concerns about rising operational costs in the"}
+{"id": "q-11", "doc": "meeting_minutes", "question": "What legal risks were mentioned about growing into new markets?", "evidence": "Kevin O'Brien noted potential regulatory"}
+{"id": "q-12", "doc": "meeting_minutes", "question": "Who leads the team working on natural language processing?", "evidence": "Dr. Yuki Tanaka, has achieved significant milestones"}
+{"id": "q-13", "doc": "meeting_minutes", "question": "When will the move to the cloud be finished?", "evidence": "is expected to be completed by Q3 2024."}
+{"id": "q-14", "doc": "meeting_minutes", "question": "Which company was proposed as a strategic partner and who would manage it?", "evidence": "partnership with NovaTech Solutions. The partnership would"}
+{"id": "q-15", "doc": "meeting_minutes", "question": "Who seconded the approval of the previous minutes?", "evidence": "December 2023 meeting. Thomas Muller seconded the motion."}
+{"id": "q-16", "doc": "meeting_minutes", "question": "When is the board meeting again?", "evidence": "The next meeting is scheduled for March 18, 2024."}
+{"id": "q-17", "doc": "meeting_minutes", "question": "Who is the company's lawyer on the board?", "evidence": "Kevin O'Brien, General Counsel"}
+{"id": "q-18", "doc": "research_report", "question": "How many papers did the research department publish?", "evidence": "produced 23 peer-reviewed publications."}
+{"id": "q-19", "doc": "research_report", "question": "Who heads the protein folding research group?", "evidence": "Lead: Dr. Benjamin Foster"}
+{"id": "q-20", "doc": "research_report", "question": "Which division created a new transformer model?", "evidence": "Notable: Developed novel transformer architecture"}
+{"id": "q-21", "doc": "research_report", "question": "Who works on optimization algorithms?", "evidence": "Notable: Breakthrough in optimization algorithms"}
+{"id": "q-22", "doc": "research_report", "question": "Which researcher worked with someone from a Swiss university?", "evidence": "paper with Prof. Hans Weber from ETH Zurich."}
+{"id": "q-23", "doc": "research_report", "question": "Who received recognition from Forbes?", "evidence": "Anna Kowalski was named to the Forbes 30 Under 30"}
+{"id": "q-24", "doc": "research_report", "question": "How large is the DARPA contract and who is responsible for it?", "evidence": "DARPA Contract (PI: Prof. Michael O'Sullivan): $750K"}
+{"id": "q-25", "doc": "research_report", "question": "What is the overall research budget?", "evidence": "Total research budget: $4.2M"}
+{"id": "q-26", "doc": "research_report", "question": "What are the hiring plans for next year?", "evidence": "New hires will include two"}
+{"id": "q-27", "doc": "research_report", "question": "Who reviewed the annual research report?", "evidence": "Reviewed by: Margaret Thompson, CEO"}
+{"id": "q-28", "doc": "research_report", "question": "Who presented at NeurIPS?", "evidence": "Dr. Fatima Al-Rashidi presented at NeurIPS alongside"}
+{"id": "q-29", "doc": "research_report", "question": "Which award did Christopher Wong win?", "evidence": "Christopher Wong received a best paper award at ICML."}
+{"id": "q-30", "doc": "research_report", "question": "Who is the PI on the National Institutes of Health grant?", "evidence": "NIH Grant (PI: Dr. Benjamin Foster): $600K"}
