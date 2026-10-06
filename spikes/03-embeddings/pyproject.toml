@@ -9,6 +9,7 @@ dependencies = [
     "scipy",
     "scikit-learn",
     "psutil",
+    "pillow",        # chunks.py imports the sample-PDF generator
 ]
 
 [tool.uv]
