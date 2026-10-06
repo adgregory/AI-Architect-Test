@@ -12,6 +12,9 @@ from typing import Any, ClassVar
 
 from app.core.config import Settings
 from app.core.factories import _require
+from app.core.logging import get_logger
+
+log = get_logger(__name__)
 
 
 class ModelProviderFactory:
@@ -44,6 +47,33 @@ class ModelProviderFactory:
 
     builders: ClassVar[dict[str, Callable[[Settings], Any]]] = {"gemini": _gemini, "bedrock": _bedrock}
 
+    @staticmethod
+    def _gcp_credentials_available() -> bool:
+        try:
+            import google.auth
+
+            google.auth.default()
+            return True
+        except Exception:  # noqa: BLE001 - not installed, no ADC, unreadable file: all mean "no"
+            return False
+
     @classmethod
-    def create(cls, settings: Settings) -> Any:
-        return cls.builders[settings.llm_provider](settings)
+    def resolve(cls, settings: Settings) -> str:
+        """`auto`: Gemini when a GCP project and credentials are present, otherwise no LLM
+        (extractive answers), so the stack runs on a machine without cloud credentials."""
+        if settings.llm_provider != "auto":
+            return settings.llm_provider
+        if settings.gemini_project and cls._gcp_credentials_available():
+            return "gemini"
+        log.warning(
+            "agent.no_llm",
+            reason="no GOOGLE_CLOUD_PROJECT" if not settings.gemini_project else "no GCP credentials",
+            fallback="extractive answers",
+        )
+        return "none"
+
+    @classmethod
+    def create(cls, settings: Settings, provider: str | None = None) -> Any:
+        """The Strands model for the provider, or None when answering without an LLM."""
+        provider = provider or cls.resolve(settings)
+        return None if provider == "none" else cls.builders[provider](settings)

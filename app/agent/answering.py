@@ -6,6 +6,8 @@ Tool-based agentic retrieval is the upgrade path for multi-step questions.
 
 from __future__ import annotations
 
+import math
+import re
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -44,20 +46,65 @@ def build_prompt(question: str, chunks: list[dict]) -> str:
     return f"Context passages:\n{context}\n\nQuestion: {question}"
 
 
+class ExtractiveAnswerer:
+    """Fallback when no LLM is configured (e.g. no cloud credentials on a reviewer's machine):
+    answers with the retrieved sentence closest to the question, so retrieval still works end to
+    end. Answers are marked as extracts and never cached."""
+
+    PREFIX = "[extract — no LLM configured] "
+    _SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+    _ABBREVIATION = re.compile(r"\b(?:Dr|Mr|Mrs|Ms|Prof|Sr|Jr|St|Inc|Ltd|Co|vs|e\.g|i\.e|No)\.$")
+
+    def __init__(self, embed_documents: Callable[[list[str]], list[list[float]]]):
+        self._embed_documents = embed_documents
+
+    @staticmethod
+    def _cosine(a: list[float], b: list[float]) -> float:
+        norm = math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b))
+        return sum(x * y for x, y in zip(a, b, strict=True)) / norm if norm else 0.0
+
+    def _split(self, text: str) -> list[str]:
+        """Sentences of OCR text: line breaks fall mid-sentence, so join lines first; don't split
+        after titles and abbreviations ("Dr. Benjamin Foster")."""
+        sentences: list[str] = []
+        for piece in self._SENTENCE_END.split(" ".join(text.split())):
+            if sentences and self._ABBREVIATION.search(sentences[-1]):
+                sentences[-1] += " " + piece
+            else:
+                sentences.append(piece)
+        return sentences
+
+    def sentences(self, chunks: list[dict]) -> list[str]:
+        found = (s.strip() for c in chunks for s in self._split(c["text"]))
+        return list(dict.fromkeys(s for s in found if len(s.split()) >= 3))
+
+    def answer(self, question_vector: list[float], chunks: list[dict]) -> str:
+        candidates = self.sentences(chunks)
+        if not candidates:
+            return REFUSAL
+        vectors = self._embed_documents(candidates)
+        best = max(range(len(candidates)), key=lambda i: self._cosine(question_vector, vectors[i]))
+        return self.PREFIX + candidates[best]
+
+
 class AnswerService:
     def __init__(
         self,
         embed_query: Callable[[str], list[float]],
         retrieve: Callable[..., list[dict]],
-        agent_factory: Callable[[], StreamingAgent],
+        agent_factory: Callable[[], StreamingAgent] | None,
         cache: SemanticCache | None = None,
         top_k: int = 3,
+        extractive: ExtractiveAnswerer | None = None,
     ):
+        if agent_factory is None and extractive is None:
+            raise ValueError("AnswerService needs an agent factory or an extractive answerer")
         self._embed_query = embed_query
         self._retrieve = retrieve
         self._agent_factory = agent_factory
         self._cache = cache
         self._top_k = top_k
+        self._extractive = extractive
 
     @staticmethod
     def _is_refusal(answer: str) -> bool:
@@ -102,6 +149,16 @@ class AnswerService:
             yield AnswerEvent("token", {"text": NO_INFORMATION}).to_dict()
             yield AnswerEvent(
                 "done", {"answer": NO_INFORMATION, "sources": [], "cached": False, "stop_reason": "no_context"}
+            ).to_dict()
+            return
+
+        if self._agent_factory is None:
+            assert self._extractive is not None
+            answer = self._extractive.answer(vector, chunks)
+            yield AnswerEvent("token", {"text": answer}).to_dict()
+            log.info("answer.extracted", sources=len(sources))
+            yield AnswerEvent(
+                "done", {"answer": answer, "sources": sources, "cached": False, "stop_reason": "extractive"}
             ).to_dict()
             return
 

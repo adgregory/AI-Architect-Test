@@ -65,7 +65,8 @@ class Settings(BaseSettings):
     agent_timeout_s: float = 60.0
 
     # Agent service model (Strands). Gemini on Vertex via ADC locally; Bedrock on AgentCore in AWS.
-    llm_provider: Literal["gemini", "bedrock"] = "gemini"
+    # auto: Gemini if GOOGLE_CLOUD_PROJECT and credentials are present, else none (extractive answers).
+    llm_provider: Literal["auto", "gemini", "bedrock", "none"] = "auto"
     gemini_model: str = "gemini-3.8-flash"
     gemini_project: str | None = Field(None, validation_alias="GOOGLE_CLOUD_PROJECT")
     gemini_location: str = Field("global", validation_alias="GOOGLE_CLOUD_LOCATION")

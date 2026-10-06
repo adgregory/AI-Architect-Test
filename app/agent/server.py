@@ -14,7 +14,7 @@ from functools import cached_property
 
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
-from app.agent.answering import AnswerService, strands_agent_factory
+from app.agent.answering import AnswerService, ExtractiveAnswerer, strands_agent_factory
 from app.agent.providers import ModelProviderFactory
 from app.core.config import Settings, get_settings
 from app.core.container import Container
@@ -32,6 +32,7 @@ class AgentRuntime:
         self.settings = settings
         self._container = Container(settings)
         self._lock = threading.Lock()
+        self.provider = ModelProviderFactory.resolve(settings)
 
     @cached_property
     def answers(self) -> AnswerService:
@@ -47,12 +48,15 @@ class AgentRuntime:
                     ttl_s=s.answer_cache_ttl_s,
                     corpus_version=self._corpus_version,
                 )
+            model = ModelProviderFactory.create(s, self.provider)
+            embeddings = self._container.embeddings
             return AnswerService(
-                embed_query=self._container.embeddings.embed_query,
+                embed_query=embeddings.embed_query,
                 retrieve=lambda vector, top_k: self._container.vector_store.search(vector, top_k),
-                agent_factory=strands_agent_factory(ModelProviderFactory.create(s)),
+                agent_factory=strands_agent_factory(model) if model is not None else None,
                 cache=cache,
                 top_k=s.retrieval_top_k,
+                extractive=ExtractiveAnswerer(embeddings.embed_documents) if model is None else None,
             )
 
     def _corpus_version(self) -> int:
@@ -71,10 +75,10 @@ class AgentRuntime:
         log.info(
             "agent.ready",
             seconds=round(time.perf_counter() - started, 2),
-            provider=self.settings.llm_provider,
-            model=self.settings.gemini_model
-            if self.settings.llm_provider == "gemini"
-            else self.settings.bedrock_model_id,
+            provider=self.provider,
+            model={"gemini": self.settings.gemini_model, "bedrock": self.settings.bedrock_model_id}.get(
+                self.provider, "none (extractive answers)"
+            ),
         )
 
 

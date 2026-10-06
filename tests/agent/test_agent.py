@@ -201,3 +201,67 @@ def test_client_rejects_streams_without_a_final_answer():
     )
     with pytest.raises(AgentUnavailableError):
         client.answer("Q?")
+
+
+class TestWithoutAnLLM:
+    """No model credentials (e.g. a reviewer's machine): answers are extracts, never cached."""
+
+    def make(self, cache=None):
+        from app.agent.answering import ExtractiveAnswerer
+
+        embeddings, store = FakeEmbeddings(), InMemoryVectorStore(score_threshold=0.1)
+        memo = "MEMO\nThe office moves to Austin in May. Robert Chen has been promoted to Vice President."
+        store.upsert([memo, DOCS[1]], embeddings.embed_documents([memo, DOCS[1]]))
+        extractive = ExtractiveAnswerer(embeddings.embed_documents)
+        return AnswerService(embeddings.embed_query, store.search, None, cache=cache, top_k=2, extractive=extractive)
+
+    async def test_answers_with_the_closest_retrieved_sentence(self):
+        from app.agent.answering import ExtractiveAnswerer
+
+        events = await collect(self.make(), "Who has been promoted to Vice President?")
+        done = events[-1]
+        assert done["stop_reason"] == "extractive"
+        assert done["answer"] == ExtractiveAnswerer.PREFIX + "Robert Chen has been promoted to Vice President."
+
+    async def test_extracts_are_not_cached(self):
+        cache = DictCache()
+        await collect(self.make(cache), "Who has been promoted to Vice President?")
+        assert cache.entries == {}
+
+    def test_sentences_survive_ocr_line_breaks_and_titles(self):
+        from app.agent.answering import ExtractiveAnswerer
+
+        text = "Lead: Dr. Benjamin\nFoster runs the lab. The full migration to AWS\nis expected by Q3 2024."
+        assert ExtractiveAnswerer(FakeEmbeddings().embed_documents).sentences([{"text": text}]) == [
+            "Lead: Dr. Benjamin Foster runs the lab.",
+            "The full migration to AWS is expected by Q3 2024.",
+        ]
+
+    def test_needs_an_agent_or_an_extractor(self):
+        with pytest.raises(ValueError):
+            AnswerService(FakeEmbeddings().embed_query, InMemoryVectorStore().search, None)
+
+
+class TestProviderResolution:
+    def resolve(self, monkeypatch, credentials: bool, **settings):
+        from app.agent.providers import ModelProviderFactory
+        from app.core.config import Settings
+
+        monkeypatch.setattr(ModelProviderFactory, "_gcp_credentials_available", staticmethod(lambda: credentials))
+        return ModelProviderFactory.resolve(Settings(_env_file=None, **settings))
+
+    def test_auto_uses_gemini_with_a_project_and_credentials(self, monkeypatch):
+        assert self.resolve(monkeypatch, True, GOOGLE_CLOUD_PROJECT="p") == "gemini"
+
+    @pytest.mark.parametrize(("project", "credentials"), [(None, True), ("p", False), (None, False)])
+    def test_auto_falls_back_to_no_llm(self, monkeypatch, project, credentials):
+        assert self.resolve(monkeypatch, credentials, GOOGLE_CLOUD_PROJECT=project) == "none"
+
+    def test_an_explicit_provider_is_kept(self, monkeypatch):
+        assert self.resolve(monkeypatch, False, llm_provider="bedrock") == "bedrock"
+
+    def test_no_llm_builds_no_model(self):
+        from app.agent.providers import ModelProviderFactory
+        from app.core.config import Settings
+
+        assert ModelProviderFactory.create(Settings(_env_file=None), "none") is None
