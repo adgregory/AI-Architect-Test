@@ -6,9 +6,11 @@ activity input/output in workflow history (payloads are capped at ~2 MB).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
+import uuid
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
@@ -64,6 +66,12 @@ class LocalFileStorage:
         if not path.exists():
             raise FileNotFoundError(key)
         yield path
+
+
+def document_id_for(content: bytes) -> str:
+    """Content-addressed document ID: the same PDF always maps to the same ID, so indexing it
+    again overwrites its chunks (point IDs derive from it) instead of duplicating them."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"sha256:{hashlib.sha256(content).hexdigest()}"))
 
 
 class JobArtifacts:

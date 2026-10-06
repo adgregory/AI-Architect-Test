@@ -37,6 +37,12 @@ class ExtractRequest:
 
 
 @dataclass(frozen=True)
+class PreparedDocument:
+    page_count: int
+    document_id: str  # content-addressed (see app.storage.document_id_for)
+
+
+@dataclass(frozen=True)
 class PageTask:
     job_id: str
     page_number: int
@@ -69,10 +75,11 @@ class FailRequest:
 
 @dataclass(frozen=True)
 class IndexRequest:
-    job_id: str
+    job_id: str  # where the OCR'd pages are stored (jobs/<job_id>/pages)
     page_count: int
     filename: str
     queues: TaskQueues
+    document_id: str = ""  # vector-store identity (content-addressed); defaults to job_id
 
 
 @dataclass(frozen=True)

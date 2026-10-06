@@ -19,7 +19,7 @@ from app.services.extraction_service import ExtractionEngines, NameExtraction
 from app.services.ocr_service import OCRResult
 from app.services.rag_service import TextChunker
 from app.services.vector_service import VectorStore
-from app.storage import JobArtifacts, ObjectStorage
+from app.storage import JobArtifacts, ObjectStorage, document_id_for
 from app.workflows.models import (
     CHUNK_AND_EMBED,
     COMPLETE_JOB,
@@ -38,6 +38,7 @@ from app.workflows.models import (
     IndexRequest,
     MarkRunning,
     PageTask,
+    PreparedDocument,
     ReconcileRequest,
 )
 
@@ -69,10 +70,12 @@ class CpuActivities:
         return [art.get_json(art.page(n)) for n in range(page_count)]
 
     @activity.defn(name=PREPARE_DOCUMENT)
-    def prepare_document(self, job_id: str) -> int:
-        """Validate the stored PDF and return its page count. Invalid input is non-retryable."""
+    def prepare_document(self, job_id: str) -> PreparedDocument:
+        """Validate the stored PDF; return its page count and content-addressed document ID.
+        Invalid input is non-retryable."""
         art = JobArtifacts(self._storage, job_id)
         try:
+            document_id = document_id_for(art.storage.get_bytes(art.input_pdf))
             with art.storage.local_path(art.input_pdf) as path:
                 pages = self._engines.ocr.page_count(str(path))
         except FileNotFoundError as exc:
@@ -87,7 +90,7 @@ class CpuActivities:
             raise ApplicationError(
                 f"PDF has {pages} pages; the limit is {self._max_pages}", type=INVALID_DOCUMENT, non_retryable=True
             )
-        return pages
+        return PreparedDocument(page_count=pages, document_id=document_id)
 
     @activity.defn(name=OCR_PAGE)
     def ocr_page(self, task: PageTask) -> str:
@@ -142,7 +145,7 @@ class IoActivities:
         self._vector_store.upsert(
             data["texts"],
             data["vectors"],
-            document_id=req.job_id,
+            document_id=req.document_id or req.job_id,
             metadata=[{"source": req.filename}] * len(data["texts"]),
         )
         return len(data["texts"])

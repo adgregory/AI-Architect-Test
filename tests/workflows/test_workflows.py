@@ -17,7 +17,7 @@ from app.services.fuzzy_service import TokenSortNameMatcher
 from app.services.ner_service import PersonNameNormalizer
 from app.services.ocr_service import OCRResult
 from app.services.rag_service import TextChunker
-from app.storage import JobArtifacts, LocalFileStorage
+from app.storage import JobArtifacts, LocalFileStorage, document_id_for
 from app.workflows.activities import CpuActivities, IoActivities
 from app.workflows.models import ExtractRequest, ReconcileRequest, TaskQueues
 from app.workflows.workflows import ExtractNamesWorkflow, IndexDocumentWorkflow, ReconcileQueuedJobsWorkflow
@@ -120,7 +120,7 @@ async def test_extracts_pages_in_parallel_completes_and_indexes(env, tmp_path):
         outcome = await env.client.execute_workflow(
             ExtractNamesWorkflow.run, req, id=req.job_id, task_queue=QUEUES.workflows
         )
-        indexed = await env.client.get_workflow_handle(f"index-{req.job_id}").result()
+        indexed = await env.client.get_workflow_handle(f"index-{document_id_for(b'%PDF-1.7 fake')}").result()
         return outcome, indexed
 
     outcome, indexed = await run_workers(env, h, scenario)
@@ -132,7 +132,9 @@ async def test_extracts_pages_in_parallel_completes_and_indexes(env, tmp_path):
     assert job.result["fuzzy_matches"][0]["extracted_name"] == "Jennifer Liu"
     assert (outcome.pages, outcome.names, outcome.matches) == (2, 2, 1)
     assert sorted(r.rsplit("#", 1)[1] for r in h.ocr.reads if "#" in r) == ["0", "1"]  # one OCR per page
-    assert indexed >= 1 and h.store.points  # child workflow indexed the document
+    assert indexed >= 1 and h.store.points  # child workflow indexed the document...
+    assert {p["payload"]["document_id"] for p in h.store.points.values()} == {document_id_for(b"%PDF-1.7 fake")}
+    # ...under its content-addressed ID
 
 
 async def test_invalid_document_fails_fast_and_marks_job_failed(env, tmp_path):
@@ -181,3 +183,18 @@ async def test_reconciler_restarts_stale_jobs_once(env, tmp_path):
     first = await run_workers(env, h, scenario)
     assert first.restarted == [req.job_id]
     assert h.repo.jobs[req.job_id].status is JobStatus.SUCCEEDED
+
+
+async def test_same_pdf_submitted_twice_is_indexed_once(env, tmp_path):
+    h = Harness(tmp_path, FakeOCR(OCR))
+    first, second = await h.new_job([]), await h.new_job([])  # identical bytes, different jobs
+    document_id = document_id_for(b"%PDF-1.7 fake")
+
+    async def scenario():
+        for req in (first, second):
+            await env.client.execute_workflow(ExtractNamesWorkflow.run, req, id=req.job_id, task_queue=QUEUES.workflows)
+            await env.client.get_workflow_handle(f"index-{document_id}").result()
+
+    await run_workers(env, h, scenario)
+    assert {p["payload"]["document_id"] for p in h.store.points.values()} == {document_id}
+    assert len(h.store.points) == len({p["payload"]["chunk_index"] for p in h.store.points.values()})

@@ -35,6 +35,7 @@ with workflow.unsafe.imports_passed_through():
         IndexRequest,
         MarkRunning,
         PageTask,
+        PreparedDocument,
         ReconcileOutcome,
         ReconcileRequest,
     )
@@ -75,13 +76,15 @@ class ExtractNamesWorkflow:
     async def run(self, req: ExtractRequest) -> ExtractOutcome:
         q = req.queues
         try:
-            pages: int = await workflow.execute_activity(
+            prepared: PreparedDocument = await workflow.execute_activity(
                 PREPARE_DOCUMENT,
                 req.job_id,
                 task_queue=q.cpu,
                 start_to_close_timeout=timedelta(seconds=60),
                 retry_policy=CPU_RETRY,
+                result_type=PreparedDocument,
             )
+            pages = prepared.page_count
             await workflow.execute_activity(
                 MARK_RUNNING,
                 MarkRunning(req.job_id, pages),
@@ -128,13 +131,18 @@ class ExtractNamesWorkflow:
             )
             raise ApplicationError(f"job {req.job_id} failed: {message}", non_retryable=True) from err
 
-        await workflow.start_child_workflow(
-            IndexDocumentWorkflow.run,
-            IndexRequest(req.job_id, pages, req.filename, q),
-            id=f"index-{req.job_id}",
-            task_queue=q.workflows,
-            parent_close_policy=ParentClosePolicy.ABANDON,
-        )
+        # Keyed by content: the same PDF submitted twice is indexed once (and already-running
+        # indexing of identical content is not an error).
+        try:
+            await workflow.start_child_workflow(
+                IndexDocumentWorkflow.run,
+                IndexRequest(req.job_id, pages, req.filename, q, document_id=prepared.document_id),
+                id=f"index-{prepared.document_id}",
+                task_queue=q.workflows,
+                parent_close_policy=ParentClosePolicy.ABANDON,
+            )
+        except WorkflowAlreadyStartedError:
+            workflow.logger.info("document %s is already being indexed", prepared.document_id)
         return ExtractOutcome(req.job_id, pages, summary.names, summary.matches)
 
 
