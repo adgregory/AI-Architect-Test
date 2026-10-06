@@ -69,6 +69,18 @@ class TestOCRContract:
         assert memo["page"] == 0
         assert memo["x"] == pytest.approx(48, abs=4) and memo["y"] == pytest.approx(48, abs=6)
 
+    def test_pages_compose_the_document(self, ocr, minutes):
+        path = str(SAMPLES / "meeting_minutes.pdf")
+        assert ocr.page_count(path) == 2
+        pages = [ocr.read_page(path, n) for n in range(2)]
+        assert [w for p in pages for w in p.words] == minutes.words
+        assert "\n".join(p.text for p in pages) == minutes.text
+        assert all(w["page"] == n for n, p in enumerate(pages) for w in p.words)
+
+    def test_page_out_of_range(self, ocr):
+        with pytest.raises(IndexError):
+            ocr.read_page(str(SAMPLES / "company_memo.pdf"), 1)
+
     def test_box_api_agrees_with_read(self, ocr):
         path = str(SAMPLES / "company_memo.pdf")
         assert ocr.get_word_boxes(path) == ocr.read(path).words

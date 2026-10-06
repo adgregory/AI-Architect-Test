@@ -26,6 +26,14 @@ class FakeOCR:
         self.reads.append(pdf_path)
         return self.result
 
+    def page_count(self, pdf_path: str) -> int:
+        return max((w["page"] for w in self.result.words), default=-1) + 1
+
+    def read_page(self, pdf_path: str, page_number: int) -> OCRResult:
+        self.reads.append(f"{pdf_path}#{page_number}")
+        words = [w for w in self.result.words if w["page"] == page_number]
+        return OCRResult(text=" ".join(w["word"] for w in words), words=words)
+
     def extract_text(self, pdf_path: str) -> str:
         return self.read(pdf_path).text
 

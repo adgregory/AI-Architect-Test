@@ -34,6 +34,12 @@ class OCRService(Protocol):
 
     def read(self, pdf_path: str) -> OCRResult: ...
 
+    def page_count(self, pdf_path: str) -> int: ...
+
+    def read_page(self, pdf_path: str, page_number: int) -> OCRResult:
+        """OCR one page (zero-based); `read` is the concatenation of every page."""
+        ...
+
     def extract_text(self, pdf_path: str) -> str: ...
 
     def get_word_boxes(self, pdf_path: str) -> list[dict]: ...
@@ -46,17 +52,67 @@ class PageRenderer:
         self.dpi = dpi
         self.scale = PDF_POINTS_PER_INCH / dpi  # image pixels -> PDF points
 
+    def _image(self, doc, page_num: int) -> Image.Image:
+        pix = doc[page_num].get_pixmap(dpi=self.dpi)
+        return Image.open(io.BytesIO(pix.tobytes("png")))
+
     def pages(self, pdf_path: str) -> Iterator[tuple[int, Image.Image]]:
         doc = fitz.open(pdf_path)
         try:
             for page_num in range(len(doc)):
-                pix = doc[page_num].get_pixmap(dpi=self.dpi)
-                yield page_num, Image.open(io.BytesIO(pix.tobytes("png")))
+                yield page_num, self._image(doc, page_num)
+        finally:
+            doc.close()
+
+    def page(self, pdf_path: str, page_num: int) -> Image.Image:
+        doc = fitz.open(pdf_path)
+        try:
+            if not 0 <= page_num < len(doc):
+                raise IndexError(f"page {page_num} out of range (document has {len(doc)} pages)")
+            return self._image(doc, page_num)
+        finally:
+            doc.close()
+
+    def count(self, pdf_path: str) -> int:
+        doc = fitz.open(pdf_path)
+        try:
+            return len(doc)
         finally:
             doc.close()
 
 
-class TesseractOCRService:
+class _PageWiseOCR:
+    """Shared plumbing: engines implement `_read_image`; whole-document and per-page reads
+    are built from it, so `read(pdf) == combine(read_page(pdf, n) for n in pages)`."""
+
+    _renderer: PageRenderer
+
+    def _read_image(self, img: Image.Image, page_num: int) -> tuple[list[str], list[dict]]:
+        raise NotImplementedError
+
+    def page_count(self, pdf_path: str) -> int:
+        return self._renderer.count(pdf_path)
+
+    def read_page(self, pdf_path: str, page_number: int) -> OCRResult:
+        lines, words = self._read_image(self._renderer.page(pdf_path, page_number), page_number)
+        return OCRResult(text="\n".join(lines), words=words)
+
+    def read(self, pdf_path: str) -> OCRResult:
+        lines, words = [], []
+        for page_num, img in self._renderer.pages(pdf_path):
+            page_lines, page_words = self._read_image(img, page_num)
+            lines.extend(page_lines)
+            words.extend(page_words)
+        return OCRResult(text="\n".join(lines), words=words)
+
+    def extract_text(self, pdf_path: str) -> str:
+        return self.read(pdf_path).text
+
+    def get_word_boxes(self, pdf_path: str) -> list[dict]:
+        return self.read(pdf_path).words
+
+
+class TesseractOCRService(_PageWiseOCR):
     """Tesseract (LSTM) via pytesseract — the reference/fallback engine."""
 
     def __init__(self, dpi: int = 150):
@@ -73,37 +129,32 @@ class TesseractOCRService:
             pytesseract.image_to_string(img) + "\n" for _, img in self._renderer.pages(pdf_path)
         )
 
-    def get_word_boxes(self, pdf_path: str) -> list[dict]:
-        return self.read(pdf_path).words
-
-    def read(self, pdf_path: str) -> OCRResult:
-        """Single pass: image_to_data yields words, boxes and the line structure."""
+    def _read_image(self, img: Image.Image, page_num: int) -> tuple[list[str], list[dict]]:
+        """image_to_data yields words, boxes and the line structure in one pass."""
         self._require_tesseract()
         scale = self._renderer.scale
-        words, lines = [], []
-        for page_num, img in self._renderer.pages(pdf_path):
-            data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
-            n = len(data["text"])
-            line_keys = list(zip(*(data.get(k) or [0] * n for k in ("block_num", "par_num", "line_num"))))
-            page_lines: dict[tuple, list[str]] = {}
-            for i, raw in enumerate(data["text"]):
-                word = raw.strip()
-                if not word:
-                    continue
-                page_lines.setdefault(line_keys[i], []).append(word)
-                words.append({
-                    "word": word,
-                    "page": page_num,
-                    "x": data["left"][i] * scale,
-                    "y": data["top"][i] * scale,
-                    "width": data["width"][i] * scale,
-                    "height": data["height"][i] * scale,
-                })
-            lines.extend(" ".join(ws) for ws in page_lines.values())
-        return OCRResult(text="\n".join(lines), words=words)
+        data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+        n = len(data["text"])
+        line_keys = list(zip(*(data.get(k) or [0] * n for k in ("block_num", "par_num", "line_num"))))
+        page_lines: dict[tuple, list[str]] = {}
+        words = []
+        for i, raw in enumerate(data["text"]):
+            word = raw.strip()
+            if not word:
+                continue
+            page_lines.setdefault(line_keys[i], []).append(word)
+            words.append({
+                "word": word,
+                "page": page_num,
+                "x": data["left"][i] * scale,
+                "y": data["top"][i] * scale,
+                "width": data["width"][i] * scale,
+                "height": data["height"][i] * scale,
+            })
+        return [" ".join(ws) for ws in page_lines.values()], words
 
 
-class RapidOCRService:
+class RapidOCRService(_PageWiseOCR):
     """PaddleOCR PP-OCRv5 mobile models on ONNX Runtime via RapidOCR (chosen in spike 01).
 
     The RapidOCR engine is injected. Word boxes come from the recogniser's character
@@ -118,35 +169,26 @@ class RapidOCRService:
         self._renderer = PageRenderer(dpi)
         self._tighten = tighten_boxes
 
-    def extract_text(self, pdf_path: str) -> str:
-        return self.read(pdf_path).text
-
-    def get_word_boxes(self, pdf_path: str) -> list[dict]:
-        return self.read(pdf_path).words
-
-    def read(self, pdf_path: str) -> OCRResult:
+    def _read_image(self, img: Image.Image, page_num: int) -> tuple[list[str], list[dict]]:
         scale = self._renderer.scale
-        words, lines = [], []
-        for page_num, img in self._renderer.pages(pdf_path):
-            rgb = np.asarray(img.convert("RGB"))
-            gray = np.asarray(img.convert("L"))
-            result = self._engine(rgb, return_word_box=True)
-            if result.txts is None:
-                continue
-            lines.extend(result.txts)
-            for line_words in result.word_results:
-                for text, x0, y0, x1, y1 in self._merge_pieces(line_words):
-                    if self._tighten:
-                        y0, y1 = self._tighten_vertically(gray, x0, y0, x1, y1)
-                    words.append({
-                        "word": text,
-                        "page": page_num,
-                        "x": x0 * scale,
-                        "y": y0 * scale,
-                        "width": (x1 - x0) * scale,
-                        "height": (y1 - y0) * scale,
-                    })
-        return OCRResult(text="\n".join(lines), words=words)
+        gray = np.asarray(img.convert("L"))
+        result = self._engine(np.asarray(img.convert("RGB")), return_word_box=True)
+        if result.txts is None:
+            return [], []
+        words = []
+        for line_words in result.word_results:
+            for text, x0, y0, x1, y1 in self._merge_pieces(line_words):
+                if self._tighten:
+                    y0, y1 = self._tighten_vertically(gray, x0, y0, x1, y1)
+                words.append({
+                    "word": text,
+                    "page": page_num,
+                    "x": x0 * scale,
+                    "y": y0 * scale,
+                    "width": (x1 - x0) * scale,
+                    "height": (y1 - y0) * scale,
+                })
+        return list(result.txts), words
 
     @staticmethod
     def _merge_pieces(pieces) -> list[tuple[str, float, float, float, float]]:
