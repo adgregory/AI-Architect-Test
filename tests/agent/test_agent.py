@@ -109,6 +109,14 @@ class TestAnswerService:
         await collect(service, "When is the migration due?")
         assert len(agents) == 2 and agents[0] is not agents[1]
 
+    async def test_duplicate_passages_are_dropped_before_top_k(self):
+        embeddings, store = FakeEmbeddings(), InMemoryVectorStore(score_threshold=0.0)
+        docs = [DOCS[0], DOCS[0], "Robert Chen  has been promoted to Vice President of Engineering.", DOCS[1]]
+        store.upsert(docs, embeddings.embed_documents(docs))
+        service = AnswerService(embeddings.embed_query, store.search, lambda: ScriptedAgent(["ok"]), top_k=2)
+        events = await collect(service, "Who has been promoted to Vice President of Engineering")
+        assert events[0]["sources"] == [DOCS[0], DOCS[1]]
+
     def test_prompt_numbers_passages(self):
         prompt = build_prompt("Q?", [{"text": "a"}, {"text": "b"}])
         assert prompt == "Context passages:\n[1] a\n\n[2] b\n\nQuestion: Q?"

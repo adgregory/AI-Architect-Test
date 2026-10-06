@@ -58,6 +58,18 @@ class AnswerService:
         self._cache = cache
         self._top_k = top_k
 
+    @staticmethod
+    def _distinct(chunks: list[dict]) -> list[dict]:
+        """Drop repeated passages (the same document ingested twice) so top-k holds k distinct ones."""
+        seen: set[str] = set()
+        out = []
+        for chunk in chunks:
+            key = " ".join(chunk["text"].split()).casefold()
+            if key not in seen:
+                seen.add(key)
+                out.append(chunk)
+        return out
+
     async def stream(self, question: str) -> AsyncIterator[dict]:
         vector = self._embed_query(question)
 
@@ -78,7 +90,7 @@ class AnswerService:
                 ).to_dict()
                 return
 
-        chunks = self._retrieve(vector, top_k=self._top_k)
+        chunks = self._distinct(self._retrieve(vector, top_k=self._top_k * 3))[: self._top_k]
         sources = [c["text"] for c in chunks]
         yield AnswerEvent("sources", {"sources": sources}).to_dict()
         if not chunks:
