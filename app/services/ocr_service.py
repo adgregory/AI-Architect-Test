@@ -6,8 +6,12 @@ import io
 from typing import Protocol, runtime_checkable
 
 import fitz
-import pytesseract
 from PIL import Image
+
+try:  # optional: installed with the `fallback` extra (plus the tesseract binary)
+    import pytesseract
+except ImportError:  # pragma: no cover - depends on installed extras
+    pytesseract = None
 
 from app.core.config import get_settings
 
@@ -29,6 +33,11 @@ class TesseractOCRService:
     def __init__(self, dpi: int = 150):
         self._dpi = dpi
 
+    @staticmethod
+    def _require_tesseract() -> None:
+        if pytesseract is None:
+            raise RuntimeError("Tesseract OCR needs the `fallback` extra: uv sync --extra fallback")
+
     def _page_images(self, pdf_path: str):
         """Yield (page_number, PIL image) for every page; always closes the document."""
         doc = fitz.open(pdf_path)
@@ -40,11 +49,13 @@ class TesseractOCRService:
             doc.close()
 
     def extract_text(self, pdf_path: str) -> str:
+        self._require_tesseract()
         return "".join(
             pytesseract.image_to_string(img) + "\n" for _, img in self._page_images(pdf_path)
         )
 
     def get_word_boxes(self, pdf_path: str) -> list[dict]:
+        self._require_tesseract()
         scale = PDF_POINTS_PER_INCH / self._dpi
         results = []
         for page_num, img in self._page_images(pdf_path):

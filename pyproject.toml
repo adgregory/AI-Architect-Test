@@ -4,27 +4,41 @@ version = "0.1.0"
 description = "Extract names and bounding boxes from scanned PDFs, fuzzy-match them, and answer questions via RAG."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
+# Core: needed whichever engines are selected.
 dependencies = [
     "fastapi==0.115.0",
     "uvicorn==0.30.0",
     "python-multipart==0.0.9",
-    "pymupdf==1.24.0",
-    "pytesseract==0.3.10",
-    "spacy==3.7.5",
-    "en-core-web-sm",
+    "pymupdf==1.24.0",          # PDF rendering, used by every OCR engine
     "thefuzz==0.22.1",
     "python-Levenshtein==0.25.1",
-    "sentence-transformers==3.0.0",
     "qdrant-client==1.11.0",
     "pydantic==2.9.0",
-    # spaCy 3.7.x (thinc 8.2) is compiled against the NumPy 1.x ABI
-    "numpy<2",
     "pydantic-settings>=2.5,<3",
+    "httpx>=0.27,<1",           # LLM HTTP client (runtime, not only tests)
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+# Engines selected by the spikes (spikes/01-03) — the production default.
+chosen = [
+    "rapidocr>=3.9,<4",         # PaddleOCR PP-OCRv5 mobile on ONNX Runtime
+    "onnxruntime>=1.20",
+    "gliner>=0.2.29,<0.3",      # GLiNER small v2.1, served as ONNX int8
+    "onnx>=1.17",               # GLiNER export/quantization
+    "torch>=2.4",               # required by the gliner package; CPU-only wheels on Linux
+    "fastembed>=0.5",           # bge-small-en-v1.5 on ONNX Runtime, no torch
+]
+# Reference engines exercised by the provided test suite.
+fallback = [
+    "pytesseract>=0.3.10",      # + the tesseract binary
+    "spacy>=3.8,<3.9",
+    "en-core-web-sm",
+    "sentence-transformers>=3.2",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx==0.27.0",
     "pytest==8.3.0",
     "pytest-asyncio==0.24.0",
 ]
@@ -33,7 +47,13 @@ dev = [
 package = false
 
 [tool.uv.sources]
-en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl" }
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
