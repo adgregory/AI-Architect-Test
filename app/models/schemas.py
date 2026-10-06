@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -45,6 +47,25 @@ class IngestResponse(BaseModel):
     status: str
     document_id: str
     chunks_stored: int
+
+
+class JobAccepted(BaseModel):
+    job_id: str
+    status: str
+    links: dict[str, str]
+
+
+class JobView(BaseModel):
+    job_id: str
+    status: str = Field(description="queued | running | succeeded | failed")
+    filename: str
+    page_count: int | None = None
+    attempts: int = 0
+    error: str | None = None
+    result: ExtractionResponse | None = None
+    created_at: datetime | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
 
 
 class HealthResponse(BaseModel):

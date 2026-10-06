@@ -7,11 +7,12 @@ so tests exercise orchestration logic without patching library internals.
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import SimpleNamespace
 
 import numpy as np
 
+from app.db import Job, JobStatus
 from app.services.ocr_service import OCRResult
 
 
@@ -140,6 +141,48 @@ class FakeQdrantClient:
     def search(self, **kwargs):
         self.search_calls.append(kwargs)
         return self.search_hits
+
+
+class InMemoryJobRepository:
+    def __init__(self):
+        self.jobs: dict[str, Job] = {}
+        self.stale: list[Job] = []
+
+    async def create(self, job_id, filename, input_key, query_names) -> Job:
+        self.jobs[job_id] = Job(job_id, JobStatus.QUEUED, filename, input_key, query_names)
+        return self.jobs[job_id]
+
+    async def get(self, job_id):
+        return self.jobs.get(job_id)
+
+    def _set(self, job_id, **changes):
+        self.jobs[job_id] = replace(self.jobs[job_id], **changes)
+
+    async def mark_running(self, job_id, page_count=None):
+        self._set(job_id, status=JobStatus.RUNNING, page_count=page_count,
+                  attempts=self.jobs[job_id].attempts + 1)
+
+    async def complete(self, job_id, result):
+        self._set(job_id, status=JobStatus.SUCCEEDED, result=result)
+
+    async def fail(self, job_id, error):
+        self._set(job_id, status=JobStatus.FAILED, error=error)
+
+    async def stale_queued(self, older_than_s, limit=100):
+        return self.stale[:limit]
+
+
+class FakeOrchestrator:
+    """Records workflow starts; can simulate Temporal being unavailable."""
+
+    def __init__(self, fail: bool = False):
+        self.fail = fail
+        self.started: list[tuple[str, str, list[dict]]] = []
+
+    async def start_extraction(self, job_id: str, filename: str, query_names: list[dict]) -> None:
+        if self.fail:
+            raise ConnectionError("temporal unavailable")
+        self.started.append((job_id, filename, query_names))
 
 
 def word(text: str, page: int, x: float, y: float, w: float = 30.0, h: float = 10.0) -> dict:

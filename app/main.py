@@ -6,8 +6,10 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
+from psycopg_pool import PoolTimeout, TooManyRequests
 
 from app.api.extract import router as extract_router
+from app.api.jobs import router as jobs_router
 from app.api.rag import router as rag_router
 from app.core.config import get_settings
 from app.core.container import Container
@@ -28,10 +30,12 @@ async def lifespan(app: FastAPI):
     await run_in_threadpool(container.warm_up)  # model loading is blocking: keep it off the event loop
     log.info("startup.ready", seconds=round(time.perf_counter() - started, 2),
              ocr=settings.ocr_engine, ner=settings.ner_engine, embeddings=settings.embedding_engine)
+    await container.open_async()
     app.state.container = container
     try:
         yield
     finally:
+        await container.close_async()
         container.close()
         log.info("shutdown.done")
 
@@ -40,6 +44,7 @@ app = FastAPI(title="PDF Name Extractor & RAG API", lifespan=lifespan)
 
 app.include_router(extract_router, prefix="/api", tags=["extraction"])
 app.include_router(rag_router, prefix="/api", tags=["rag"])
+app.include_router(jobs_router, prefix="/api", tags=["jobs"])
 
 
 @app.middleware("http")
@@ -64,6 +69,15 @@ async def request_context(request: Request, call_next):
 async def missing_engine(_: Request, exc: MissingEngineError) -> JSONResponse:
     log.error("engine.unavailable", error=str(exc))
     return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+
+@app.exception_handler(PoolTimeout)
+@app.exception_handler(TooManyRequests)
+async def database_busy(_: Request, exc: Exception) -> JSONResponse:
+    """Pool exhausted: shed load quickly instead of queueing requests indefinitely."""
+    log.warning("db.pool_exhausted", error=type(exc).__name__)
+    return JSONResponse(status_code=503, content={"detail": "database busy, retry shortly"},
+                        headers={"Retry-After": "2"})
 
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])

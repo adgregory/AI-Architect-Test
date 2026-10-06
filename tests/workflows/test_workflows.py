@@ -22,7 +22,7 @@ from app.storage import JobArtifacts, LocalFileStorage
 from app.workflows.activities import CpuActivities, IoActivities
 from app.workflows.models import ExtractRequest, ReconcileRequest, TaskQueues
 from app.workflows.workflows import ExtractNamesWorkflow, IndexDocumentWorkflow, ReconcileQueuedJobsWorkflow
-from tests.fakes import FakeEmbeddings, FakeNER, FakeOCR, InMemoryVectorStore, word
+from tests.fakes import FakeEmbeddings, FakeNER, FakeOCR, InMemoryJobRepository, InMemoryVectorStore, word
 
 QUEUES = TaskQueues(workflows="wf", cpu="cpu", io="io")
 OCR = OCRResult(
@@ -30,36 +30,6 @@ OCR = OCRResult(
     words=[word("Richard", 0, 60, 166), word("Hernandez", 0, 95, 166),
            word("met", 0, 140, 166), word("Jennifer", 1, 10, 40), word("Liu", 1, 50, 40)],
 )
-
-
-class InMemoryJobRepository:
-    def __init__(self):
-        self.jobs: dict[str, Job] = {}
-        self.stale: list[Job] = []
-
-    async def create(self, job_id, filename, input_key, query_names) -> Job:
-        self.jobs[job_id] = Job(job_id, JobStatus.QUEUED, filename, input_key, query_names)
-        return self.jobs[job_id]
-
-    async def get(self, job_id):
-        return self.jobs.get(job_id)
-
-    def _set(self, job_id, **changes):
-        from dataclasses import replace
-        self.jobs[job_id] = replace(self.jobs[job_id], **changes)
-
-    async def mark_running(self, job_id, page_count=None):
-        self._set(job_id, status=JobStatus.RUNNING, page_count=page_count,
-                  attempts=self.jobs[job_id].attempts + 1)
-
-    async def complete(self, job_id, result):
-        self._set(job_id, status=JobStatus.SUCCEEDED, result=result)
-
-    async def fail(self, job_id, error):
-        self._set(job_id, status=JobStatus.FAILED, error=error)
-
-    async def stale_queued(self, older_than_s, limit=100):
-        return self.stale[:limit]
 
 
 class FlakyOCR(FakeOCR):

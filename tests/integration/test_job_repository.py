@@ -29,16 +29,25 @@ if not _db_ready():
                 "uv run alembic upgrade head)", allow_module_level=True)
 
 
+CREATED: list[str] = []
+
+
+def new_id() -> str:
+    job_id = str(uuid.uuid4())
+    CREATED.append(job_id)
+    return job_id
+
+
 @pytest.fixture
 async def repo():
     pool = create_pool(SETTINGS)
     await pool.open()
     yield PostgresJobRepository(pool)
+    # Leave the shared dev database clean (the reconciler would otherwise pick these up).
+    async with pool.connection() as conn:
+        await conn.execute("DELETE FROM jobs WHERE id = ANY(%s)", ([uuid.UUID(i) for i in CREATED],))
+    CREATED.clear()
     await pool.close()
-
-
-def new_id() -> str:
-    return str(uuid.uuid4())
 
 
 async def test_lifecycle(repo):
