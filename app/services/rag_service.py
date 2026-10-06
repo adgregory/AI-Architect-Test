@@ -34,7 +34,7 @@ Context:
 {context}
 
 Question:
-{{question}}
+{question}
 
 Answer:"""
 
