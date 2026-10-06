@@ -1,0 +1,965 @@
+{
+ "config": "nomic-onnx-cpu",
+ "model": "nomic",
+ "hf_name": "nomic-ai/nomic-embed-text-v1.5",
+ "backend": "onnx",
+ "device": "cpu",
+ "dim": 768,
+ "max_seq_length": 8192,
+ "prefixes": {
+  "query": "search_query: ",
+  "passage": "search_document: ",
+  "symmetric": "search_query: "
+ },
+ "weights_disk_mb": 522.0,
+ "quality": {
+  "spearman": 0.1743,
+  "auc_paraphrase_vs_hard_neg": 0.2817,
+  "separation_margin_sd": -0.269,
+  "mean_cos": {
+   "paraphrase": 0.9287,
+   "hard_negative": 0.9473,
+   "unrelated": 0.5226,
+   "by_grade": {
+    "0": 0.5226,
+    "1": 0.8709,
+    "2": 0.7271,
+    "3": 0.9287
+   }
+  },
+  "triplet_accuracy": {
+   "all": 0.2286,
+   "antonym": 0.1429,
+   "entity_swap": 0.8571,
+   "negation": 0.1429,
+   "number_change": 0.0,
+   "role_swap": 0.0
+  },
+  "pairs": [
+   {
+    "a": "Margaret Thompson is the Chief Executive Officer.",
+    "b": "The company's CEO is Margaret Thompson.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9321653246879578
+   },
+   {
+    "a": "David Nakamura will manage the project codenamed Atlas.",
+    "b": "Project Atlas is going to be run by David Nakamura.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9434356689453125
+   },
+   {
+    "a": "Questions should be directed to Patricia Okonkwo in Human Resources.",
+    "b": "Send any questions to Patricia Okonkwo from HR.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9122662544250488
+   },
+   {
+    "a": "Dr. Sarah Williams will join as Chief Data Scientist.",
+    "b": "Sarah Williams is coming on board as the Chief Data Scientist.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9805123209953308
+   },
+   {
+    "a": "Richard Hernandez adjourned the meeting at 12:25 PM.",
+    "b": "The meeting was closed by Richard Hernandez at 12:25 in the afternoon.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.944068431854248
+   },
+   {
+    "a": "Alexander Popov presented the cloud migration timeline.",
+    "b": "The schedule for moving to the cloud was presented by Alexander Popov.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.8698455095291138
+   },
+   {
+    "a": "Dr. Benjamin Foster received the Young Investigator Award from the National Science Foundation.",
+    "b": "The NSF gave Dr. Benjamin Foster its Young Investigator Award.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9371521472930908
+   },
+   {
+    "a": "The Applied Mathematics Division achieved a breakthrough in optimization algorithms.",
+    "b": "Applied Mathematics made a major advance in optimisation algorithms.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.920548677444458
+   },
+   {
+    "a": "The Machine Learning Division developed a novel transformer architecture.",
+    "b": "A new transformer architecture was created by the ML division.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9134881496429443
+   },
+   {
+    "a": "External grants secured total $1.8M.",
+    "b": "The department won 1.8 million dollars in outside grants.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.7680903673171997
+   },
+   {
+    "a": "The board meeting took place in Conference Room A at headquarters.",
+    "b": "Directors met in Conference Room A in the head office.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.8593121767044067
+   },
+   {
+    "a": "Kevin O'Brien is the General Counsel.",
+    "b": "The company's chief lawyer is Kevin O'Brien.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.8910311460494995
+   },
+   {
+    "a": "The Computational Biology Division published groundbreaking work on protein folding.",
+    "b": "Pioneering protein-folding research came out of Computational Biology.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9412442445755005
+   },
+   {
+    "a": "Robert Chen will oversee all technical operations.",
+    "b": "All technical operations will fall under Robert Chen.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.9751772880554199
+   },
+   {
+    "a": "The memo announces several organizational changes.",
+    "b": "This memorandum informs staff about a number of changes to the organization.",
+    "grade": 3,
+    "kind": "graded",
+    "cos": 0.8676164150238037
+   },
+   {
+    "a": "Robert Chen has been promoted to Vice President of Engineering.",
+    "b": "Engineering has new leadership at the vice-president level.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.8000445365905762
+   },
+   {
+    "a": "Elizabeth Park presented the Q4 financial results.",
+    "b": "The Chief Financial Officer reported on the fourth quarter.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.6612323522567749
+   },
+   {
+    "a": "Dr. Aisha Patel raised concerns about rising operational costs.",
+    "b": "An independent director questioned the company's spending.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.6411333680152893
+   },
+   {
+    "a": "The partnership with NovaTech Solutions needs a legal review.",
+    "b": "External counsel will look at the NovaTech deal.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.8100554347038269
+   },
+   {
+    "a": "Dr. Fatima Al-Rashidi leads the Machine Learning Division.",
+    "b": "Dr. Fatima Al-Rashidi is the PI on a $450K NSF grant.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.8112729787826538
+   },
+   {
+    "a": "The research department has three divisions.",
+    "b": "Computational Biology, Machine Learning and Applied Mathematics are the research divisions.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.7453349828720093
+   },
+   {
+    "a": "Thomas Muller provided an update on the AI initiative.",
+    "b": "The machine learning team has hit significant milestones in its NLP project.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.6501181125640869
+   },
+   {
+    "a": "Prof. Michael O'Sullivan leads the Applied Mathematics Division.",
+    "b": "A DARPA contract worth $750K is led by Prof. Michael O'Sullivan.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.734315037727356
+   },
+   {
+    "a": "Maria Garcia has been appointed Head of Product Design.",
+    "b": "Product design will be headed by someone from the London UX team.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.7036645412445068
+   },
+   {
+    "a": "The full migration to AWS is expected by Q3 2024.",
+    "b": "The infrastructure team is moving systems to the cloud.",
+    "grade": 2,
+    "kind": "graded",
+    "cos": 0.7134594321250916
+   },
+   {
+    "a": "Robert Chen has been promoted to Vice President of Engineering.",
+    "b": "Maria Garcia has been appointed Head of Product Design.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.539695143699646
+   },
+   {
+    "a": "Elizabeth Park presented the Q4 financial results.",
+    "b": "Thomas Muller provided an update on the AI initiative.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.5284501314163208
+   },
+   {
+    "a": "The NIH grant is worth $600K.",
+    "b": "The total research budget is $4.2M.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.6961040496826172
+   },
+   {
+    "a": "Anna Kowalski was named to the Forbes 30 Under 30 list.",
+    "b": "Christopher Wong received a best paper award at ICML.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.5062063932418823
+   },
+   {
+    "a": "Carlos Mendoza, VP of Sales, was excused from the meeting.",
+    "b": "Jennifer Liu took the minutes as Secretary.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.5628789663314819
+   },
+   {
+    "a": "The Computational Biology Division is led by Dr. Benjamin Foster.",
+    "b": "The Applied Mathematics Division is led by Prof. Michael O'Sullivan.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.6348839998245239
+   },
+   {
+    "a": "The cloud migration is expected to be completed by Q3 2024.",
+    "b": "A strategic partnership with NovaTech Solutions was proposed.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.5868667364120483
+   },
+   {
+    "a": "Dr. Sarah Williams will report to the CTO.",
+    "b": "Questions should go to Human Resources.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.5859502553939819
+   },
+   {
+    "a": "The next meeting is scheduled for March 18, 2024.",
+    "b": "The previous minutes were from the December 2023 meeting.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.8387293815612793
+   },
+   {
+    "a": "For 2025 the department will hire a visiting scholar.",
+    "b": "Dr. Priya Sharma co-authored a paper with ETH Zurich.",
+    "grade": 1,
+    "kind": "graded",
+    "cos": 0.5557456612586975
+   },
+   {
+    "a": "Robert Chen has been promoted to Vice President of Engineering.",
+    "b": "The recipe calls for two cups of flour and a pinch of salt.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.4720737636089325
+   },
+   {
+    "a": "Revenue increased 12% year-over-year.",
+    "b": "The hiking trail is closed after heavy snowfall.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.5336095094680786
+   },
+   {
+    "a": "Dr. Benjamin Foster received the Young Investigator Award.",
+    "b": "Please water the plants twice a week.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.4365052878856659
+   },
+   {
+    "a": "The meeting was held in Conference Room A.",
+    "b": "The football match ended in a draw.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.6366329789161682
+   },
+   {
+    "a": "Kevin O'Brien agreed to coordinate the legal review.",
+    "b": "Tomatoes grow best in full sun.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.47637856006622314
+   },
+   {
+    "a": "The department produced 23 peer-reviewed publications.",
+    "b": "The train to the airport leaves every fifteen minutes.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.5371878147125244
+   },
+   {
+    "a": "Catherine Dubois will manage the NovaTech partnership.",
+    "b": "My cat sleeps most of the afternoon.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.48002567887306213
+   },
+   {
+    "a": "The cloud migration timeline was presented.",
+    "b": "The museum is free on the first Sunday of the month.",
+    "grade": 0,
+    "kind": "graded",
+    "cos": 0.6085240244865417
+   },
+   {
+    "a": "The motion to approve the December minutes was carried.",
+    "b": "The board passed the motion approving last December's minutes.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9179015755653381,
+    "category": "negation"
+   },
+   {
+    "a": "The motion to approve the December minutes was carried.",
+    "b": "The motion to approve the December minutes was not carried.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9874972105026245,
+    "category": "negation"
+   },
+   {
+    "a": "Jennifer Liu confirmed that a quorum was present.",
+    "b": "Jennifer Liu verified there were enough members for a quorum.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9535292387008667,
+    "category": "negation"
+   },
+   {
+    "a": "Jennifer Liu confirmed that a quorum was present.",
+    "b": "Jennifer Liu confirmed that a quorum was not present.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.99058598279953,
+    "category": "negation"
+   },
+   {
+    "a": "Carlos Mendoza was absent from the board meeting.",
+    "b": "Carlos Mendoza did not attend the board meeting.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9906030297279358,
+    "category": "negation"
+   },
+   {
+    "a": "Carlos Mendoza was absent from the board meeting.",
+    "b": "Carlos Mendoza was present at the board meeting.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9764841794967651,
+    "category": "negation"
+   },
+   {
+    "a": "The cloud migration to AWS is on schedule for Q3 2024.",
+    "b": "Moving to AWS is expected to finish in the third quarter of 2024.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9190323948860168,
+    "category": "negation"
+   },
+   {
+    "a": "The cloud migration to AWS is on schedule for Q3 2024.",
+    "b": "The cloud migration to AWS will not be finished in Q3 2024.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9774656295776367,
+    "category": "negation"
+   },
+   {
+    "a": "Dr. Aisha Patel recommended due diligence before proceeding with the partnership.",
+    "b": "Dr. Aisha Patel advised a thorough review before moving ahead with the partnership.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9295073747634888,
+    "category": "negation"
+   },
+   {
+    "a": "Dr. Aisha Patel recommended due diligence before proceeding with the partnership.",
+    "b": "Dr. Aisha Patel saw no need for due diligence before proceeding with the partnership.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9815834164619446,
+    "category": "negation"
+   },
+   {
+    "a": "The appointments are effective immediately.",
+    "b": "The new appointments take effect right away.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9097302556037903,
+    "category": "negation"
+   },
+   {
+    "a": "The appointments are effective immediately.",
+    "b": "The appointments are not effective immediately.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.977196455001831,
+    "category": "negation"
+   },
+   {
+    "a": "Kevin O'Brien agreed to coordinate the legal review.",
+    "b": "Kevin O'Brien will handle coordination of the legal review.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9809455275535583,
+    "category": "negation"
+   },
+   {
+    "a": "Kevin O'Brien agreed to coordinate the legal review.",
+    "b": "Kevin O'Brien refused to coordinate the legal review.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.983346700668335,
+    "category": "negation"
+   },
+   {
+    "a": "Dr. Sarah Williams reports directly to James Anderson.",
+    "b": "James Anderson is Dr. Sarah Williams's direct manager.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9613248109817505,
+    "category": "role_swap"
+   },
+   {
+    "a": "Dr. Sarah Williams reports directly to James Anderson.",
+    "b": "James Anderson reports directly to Dr. Sarah Williams.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9852003455162048,
+    "category": "role_swap"
+   },
+   {
+    "a": "Elizabeth Park moved to approve the minutes and Thomas Muller seconded.",
+    "b": "Thomas Muller seconded Elizabeth Park's motion to approve the minutes.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9771127700805664,
+    "category": "role_swap"
+   },
+   {
+    "a": "Elizabeth Park moved to approve the minutes and Thomas Muller seconded.",
+    "b": "Thomas Muller moved to approve the minutes and Elizabeth Park seconded.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9943471550941467,
+    "category": "role_swap"
+   },
+   {
+    "a": "The machine learning team is led by Dr. Yuki Tanaka under Thomas Muller.",
+    "b": "Thomas Muller oversees the machine learning team, which Dr. Yuki Tanaka leads.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.972241997718811,
+    "category": "role_swap"
+   },
+   {
+    "a": "The machine learning team is led by Dr. Yuki Tanaka under Thomas Muller.",
+    "b": "The machine learning team is led by Thomas Muller under Dr. Yuki Tanaka.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9981693029403687,
+    "category": "role_swap"
+   },
+   {
+    "a": "Dr. Priya Sharma co-authored a paper with Prof. Hans Weber from ETH Zurich.",
+    "b": "Prof. Hans Weber of ETH Zurich wrote a paper together with Dr. Priya Sharma.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9890252351760864,
+    "category": "role_swap"
+   },
+   {
+    "a": "Dr. Priya Sharma co-authored a paper with Prof. Hans Weber from ETH Zurich.",
+    "b": "Dr. Priya Sharma from ETH Zurich co-authored a paper with Prof. Hans Weber.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9935978055000305,
+    "category": "role_swap"
+   },
+   {
+    "a": "Margaret Thompson reviewed the report prepared by Dr. Olivia Chambers.",
+    "b": "The report Dr. Olivia Chambers prepared was reviewed by Margaret Thompson.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9763713479042053,
+    "category": "role_swap"
+   },
+   {
+    "a": "Margaret Thompson reviewed the report prepared by Dr. Olivia Chambers.",
+    "b": "Dr. Olivia Chambers reviewed the report prepared by Margaret Thompson.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9967427253723145,
+    "category": "role_swap"
+   },
+   {
+    "a": "Robert Chen was promoted to Vice President of Engineering by Margaret Thompson.",
+    "b": "Margaret Thompson promoted Robert Chen to VP of Engineering.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9742016792297363,
+    "category": "role_swap"
+   },
+   {
+    "a": "Robert Chen was promoted to Vice President of Engineering by Margaret Thompson.",
+    "b": "Margaret Thompson was promoted to Vice President of Engineering by Robert Chen.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9835396409034729,
+    "category": "role_swap"
+   },
+   {
+    "a": "Dr. Benjamin Foster leads the division and Lucas Zimmermann is a senior researcher in it.",
+    "b": "Lucas Zimmermann is a senior researcher in the division that Dr. Benjamin Foster leads.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.970782995223999,
+    "category": "role_swap"
+   },
+   {
+    "a": "Dr. Benjamin Foster leads the division and Lucas Zimmermann is a senior researcher in it.",
+    "b": "Lucas Zimmermann leads the division and Dr. Benjamin Foster is a senior researcher in it.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9972987771034241,
+    "category": "role_swap"
+   },
+   {
+    "a": "Dr. James Chen from Stanford University presented at NeurIPS.",
+    "b": "At NeurIPS, Stanford's Dr. James Chen gave a presentation.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9756205081939697,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Dr. James Chen from Stanford University presented at NeurIPS.",
+    "b": "Robert Chen from Stanford University presented at NeurIPS.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9077990055084229,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Maria Garcia was appointed Head of Product Design.",
+    "b": "Maria Garcia is the new head of the product design team.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9746013879776001,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Maria Garcia was appointed Head of Product Design.",
+    "b": "Patricia Okonkwo was appointed Head of Product Design.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.7339411973953247,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Anna Kowalski was named to the Forbes 30 Under 30 list.",
+    "b": "Forbes included Anna Kowalski in its 30 Under 30 list.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9769865274429321,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Anna Kowalski was named to the Forbes 30 Under 30 list.",
+    "b": "Christopher Wong was named to the Forbes 30 Under 30 list.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.66302490234375,
+    "category": "entity_swap"
+   },
+   {
+    "a": "The full migration is moving to AWS.",
+    "b": "Everything is being migrated onto Amazon Web Services.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.8517475128173828,
+    "category": "entity_swap"
+   },
+   {
+    "a": "The full migration is moving to AWS.",
+    "b": "The full migration is moving to Microsoft Azure.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.8860877752304077,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Christopher Wong received a best paper award at ICML.",
+    "b": "At ICML, Christopher Wong won a best paper award.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9924823641777039,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Christopher Wong received a best paper award at ICML.",
+    "b": "Christopher Wong received a best paper award at NeurIPS.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.867580771446228,
+    "category": "entity_swap"
+   },
+   {
+    "a": "The partnership with NovaTech Solutions will be managed by Catherine Dubois.",
+    "b": "Catherine Dubois will run the NovaTech Solutions partnership.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9816838502883911,
+    "category": "entity_swap"
+   },
+   {
+    "a": "The partnership with NovaTech Solutions will be managed by Catherine Dubois.",
+    "b": "The partnership with NovaTech Solutions will be managed by Alexander Popov.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.793434202671051,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Maria Garcia previously led the UX team at the London office.",
+    "b": "Before this role, Maria Garcia headed UX in London.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9451473951339722,
+    "category": "entity_swap"
+   },
+   {
+    "a": "Maria Garcia previously led the UX team at the London office.",
+    "b": "Maria Garcia previously led the UX team at the Berlin office.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9207659363746643,
+    "category": "entity_swap"
+   },
+   {
+    "a": "The NIH grant led by Dr. Benjamin Foster is worth $600K.",
+    "b": "Dr. Benjamin Foster is PI on a $600,000 NIH grant.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.950658917427063,
+    "category": "number_change"
+   },
+   {
+    "a": "The NIH grant led by Dr. Benjamin Foster is worth $600K.",
+    "b": "The NIH grant led by Dr. Benjamin Foster is worth $750K.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9880467057228088,
+    "category": "number_change"
+   },
+   {
+    "a": "Revenue increased 12% year-over-year.",
+    "b": "Annual revenue grew by twelve percent.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9160944223403931,
+    "category": "number_change"
+   },
+   {
+    "a": "Revenue increased 12% year-over-year.",
+    "b": "Revenue increased 21% year-over-year.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9909839630126953,
+    "category": "number_change"
+   },
+   {
+    "a": "The department produced 23 peer-reviewed publications.",
+    "b": "Twenty-three peer-reviewed papers came out of the department.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9435957670211792,
+    "category": "number_change"
+   },
+   {
+    "a": "The department produced 23 peer-reviewed publications.",
+    "b": "The department produced 32 peer-reviewed publications.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9941772222518921,
+    "category": "number_change"
+   },
+   {
+    "a": "The meeting was called to order at 10:05 AM.",
+    "b": "The chair opened the meeting at five past ten in the morning.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.8439270257949829,
+    "category": "number_change"
+   },
+   {
+    "a": "The meeting was called to order at 10:05 AM.",
+    "b": "The meeting was called to order at 11:05 AM.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9931730031967163,
+    "category": "number_change"
+   },
+   {
+    "a": "The total research budget is $4.2M.",
+    "b": "Research has an overall budget of 4.2 million dollars.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9412322044372559,
+    "category": "number_change"
+   },
+   {
+    "a": "The total research budget is $4.2M.",
+    "b": "The total research budget is $2.4M.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9843323230743408,
+    "category": "number_change"
+   },
+   {
+    "a": "The next board meeting is scheduled for March 18, 2024.",
+    "b": "The board will meet again on 18 March 2024.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9479547739028931,
+    "category": "number_change"
+   },
+   {
+    "a": "The next board meeting is scheduled for March 18, 2024.",
+    "b": "The next board meeting is scheduled for March 28, 2024.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9948898553848267,
+    "category": "number_change"
+   },
+   {
+    "a": "Our team of 45 researchers spans three divisions.",
+    "b": "Forty-five researchers work across the department's three divisions.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.906293511390686,
+    "category": "number_change"
+   },
+   {
+    "a": "Our team of 45 researchers spans three divisions.",
+    "b": "Our team of 45 researchers spans five divisions.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9963021278381348,
+    "category": "number_change"
+   },
+   {
+    "a": "Revenue increased compared with last year.",
+    "b": "Revenue went up relative to the previous year.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9555766582489014,
+    "category": "antonym"
+   },
+   {
+    "a": "Revenue increased compared with last year.",
+    "b": "Revenue decreased compared with last year.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.931248128414154,
+    "category": "antonym"
+   },
+   {
+    "a": "Robert Chen has been promoted to Vice President of Engineering.",
+    "b": "Robert Chen moves up to VP of Engineering.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9616000652313232,
+    "category": "antonym"
+   },
+   {
+    "a": "Robert Chen has been promoted to Vice President of Engineering.",
+    "b": "Robert Chen has been demoted from Vice President of Engineering.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9754570126533508,
+    "category": "antonym"
+   },
+   {
+    "a": "Operational costs in the APAC region are rising.",
+    "b": "Costs of operations across Asia-Pacific are going up.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.7785769701004028,
+    "category": "antonym"
+   },
+   {
+    "a": "Operational costs in the APAC region are rising.",
+    "b": "Operational costs in the APAC region are falling.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9534933567047119,
+    "category": "antonym"
+   },
+   {
+    "a": "The plan is to expand the ML division in 2025.",
+    "b": "Next year the machine learning division will grow.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.8527306318283081,
+    "category": "antonym"
+   },
+   {
+    "a": "The plan is to expand the ML division in 2025.",
+    "b": "The plan is to shrink the ML division in 2025.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9622786045074463,
+    "category": "antonym"
+   },
+   {
+    "a": "Richard Hernandez opened the meeting.",
+    "b": "The meeting was called to order by Richard Hernandez.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.9204235076904297,
+    "category": "antonym"
+   },
+   {
+    "a": "Richard Hernandez opened the meeting.",
+    "b": "Richard Hernandez closed the meeting.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9514840245246887,
+    "category": "antonym"
+   },
+   {
+    "a": "Kevin O'Brien supported the proposed expansion into Southeast Asia.",
+    "b": "Kevin O'Brien was in favour of expanding into Southeast Asia.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.982991635799408,
+    "category": "antonym"
+   },
+   {
+    "a": "Kevin O'Brien supported the proposed expansion into Southeast Asia.",
+    "b": "Kevin O'Brien opposed the proposed expansion into Southeast Asia.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.9892134666442871,
+    "category": "antonym"
+   },
+   {
+    "a": "New hires will include two postdoctoral researchers.",
+    "b": "The team will be adding two postdocs.",
+    "grade": 3,
+    "kind": "triplet_pos",
+    "cos": 0.7590640783309937,
+    "category": "antonym"
+   },
+   {
+    "a": "New hires will include two postdoctoral researchers.",
+    "b": "Two postdoctoral researchers will be let go.",
+    "grade": 1,
+    "kind": "hard_neg",
+    "cos": 0.8538404703140259,
+    "category": "antonym"
+   }
+  ]
+ },
+ "retrieval": {
+  "chunks": 33,
+  "questions": 30,
+  "recall@1": 0.8667,
+  "recall@3": 0.9333,
+  "mrr@10": 0.9028,
+  "misses_beyond_top3": [
+   {
+    "id": "q-05",
+    "question": "Who should employees contact with questions about the changes?",
+    "gold": "company_memo#6",
+    "rank": 4,
+    "top1": "company_memo#1"
+   },
+   {
+    "id": "q-27",
+    "question": "Who reviewed the annual research report?",
+    "gold": "research_report#11",
+    "rank": 17,
+    "top1": "research_report#0"
+   }
+  ]
+ },
+ "performance": {
+  "query_latency_ms": {
+   "n": 300,
+   "mean": 5.58,
+   "p50": 5.54,
+   "p90": 5.89,
+   "p95": 6.06,
+   "p99": 6.27
+  },
+  "chunk_batch_latency_ms": {
+   "n": 10,
+   "mean": 317.67,
+   "p50": 318.19,
+   "p90": 319.88,
+   "p95": 319.95,
+   "p99": 320.01
+  },
+  "chunks_per_second": 103.7,
+  "rss_mb": 1643.4
+ },
+ "cold_start": [
+  {
+   "process_to_ready_s": 5.518,
+   "model_load_s": 5.48,
+   "first_query_s": 0.018,
+   "cold_start_total_s": 5.537
+  },
+  {
+   "process_to_ready_s": 5.655,
+   "model_load_s": 5.619,
+   "first_query_s": 0.032,
+   "cold_start_total_s": 5.687
+  },
+  {
+   "process_to_ready_s": 5.405,
+   "model_load_s": 5.368,
+   "first_query_s": 0.031,
+   "cold_start_total_s": 5.435
+  }
+ ]
+}

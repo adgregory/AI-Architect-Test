@@ -26,5 +26,8 @@ MODELS = {m.id: m for m in [
     # nomic: task prefixes are mandatory; same prefix on both sides for symmetric similarity.
     ModelSpec("nomic", "nomic-ai/nomic-embed-text-v1.5", query_prefix="search_query: ",
               passage_prefix="search_document: ", symmetric_prefix="search_query: ", trust_remote_code=True),
+    # Same model, Nomic's recommended prefix for similarity/clustering tasks on the symmetric side.
+    ModelSpec("nomic-clustering", "nomic-ai/nomic-embed-text-v1.5", query_prefix="search_query: ",
+              passage_prefix="search_document: ", symmetric_prefix="clustering: ", trust_remote_code=True),
     ModelSpec("arctic-m", "Snowflake/snowflake-arctic-embed-m-v1.5", query_prefix=BGE_QUERY),
 ]}
