@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     retrieval_top_k: int = Field(3, ge=1, le=50)
     retrieval_score_threshold: float = Field(0.5, ge=-1.0, le=1.0)
 
+    # Semantic answer cache (spike 04): cosine threshold + QuestionGuard, TTL via payload filter
+    answer_cache_enabled: bool = True
+    answer_cache_collection: str = "answer_cache"
+    answer_cache_threshold: float = Field(0.90, ge=0.0, le=1.0)
+    answer_cache_ttl_s: int = Field(24 * 3600, ge=60)
+
     # RAG chunking
     chunk_size: int = Field(500, ge=50, description="Target chunk size in characters")
 

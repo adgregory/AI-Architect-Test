@@ -1,0 +1,292 @@
+{
+ "model": "BAAI/bge-small-en-v1.5",
+ "cases": 263,
+ "should_hit": 50,
+ "repeated_questions": 150,
+ "must_miss": 63,
+ "guard_blocks_true_paraphrases": [
+  {
+   "a": "Carlos Mendoza was absent from the board meeting.",
+   "b": "Carlos Mendoza did not attend the board meeting."
+  },
+  {
+   "a": "The cloud migration to AWS is on schedule for Q3 2024.",
+   "b": "Moving to AWS is expected to finish in the third quarter of 2024."
+  },
+  {
+   "a": "Dr. Sarah Williams reports directly to James Anderson.",
+   "b": "James Anderson is Dr. Sarah Williams's direct manager."
+  },
+  {
+   "a": "Elizabeth Park moved to approve the minutes and Thomas Muller seconded.",
+   "b": "Thomas Muller seconded Elizabeth Park's motion to approve the minutes."
+  },
+  {
+   "a": "The machine learning team is led by Dr. Yuki Tanaka under Thomas Muller.",
+   "b": "Thomas Muller oversees the machine learning team, which Dr. Yuki Tanaka leads."
+  },
+  {
+   "a": "Dr. Priya Sharma co-authored a paper with Prof. Hans Weber from ETH Zurich.",
+   "b": "Prof. Hans Weber of ETH Zurich wrote a paper together with Dr. Priya Sharma."
+  },
+  {
+   "a": "Margaret Thompson reviewed the report prepared by Dr. Olivia Chambers.",
+   "b": "The report Dr. Olivia Chambers prepared was reviewed by Margaret Thompson."
+  },
+  {
+   "a": "Robert Chen was promoted to Vice President of Engineering by Margaret Thompson.",
+   "b": "Margaret Thompson promoted Robert Chen to VP of Engineering."
+  },
+  {
+   "a": "Dr. Benjamin Foster leads the division and Lucas Zimmermann is a senior researcher in it.",
+   "b": "Lucas Zimmermann is a senior researcher in the division that Dr. Benjamin Foster leads."
+  },
+  {
+   "a": "Dr. James Chen from Stanford University presented at NeurIPS.",
+   "b": "At NeurIPS, Stanford's Dr. James Chen gave a presentation."
+  },
+  {
+   "a": "Maria Garcia was appointed Head of Product Design.",
+   "b": "Maria Garcia is the new head of the product design team."
+  },
+  {
+   "a": "Anna Kowalski was named to the Forbes 30 Under 30 list.",
+   "b": "Forbes included Anna Kowalski in its 30 Under 30 list."
+  },
+  {
+   "a": "The full migration is moving to AWS.",
+   "b": "Everything is being migrated onto Amazon Web Services."
+  },
+  {
+   "a": "Christopher Wong received a best paper award at ICML.",
+   "b": "At ICML, Christopher Wong won a best paper award."
+  },
+  {
+   "a": "The partnership with NovaTech Solutions will be managed by Catherine Dubois.",
+   "b": "Catherine Dubois will run the NovaTech Solutions partnership."
+  },
+  {
+   "a": "The NIH grant led by Dr. Benjamin Foster is worth $600K.",
+   "b": "Dr. Benjamin Foster is PI on a $600,000 NIH grant."
+  },
+  {
+   "a": "The department produced 23 peer-reviewed publications.",
+   "b": "Twenty-three peer-reviewed papers came out of the department."
+  },
+  {
+   "a": "The meeting was called to order at 10:05 AM.",
+   "b": "The chair opened the meeting at five past ten in the morning."
+  },
+  {
+   "a": "The total research budget is $4.2M.",
+   "b": "Research has an overall budget of 4.2 million dollars."
+  },
+  {
+   "a": "Our team of 45 researchers spans three divisions.",
+   "b": "Forty-five researchers work across the department's three divisions."
+  },
+  {
+   "a": "Robert Chen has been promoted to Vice President of Engineering.",
+   "b": "Robert Chen moves up to VP of Engineering."
+  },
+  {
+   "a": "Operational costs in the APAC region are rising.",
+   "b": "Costs of operations across Asia-Pacific are going up."
+  },
+  {
+   "a": "The plan is to expand the ML division in 2025.",
+   "b": "Next year the machine learning division will grow."
+  },
+  {
+   "a": "Margaret Thompson is the Chief Executive Officer.",
+   "b": "The company's CEO is Margaret Thompson."
+  },
+  {
+   "a": "David Nakamura will manage the project codenamed Atlas.",
+   "b": "Project Atlas is going to be run by David Nakamura."
+  },
+  {
+   "a": "Questions should be directed to Patricia Okonkwo in Human Resources.",
+   "b": "Send any questions to Patricia Okonkwo from HR."
+  },
+  {
+   "a": "Richard Hernandez adjourned the meeting at 12:25 PM.",
+   "b": "The meeting was closed by Richard Hernandez at 12:25 in the afternoon."
+  },
+  {
+   "a": "Dr. Benjamin Foster received the Young Investigator Award from the National Science Foundation.",
+   "b": "The NSF gave Dr. Benjamin Foster its Young Investigator Award."
+  },
+  {
+   "a": "The Applied Mathematics Division achieved a breakthrough in optimization algorithms.",
+   "b": "Applied Mathematics made a major advance in optimisation algorithms."
+  },
+  {
+   "a": "The Machine Learning Division developed a novel transformer architecture.",
+   "b": "A new transformer architecture was created by the ML division."
+  },
+  {
+   "a": "External grants secured total $1.8M.",
+   "b": "The department won 1.8 million dollars in outside grants."
+  },
+  {
+   "a": "Kevin O'Brien is the General Counsel.",
+   "b": "The company's chief lawyer is Kevin O'Brien."
+  },
+  {
+   "a": "The Computational Biology Division published groundbreaking work on protein folding.",
+   "b": "Pioneering protein-folding research came out of Computational Biology."
+  }
+ ],
+ "guard_lets_through_negatives": [],
+ "sweep": [
+  {
+   "threshold": 0.8,
+   "guard": false,
+   "hit_rate_paraphrase": 0.9,
+   "hit_rate_repeated_question": 1.0,
+   "false_hits": 30,
+   "false_hits_by_kind": {
+    "negation": 6,
+    "role_swap": 7,
+    "entity_swap": 4,
+    "number_change": 7,
+    "antonym": 6
+   }
+  },
+  {
+   "threshold": 0.8,
+   "guard": true,
+   "hit_rate_paraphrase": 0.3,
+   "hit_rate_repeated_question": 0.94,
+   "false_hits": 0,
+   "false_hits_by_kind": {}
+  },
+  {
+   "threshold": 0.85,
+   "guard": false,
+   "hit_rate_paraphrase": 0.76,
+   "hit_rate_repeated_question": 1.0,
+   "false_hits": 26,
+   "false_hits_by_kind": {
+    "negation": 5,
+    "role_swap": 7,
+    "entity_swap": 3,
+    "number_change": 6,
+    "antonym": 5
+   }
+  },
+  {
+   "threshold": 0.85,
+   "guard": true,
+   "hit_rate_paraphrase": 0.24,
+   "hit_rate_repeated_question": 0.94,
+   "false_hits": 0,
+   "false_hits_by_kind": {}
+  },
+  {
+   "threshold": 0.88,
+   "guard": false,
+   "hit_rate_paraphrase": 0.62,
+   "hit_rate_repeated_question": 1.0,
+   "false_hits": 22,
+   "false_hits_by_kind": {
+    "negation": 4,
+    "role_swap": 7,
+    "entity_swap": 2,
+    "number_change": 6,
+    "antonym": 3
+   }
+  },
+  {
+   "threshold": 0.88,
+   "guard": true,
+   "hit_rate_paraphrase": 0.18,
+   "hit_rate_repeated_question": 0.94,
+   "false_hits": 0,
+   "false_hits_by_kind": {}
+  },
+  {
+   "threshold": 0.9,
+   "guard": false,
+   "hit_rate_paraphrase": 0.48,
+   "hit_rate_repeated_question": 1.0,
+   "false_hits": 18,
+   "false_hits_by_kind": {
+    "negation": 3,
+    "role_swap": 7,
+    "entity_swap": 1,
+    "number_change": 6,
+    "antonym": 1
+   }
+  },
+  {
+   "threshold": 0.9,
+   "guard": true,
+   "hit_rate_paraphrase": 0.1,
+   "hit_rate_repeated_question": 0.94,
+   "false_hits": 0,
+   "false_hits_by_kind": {}
+  },
+  {
+   "threshold": 0.92,
+   "guard": false,
+   "hit_rate_paraphrase": 0.36,
+   "hit_rate_repeated_question": 0.993,
+   "false_hits": 15,
+   "false_hits_by_kind": {
+    "negation": 1,
+    "role_swap": 7,
+    "entity_swap": 1,
+    "number_change": 6
+   }
+  },
+  {
+   "threshold": 0.92,
+   "guard": true,
+   "hit_rate_paraphrase": 0.06,
+   "hit_rate_repeated_question": 0.933,
+   "false_hits": 0,
+   "false_hits_by_kind": {}
+  },
+  {
+   "threshold": 0.94,
+   "guard": false,
+   "hit_rate_paraphrase": 0.28,
+   "hit_rate_repeated_question": 0.993,
+   "false_hits": 12,
+   "false_hits_by_kind": {
+    "role_swap": 7,
+    "entity_swap": 1,
+    "number_change": 4
+   }
+  },
+  {
+   "threshold": 0.94,
+   "guard": true,
+   "hit_rate_paraphrase": 0.02,
+   "hit_rate_repeated_question": 0.933,
+   "false_hits": 0,
+   "false_hits_by_kind": {}
+  },
+  {
+   "threshold": 0.96,
+   "guard": false,
+   "hit_rate_paraphrase": 0.16,
+   "hit_rate_repeated_question": 0.96,
+   "false_hits": 9,
+   "false_hits_by_kind": {
+    "role_swap": 7,
+    "number_change": 2
+   }
+  },
+  {
+   "threshold": 0.96,
+   "guard": true,
+   "hit_rate_paraphrase": 0.0,
+   "hit_rate_repeated_question": 0.9,
+   "false_hits": 0,
+   "false_hits_by_kind": {}
+  }
+ ]
+}
