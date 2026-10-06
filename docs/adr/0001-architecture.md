@@ -10,11 +10,11 @@ fuzzy-matches them against names supplied in the request, indexes document
 text for retrieval, and answers questions with RAG. Constraints:
 
 - Runs locally with Docker Compose for now; infrastructure-as-code comes later.
-- The only cloud account available is GCP, so the LLM is Gemini on Vertex AI
+- Production targets AWS: the agent runs on AgentCore Runtime with a Bedrock model. The only
+  account available for local testing is GCP, so locally the agent uses Gemini on Vertex AI
   via Application Default Credentials (ADC).
 - The test suite fixes part of the contract: a synchronous `POST /api/extract`
   response shape, and a Qdrant-backed `VectorStore`.
-- A later AWS deployment (AgentCore for the agent runtime) must stay possible.
 - Every backend sits behind an interface so it can be swapped (e.g. hybrid search).
 
 ## Decision
@@ -29,7 +29,7 @@ text for retrieval, and answers questions with RAG. Constraints:
 | `dispatcher` (Lambda) | Consumes the Kinesis stream and starts Temporal workflows |
 | `worker-cpu` | Temporal worker on the `cpu` queue: OCR, NER, box location, fuzzy matching, embedding — no DB connections |
 | `worker-io` | Temporal worker on the `io` queue: job status/result writes, `NOTIFY`, Qdrant upserts — sole owner of the worker-side DB pool |
-| `agent` | Strands agent (Gemini on Vertex via ADC), AgentCore runtime contract |
+| `agent` | Strands agent, AgentCore runtime contract (Gemini on Vertex locally; Bedrock on AgentCore in AWS) |
 | `postgres` | `jobs`, `outbox`, Temporal persistence |
 | `temporal`, `temporal-ui` | Workflow orchestration |
 | `qdrant` | Document-chunk vectors and the semantic answer cache |
@@ -89,8 +89,16 @@ ExtractNamesWorkflow(job_id)
 
 ### Agent service and streaming
 
-- Strands Agents with `GeminiModel` (`strands-agents[gemini]`) given a pre-built
-  `google.genai.Client(vertexai=True, project, location="global")`; credentials via ADC.
+- Strands Agents; the model provider is selected by configuration, per environment:
+
+  | Environment | Provider | Credentials |
+  |-------------|----------|-------------|
+  | Local (compose) | `GeminiModel` (`strands-agents[gemini]`) with a pre-built `google.genai.Client(vertexai=True, project, location="global")` | ADC file mounted read-only |
+  | AWS (AgentCore Runtime) | `BedrockModel` — the production model | AgentCore runtime execution role (`bedrock:InvokeModel`, `bedrock:InvokeModelWithResponseStream` scoped to the configured model ARN) |
+
+  No GCP credentials exist in AWS (no Workload Identity Federation needed). Prompts and
+  answer quality are validated against both providers since local and production models
+  differ. The Bedrock model ID is stack configuration.
 - Built to the **AgentCore Runtime contract** (`POST /invocations`, `GET /ping`, port
   8080) so the same image can be deployed to AgentCore later.
 - Retrieval (embed question → Qdrant search → semantic cache) is a Strands tool inside
@@ -161,7 +169,8 @@ Pools are closed on shutdown; pool sizes, timeouts and limits come from configur
 | NER model | 02 |
 | Embedding model | 03 |
 | Answer-cache similarity threshold | 04 |
-| Gemini model ID | confirm in the Vertex console |
+| Gemini model ID (local) | confirm in the Vertex console |
+| Bedrock model ID (AWS) | stack configuration |
 
 ## Consequences
 
