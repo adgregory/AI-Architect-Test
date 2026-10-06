@@ -24,7 +24,9 @@ text for retrieval, and answers questions with RAG. Constraints:
 | Container | Responsibility |
 |-----------|----------------|
 | `api` | FastAPI backend: validation, sync extraction, job API, SSE, relays agent stream |
-| `outbox-relay` | Dispatches outbox rows to Temporal |
+| `debezium` | Debezium Server: CDC on the `outbox` table → Kinesis (outbox event router) |
+| `localstack` | Local Kinesis stream + Lambda (event source mapping) — AWS parity |
+| `dispatcher` (Lambda) | Consumes the Kinesis stream and starts Temporal workflows |
 | `worker-cpu` | Temporal worker on the `cpu` queue: OCR, NER, box location, fuzzy matching, embedding — no DB connections |
 | `worker-io` | Temporal worker on the `io` queue: job status/result writes, `NOTIFY`, Qdrant upserts — sole owner of the worker-side DB pool |
 | `agent` | Strands agent (Gemini on Vertex via ADC), AgentCore runtime contract |
@@ -45,13 +47,20 @@ Sync and async extraction call the same service classes; only the entry point di
 
 1. `POST /api/jobs` validates the upload, stores the PDF, and in **one transaction**
    inserts the `jobs` row and an `outbox` row, then returns `202`.
-2. `outbox-relay` claims unsent rows with `SELECT … FOR UPDATE SKIP LOCKED`, starts
-   `ExtractNamesWorkflow` with `workflow_id = job_id`, and marks the row dispatched.
-   It is woken by `LISTEN/NOTIFY` with a short poll as fallback. Delivery is
-   at-least-once; Temporal's workflow-ID uniqueness makes duplicates harmless.
-   No CDC (Debezium/Kafka) — a polling relay is enough at this scale; CDC is the
-   upgrade path if other consumers need the same events.
-3. The workflow's last activity writes the result to `jobs.result` (jsonb), sets
+2. **Debezium Server** reads the WAL through a logical replication slot and a publication
+   on `outbox`, applies the outbox event router, and publishes each event to a **Kinesis**
+   stream (partition key `job_id`). Locally Kinesis is LocalStack; in AWS it is Kinesis
+   Data Streams. Kafka is not used.
+3. The **dispatcher Lambda** (Kinesis event source mapping) starts `ExtractNamesWorkflow`
+   with `workflow_id = job_id`. Delivery is at-least-once end to end; Temporal's workflow-ID
+   uniqueness makes duplicates harmless (`WorkflowAlreadyStarted` is treated as success).
+   Failures use partial batch responses (`ReportBatchItemFailures`), bisect-on-error,
+   bounded retry age and an on-failure destination (SQS DLQ + alarm). Locally the same
+   Lambda runs in LocalStack, so the dispatch code path is identical in both environments.
+   - **WAL retention risk:** a stalled Debezium keeps the replication slot's WAL and can
+     fill the database disk. Mitigations: `max_slot_wal_keep_size`, alarms on slot lag and
+     disk, Debezium offsets in durable storage (not an ephemeral task file).
+4. The workflow's last activity writes the result to `jobs.result` (jsonb), sets
    the status, and issues `NOTIFY job_done`; open SSE connections push the result.
 
 ### Temporal workflow
@@ -99,6 +108,8 @@ ExtractNamesWorkflow(job_id)
 
 - **Postgres:** `jobs` (status, timestamps, owner, retry count as columns; result as
   `jsonb`), `outbox`, and Temporal's persistence — one database engine.
+  Logical replication is enabled for Debezium (`wal_level=logical` locally; an RDS
+  parameter group with `rds.logical_replication=1` in AWS).
 - **Qdrant:** `chunks` collection (cosine) and `answer_cache` collection. The cache stores
   `created_at` in the payload; lookups filter expired entries and a periodic job deletes
   them (Qdrant has no TTL). Hybrid (sparse + dense with fusion) is available when needed.
@@ -123,12 +134,12 @@ gives the same predictability with concurrency.
 
 | Resource | Approach |
 |----------|----------|
-| Postgres pools | Async pool per process (`psycopg_pool.AsyncConnectionPool` or SQLAlchemy async engine) in `api`, `outbox-relay` and the `io` worker only, with `min_size`/`max_size`, acquire `timeout`, `max_waiting`, `max_lifetime`, `max_idle` and a reset/health check on checkout — all from config |
-| Postgres budget | `api` replicas × `api` pool + `io` replicas × `io` pool + relay pool + `LISTEN` connections + Temporal server `maxConns` + admin headroom < `max_connections`; independent of `cpu` worker count |
+| Postgres pools | Async pool per process (`psycopg_pool.AsyncConnectionPool` or SQLAlchemy async engine) in `api` and the `io` worker only, with `min_size`/`max_size`, acquire `timeout`, `max_waiting`, `max_lifetime`, `max_idle` and a reset/health check on checkout — all from config |
+| Postgres budget | `api` replicas × (`api` pool + 1 `LISTEN`) + `io` replicas × `io` pool + 1 Debezium replication connection + Temporal server `maxConns` + admin headroom < `max_connections`; independent of `cpu` worker count |
 | Query hygiene | `statement_timeout` and `idle_in_transaction_session_timeout` on the app role; connections acquired late and released early — never held across OCR, NER or LLM calls |
 | Backpressure | Pool exhaustion → fast `503` + `Retry-After` from the API (bounded `max_waiting`); async jobs absorb bursts in the outbox and Temporal queues |
 | Observability | Pool stats (in use, idle, waiting, acquire wait, timeouts) exported with the service metrics |
-| `LISTEN/NOTIFY` | One dedicated long-lived connection per process, outside the pool (LISTEN is session-scoped) |
+| `LISTEN/NOTIFY` | `api` only (job-completion SSE): one dedicated long-lived connection per process, outside the pool (LISTEN is session-scoped) |
 | PgBouncer | Added in transaction mode when replica count makes the budget tight; `LISTEN` connections bypass it |
 | Qdrant | One client per process (pooled HTTP keep-alive / gRPC channel), reused |
 | `api` → `agent` | One shared `httpx.AsyncClient` with connection limits and timeouts |
