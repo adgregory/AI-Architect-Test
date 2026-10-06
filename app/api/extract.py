@@ -4,8 +4,8 @@ import tempfile
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import TypeAdapter, ValidationError
 
-from app.api.deps import get_extraction_session
-from app.core.config import get_settings
+from app.api.deps import get_app_settings, get_extraction_session
+from app.core.config import Settings
 from app.core.logging import get_logger
 from app.models.schemas import ExtractionResponse, NamePair
 from app.services.extraction_service import ExtractionSession
@@ -61,10 +61,11 @@ def extract_names_from_pdf(
     pdf_file: UploadFile = File(...),
     names: str = Form(...),
     session: ExtractionSession = Depends(get_extraction_session),
+    settings: Settings = Depends(get_app_settings),
 ):
     """Extract person names and their bounding boxes from a scanned PDF and fuzzy-match
     them (≥ 90%) against the requested name pairs."""
-    content = read_pdf_upload(pdf_file, get_settings().max_upload_mb * 2**20)
+    content = read_pdf_upload(pdf_file, settings.max_upload_mb * 2**20)
     query_names = _parse_names(names)
 
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")

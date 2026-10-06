@@ -6,7 +6,7 @@ import threading
 
 from fastapi import Depends, Request
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.core.container import Container
 from app.services.extraction_service import ExtractionSession
 from app.services.rag_service import RAGService
@@ -25,6 +25,10 @@ def get_container(request: Request) -> Container:
                 container = Container(get_settings())
                 request.app.state.container = container
     return container
+
+
+def get_app_settings(container: Container = Depends(get_container)) -> Settings:
+    return container.settings
 
 
 def get_extraction_session(container: Container = Depends(get_container)) -> ExtractionSession:

@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.api.deps import get_container, get_rag_service
 from app.api.extract import read_pdf_upload
-from app.core.config import get_settings
 from app.core.container import Container
 from app.core.logging import get_logger
 from app.models.schemas import IngestResponse, RAGRequest, RAGResponse
@@ -23,7 +22,7 @@ def generate_answer(question: str, rag: RAGService) -> dict:
 @router.post("/ingest", response_model=IngestResponse)
 def ingest_pdf(pdf_file: UploadFile = File(...), container: Container = Depends(get_container)):
     """OCR a PDF, chunk it, embed the chunks and store them in the vector database."""
-    settings = get_settings()
+    settings = container.settings
     content = read_pdf_upload(pdf_file, settings.max_upload_mb * 2**20)
 
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
