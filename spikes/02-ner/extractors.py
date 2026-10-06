@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -84,7 +85,7 @@ class BertNerExtractor:
 
 class GlinerExtractor:
     LABELS = ["person"]
-    THRESHOLD = 0.5
+    THRESHOLD = float(os.environ.get("GLINER_THRESHOLD", "0.5"))
 
     def __init__(self, backend: str, device: str):
         from gliner import GLiNER
