@@ -127,6 +127,44 @@ tasks:
         echo "job $job"
         curl -sN {{.API_URL}}/api/jobs/$job/events
 
+  # ------------------------------------------------------------------ infrastructure (Pulumi, offline)
+  infra:setup:
+    desc: Install the infra uv environment and create local-backend stacks (dev, staging)
+    dir: infra
+    env: &pulumi_offline
+      PULUMI_BACKEND_URL: "file://{{.ROOT_DIR}}/infra/.pulumi"
+      PULUMI_CONFIG_PASSPHRASE: "local-dev-only"  # pragma: allowlist secret - local file backend only
+      INFRA_OFFLINE: "1"
+      AWS_ACCESS_KEY_ID: "offline"
+      AWS_SECRET_ACCESS_KEY: "offline"  # pragma: allowlist secret - placeholder for offline previews
+    cmds:
+      - uv sync
+      - mkdir -p .pulumi
+      - pulumi stack select dev 2>/dev/null || pulumi stack init dev
+      - pulumi stack select staging 2>/dev/null || pulumi stack init staging
+
+  infra:test:
+    desc: Unit tests with Pulumi mocks + policy rules (no AWS access)
+    dir: infra
+    cmds:
+      - uv run pytest -q tests
+
+  infra:preview:
+    desc: "Offline preview with the CrossGuard policy pack (INFRA_STACK=dev|staging)"
+    dir: infra
+    env: *pulumi_offline
+    cmds:
+      - pulumi preview --stack {{.INFRA_STACK | default "dev"}} --non-interactive --policy-pack policies {{.CLI_ARGS}}
+
+  infra:check:
+    desc: Everything that validates the infrastructure offline (tests + both stack previews)
+    cmds:
+      - task: infra:test
+      - task: infra:preview
+        vars: {INFRA_STACK: dev}
+      - task: infra:preview
+        vars: {INFRA_STACK: staging}
+
   # ------------------------------------------------------------------ docker
   docker:build:
     desc: "Build the image (STACK=chosen|fallback)"
