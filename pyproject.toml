@@ -6,14 +6,14 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 # Core: needed whichever engines are selected.
 dependencies = [
-    "fastapi==0.115.0",
-    "uvicorn==0.30.0",
-    "python-multipart==0.0.9",
+    "fastapi>=0.116,<1",
+    "uvicorn>=0.34.2,<1",
+    "python-multipart>=0.0.18",
     "pymupdf==1.24.0",          # PDF rendering, used by every OCR engine
     "thefuzz==0.22.1",
     "python-Levenshtein==0.25.1",
     "qdrant-client==1.11.0",
-    "pydantic==2.9.0",
+    "pydantic>=2.11,<3",
     "pydantic-settings>=2.5,<3",
     "httpx>=0.27,<1",           # LLM HTTP client (runtime, not only tests)
     "numpy>=1.26",
@@ -41,6 +41,11 @@ fallback = [
     "spacy>=3.8,<3.9",
     "en-core-web-sm",
     "sentence-transformers>=3.2",
+]
+agent = [
+    "bedrock-agentcore>=1.0",
+    "fastembed>=0.5",
+    "strands-agents[gemini]>=1.50",
 ]
 
 [dependency-groups]
