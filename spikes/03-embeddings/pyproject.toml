@@ -1,0 +1,15 @@
+[project]
+name = "embedding-spike"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "sentence-transformers[onnx]>=3.2",
+    "torch",
+    "einops",        # nomic-embed-text remote code
+    "scipy",
+    "scikit-learn",
+    "psutil",
+]
+
+[tool.uv]
+package = false
