@@ -1,6 +1,6 @@
 # Spike 03 — Text embedding model
 
-**Status:** results in — recommendation awaiting decision; dataset pending user review
+**Status:** decided — dataset pending user review
 
 ## Question
 
@@ -143,9 +143,9 @@ Cold start (fresh process, model load + first query) is 4–7 s for every model 
   AUC < 0.65 everywhere) is robust.
 - **Domain:** corporate memo / minutes / research-report English only.
 
-## Recommendation (awaiting decision)
+## Decision
 
-**`BAAI/bge-small-en-v1.5` on ONNX Runtime CPU**, behind the `EmbeddingModel` interface, with the
+**Accepted (2026-10-05): `BAAI/bge-small-en-v1.5` on ONNX Runtime CPU**, behind the `EmbeddingModel` interface, with the
 BGE query instruction on questions and no prefix on chunks:
 
 - Best retrieval (Recall@3 1.00, MRR 0.92) — the job the embeddings actually do in RAG.

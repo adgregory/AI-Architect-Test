@@ -167,7 +167,7 @@ Pools are closed on shutdown; pool sizes, timeouts and limits come from configur
 |--------|-------|
 | ~~OCR engine~~ → **PaddleOCR PP-OCRv5 mobile on ONNX Runtime CPU (RapidOCR)** | 01 (decided) |
 | ~~NER model~~ → **GLiNER small v2.1, ONNX int8 on CPU, threshold 0.3 (configurable)** | 02 (decided) |
-| Embedding model | 03 |
+| ~~Embedding model~~ → **bge-small-en-v1.5 (384-d), ONNX Runtime CPU** | 03 (decided) |
 | Answer-cache similarity threshold | 04 |
 | Gemini model ID (local) | confirm in the Vertex console |
 | Bedrock model ID (AWS) | stack configuration |
