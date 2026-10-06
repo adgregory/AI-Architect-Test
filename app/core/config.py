@@ -66,7 +66,7 @@ class Settings(BaseSettings):
 
     # Agent service model (Strands). Gemini on Vertex via ADC locally; Bedrock on AgentCore in AWS.
     llm_provider: Literal["gemini", "bedrock"] = "gemini"
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.8-flash"
     gemini_project: str | None = Field(None, validation_alias="GOOGLE_CLOUD_PROJECT")
     gemini_location: str = Field("global", validation_alias="GOOGLE_CLOUD_LOCATION")
     bedrock_model_id: str = "anthropic.claude-haiku-4-5-20251001-v1:0"
