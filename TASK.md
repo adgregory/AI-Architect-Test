@@ -115,7 +115,7 @@ As part of your submission, fill in the tables below documenting every bug you f
 Baseline ([docs/baseline-test-failures.md](docs/baseline-test-failures.md)): 30 of the 49 provided tests failed before any
 app change: 17 from 11 bugs (rows 1–5, 7–10), 5 from missing features (rows 11–12) and 8 from architecture checks
 (Architecture table, rows 1–2). Rows 6, 13 and 14 were found outside the provided tests.
-Now: all 49 pass, plus 156 added tests (205 total).
+Now: all 49 pass, plus 166 added tests (215 total).
 
 | # | File | Bug Description | How You Fixed It |
 |---|------|-----------------|------------------|
@@ -158,7 +158,7 @@ Now: all 49 pass, plus 156 added tests (205 total).
 | 3 | Input validation | `app/api/uploads.py`: PDF signature, size limit (413), names schema (422); `max_pages` rejected as non-retryable |
 | 4 | Resilience | Temporal retry policies (transient vs non-retryable), heartbeats, reconciler; HTTP/Qdrant/LLM timeouts; bounded DB pools → 503 + `Retry-After`; background work is best effort |
 | 5 | Error handling | Dependency failures (engine missing, agent down, DB pool exhausted) mapped to 503 + `Retry-After` in `app/main.py`; anything else is a generic 500 with the detail in the logs only |
-| 6 | Tests (bonus) | 156 added: unit (fakes), API (dependency overrides), contract (every engine against the same expectations), workflows (Temporal time-skipping server), Postgres repository, end-to-end pipeline, Pulumi mocks |
+| 6 | Tests (bonus) | 166 added: unit (fakes), API (dependency overrides), contract (every engine against the same expectations), workflows (Temporal time-skipping server), Postgres repository, end-to-end pipeline, Pulumi mocks |
 | 7 | Dependency management | uv + `pyproject.toml` with a lockfile; extras per stack; `uv.lock` checked in pre-commit |
 | 8 | Static checks | pre-commit: ruff (lint + format), mypy (pydantic plugin), detect-secrets, hygiene hooks |
 | 9 | Containerisation | Multi-stage `Dockerfile` (`STACK` build arg, models baked in, non-root, healthcheck, offline); `Dockerfile.agent`; `docker-compose.yml` with the full stack and migrations |
