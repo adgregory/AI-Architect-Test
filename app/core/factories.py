@@ -68,14 +68,17 @@ def fastembed_model(name: str, cache_dir: str):
 
 
 @lru_cache
-def rapidocr_engine():
+def rapidocr_engine(model_dir: str):
     _require("rapidocr", "chosen", "rapidocr")
     from rapidocr import LangDet, LangRec, ModelType, OCRVersion, RapidOCR
 
-    # Same models and settings measured in spike 01.
+    # Same models and settings measured in spike 01. Models are downloaded into MODELS_DIR
+    # (not into site-packages) so images can bake them and run as a non-root user.
+    Path(model_dir).mkdir(parents=True, exist_ok=True)
     return RapidOCR(params={
         "Global.use_cls": False,
         "Global.log_level": "warning",
+        "Global.model_root_dir": model_dir,
         "Det.ocr_version": OCRVersion.PPOCRV5, "Det.model_type": ModelType.MOBILE, "Det.lang_type": LangDet.CH,
         "Rec.ocr_version": OCRVersion.PPOCRV5, "Rec.model_type": ModelType.MOBILE, "Rec.lang_type": LangRec.EN,
     })
@@ -95,6 +98,8 @@ def ensure_gliner_onnx(settings: Settings) -> Path:
         log.info("gliner.export.start", model=settings.gliner_model, out=str(out),
                  quantized=settings.gliner_quantized)
         GLiNER.from_pretrained(settings.gliner_model).export_to_onnx(out, quantize=settings.gliner_quantized)
+        if settings.gliner_quantized:
+            (out / "model.onnx").unlink(missing_ok=True)  # only the int8 model is served (~580 MB saved)
         log.info("gliner.export.done", out=str(out))
     return needed
 
@@ -123,7 +128,8 @@ class OCRServiceFactory:
     def _rapidocr(s: Settings) -> "OCRService":
         from app.services.ocr_service import RapidOCRService
 
-        return RapidOCRService(rapidocr_engine(), dpi=s.ocr_dpi, tighten_boxes=s.ocr_tighten_boxes)
+        engine = rapidocr_engine(str(Path(s.models_dir) / "rapidocr"))
+        return RapidOCRService(engine, dpi=s.ocr_dpi, tighten_boxes=s.ocr_tighten_boxes)
 
     @staticmethod
     def _tesseract(s: Settings) -> "OCRService":
