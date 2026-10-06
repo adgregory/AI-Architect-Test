@@ -101,7 +101,7 @@ ignore = [
 "scripts/**" = ["E402"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "tests"]
+known-first-party = ["app", "tests", "config", "components"]  # config/components: infra/ modules
 
 [tool.mypy]
 python_version = "3.12"

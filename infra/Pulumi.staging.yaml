@@ -1,0 +1,26 @@
+# staging: production-shaped. Private subnets behind a NAT gateway, Multi-AZ RDS, 2 replicas.
+config:
+  aws:region: us-east-1
+  pdf-name-extractor:env: staging
+  pdf-name-extractor:availabilityZones: [us-east-1a, us-east-1b]
+  pdf-name-extractor:vpcCidr: 10.30.0.0/16
+  pdf-name-extractor:natGateway: "true"
+  pdf-name-extractor:adminCidrs: [203.0.113.10/32]
+  pdf-name-extractor:certificateArn: ""
+  pdf-name-extractor:imageTag: latest
+  pdf-name-extractor:rds:
+    instanceClass: db.t4g.medium
+    allocatedStorageGb: 50
+    multiAz: true
+    maxSlotWalKeepSizeMb: 4096
+  pdf-name-extractor:api: {cpu: 1024, memory: 4096, desiredCount: 2}
+  pdf-name-extractor:workerCpu: {cpu: 4096, memory: 16384, desiredCount: 2, concurrency: 4}
+  pdf-name-extractor:workerIo: {cpu: 512, memory: 1024, desiredCount: 2}
+  pdf-name-extractor:temporal: {cpu: 1024, memory: 2048, desiredCount: 1}
+  pdf-name-extractor:qdrant: {cpu: 1024, memory: 4096, desiredCount: 1}
+  pdf-name-extractor:debezium: {cpu: 512, memory: 1024, desiredCount: 1}
+  pdf-name-extractor:bedrockModelId: anthropic.claude-haiku-4-5-20251001-v1:0
+  pdf-name-extractor:outboxEnabled: "true" # Debezium -> Kinesis -> Lambda dispatch (production target)
+  pdf-name-extractor:kinesisShards: "2"
+  pdf-name-extractor:logRetentionDays: "30"
+encryptionsalt: v1:Te42wOmJzRc=:v1:jH1xFCz37SmmE90e:/0FWpgPfSHSk7eCd6mt7WmcWH01dEw==

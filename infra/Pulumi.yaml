@@ -1,0 +1,10 @@
+name: pdf-name-extractor
+description: AWS infrastructure for the PDF name extractor & RAG API
+runtime:
+  name: python
+  options:
+    toolchain: uv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: ""

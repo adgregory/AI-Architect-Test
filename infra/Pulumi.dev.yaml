@@ -1,0 +1,26 @@
+# dev: cheapest viable footprint. No NAT (public subnets + public IPs), single-AZ RDS, 1 replica each.
+config:
+  aws:region: us-east-1
+  pdf-name-extractor:env: dev
+  pdf-name-extractor:availabilityZones: [us-east-1a, us-east-1b]
+  pdf-name-extractor:vpcCidr: 10.20.0.0/16
+  pdf-name-extractor:natGateway: "false"
+  pdf-name-extractor:adminCidrs: [203.0.113.10/32] # who may reach the Temporal UI
+  pdf-name-extractor:certificateArn: "" # HTTPS listener when set
+  pdf-name-extractor:imageTag: latest
+  pdf-name-extractor:rds:
+    instanceClass: db.t4g.micro
+    allocatedStorageGb: 20
+    multiAz: false
+    maxSlotWalKeepSizeMb: 2048
+  pdf-name-extractor:api: {cpu: 1024, memory: 4096, desiredCount: 1}
+  pdf-name-extractor:workerCpu: {cpu: 2048, memory: 8192, desiredCount: 1, concurrency: 2}
+  pdf-name-extractor:workerIo: {cpu: 256, memory: 512, desiredCount: 1}
+  pdf-name-extractor:temporal: {cpu: 512, memory: 1024, desiredCount: 1}
+  pdf-name-extractor:qdrant: {cpu: 512, memory: 2048, desiredCount: 1}
+  pdf-name-extractor:debezium: {cpu: 512, memory: 1024, desiredCount: 1}
+  pdf-name-extractor:bedrockModelId: anthropic.claude-haiku-4-5-20251001-v1:0
+  pdf-name-extractor:outboxEnabled: "false" # Debezium -> Kinesis -> Lambda dispatch (production target)
+  pdf-name-extractor:kinesisShards: "1"
+  pdf-name-extractor:logRetentionDays: "14"
+encryptionsalt: v1:RIeQAnDJlh8=:v1:Rd4hjhkLS0ayA0Vo:3K/vypYcjKp4MEy+bZUQI1D896szWQ==

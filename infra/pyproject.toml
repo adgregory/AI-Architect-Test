@@ -1,0 +1,19 @@
+[project]
+name = "pdf-name-extractor-infra"
+version = "0.1.0"
+description = "AWS infrastructure for the PDF name extractor (Pulumi, Python)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pulumi>=3.150,<4",
+    "pulumi-aws>=7,<8",
+    "pydantic>=2.11,<3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pulumi-policy>=1.13",
+]
+
+[tool.uv]
+package = false
