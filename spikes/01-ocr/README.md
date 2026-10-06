@@ -1,6 +1,6 @@
 # Spike 01 — OCR engine selection
 
-**Status:** running
+**Status:** results in — Docker image sizes and powermetrics GPU utilisation pending
 
 ## Question
 
@@ -136,8 +136,62 @@ space), so metrics are computed identically across engines.
 
 ## Results
 
-_Pending._
+Full tables: [`results/SUMMARY.md`](results/SUMMARY.md). 150 pages × 3 reps per configuration,
+Apple M5 Max. Headline numbers (all pages; latency per page, warm):
+
+| Config | CER | Name recall | Name located, word box (x-IoU ≥ 0.8)¹ | p50 | p99 | Cold start | CPU (cores busy) |
+|--------|-----|-------------|----------------------------------------|-----|-----|-----------|------------------|
+| tesseract/cpu | 14.9% | 76.3% | 96% | 330 ms | 416 ms | 0.4 s | 0.9 |
+| paddle/cpu | **1.5%** | **90.1%** | 99% | 3,180 ms | 3,800 ms | 4.3 s | 1.0 |
+| paddle-onnx/cpu | 2.4% | 87.9% | 99% | 387 ms | 519 ms | 0.8 s | 8.4 |
+| paddle-onnx/coreml | 2.4% | 87.9% | 99% | 3,193 ms | 6,186 ms | 10.3 s | 1.0 |
+| docling/cpu | 35.7% | 59.8% | — (no word boxes) | 6,145 ms | 10,296 ms | 12.4 s | 1.4 |
+| docling/mps | 35.7% | 59.8% | — (no word boxes) | 1,364 ms | 3,033 ms | 6.5 s | 0.8 (+12.4 GB GPU) |
+
+¹ Clean, jpeg and noise pages; horizontal overlap of the located name with the ground-truth name box.
+
+### Findings
+
+1. **Accuracy:** PaddleOCR (PP-OCRv5 mobile) is in a different league from Tesseract on degraded
+   input — on the combined `scan` profile CER is 4.1% (native) / 7.1% (ONNX) vs 43.1%, and name
+   recall 72% / 66% vs 46%. On clean pages all three are at ~0% CER.
+2. **Docling (default EasyOCR) is the weakest and slowest:** 5.1% CER even on clean pages and 35.7%
+   overall; it segments text into phrases and has **no word-level boxes**, so it can't localize a
+   name inside a phrase without extra work. MPS gives a 4.5× speed-up but not accuracy.
+3. **ONNX vs native (same models):** ONNX Runtime is **8.2× faster** per page (387 vs 3,180 ms) with a
+   small accuracy cost (2.4% vs 1.5% CER, mostly on the hardest `scan` pages) — attributable to
+   different pre/post-processing defaults between RapidOCR and PaddleOCR (tunable). Its speed comes
+   from parallelism: ~8.4 cores busy vs ~1 for native Paddle, so **CPU cost per page is similar
+   (~3.3 core-seconds)** — it trades cores for latency.
+4. **CoreML is not usable for these models:** the PP-OCR ONNX graphs have dynamic shapes; CoreML
+   rejects many ops and splits each model into 24–45 partitions, so inference ping-pongs between
+   CoreML and CPU — **8× slower than CPU** (p99 6.2 s) with a 10 s cold start. The older
+   `NeuralNetwork` CoreML format was faster but **broke recognition** (11 of 26 lines). Static input
+   shapes might fix this; not pursued.
+5. **Bounding boxes:** Tesseract returns tight word boxes natively. Paddle locates names just as
+   precisely horizontally (99% with x-IoU ≥ 0.8) but its word boxes span the full text-line height
+   (1.7–2.0× glyph height), which is why its full IoU scores look lower. A cheap post-process —
+   shrinking each box vertically to the ink pixels it contains — closes the gap. Native Paddle
+   needs `return_word_box=True` and merges punctuation/space pieces; RapidOCR derives word boxes
+   from CTC character positions.
+6. **Native PaddlePaddle on Apple Silicon CPU** is slow (recognition dominates; batch 1 is fastest)
+   and Paddle's GPU builds require CUDA.
 
 ## Decision
 
-_Pending._
+**Use PaddleOCR PP-OCRv5 mobile models on ONNX Runtime (CPU), via RapidOCR**, behind the
+`OCREngine` interface:
+
+- Near-best accuracy (2.4% CER, 88% name recall; 99% of located names horizontally exact) at
+  Tesseract-class latency (p99 519 ms) and sub-second cold start.
+- ONNX Runtime is portable (Linux x86/ARM containers, Lambda/Fargate-friendly) without the
+  PaddlePaddle framework; CUDA/TensorRT execution providers are available if GPUs are added later.
+- Add vertical box tightening in the box-location step; cap ONNX Runtime intra-op threads per
+  worker so concurrent pages don't oversubscribe cores (size workers on ~3.3 core-s/page).
+- **Rejected:** Docling (accuracy, no word boxes, heavy); CoreML EP (partitioning, slower, broken
+  in one format); native Paddle (8× slower for marginal accuracy). **Tesseract** remains a viable
+  lightweight fallback for clean, born-digital-like scans.
+
+Follow-ups: align RapidOCR det/rec parameters with PaddleOCR defaults to recover the `scan` gap;
+measure single-thread latency for worker sizing; Docker image size per engine
+(`measure_disk.py --docker`) and powermetrics GPU utilisation (`sudo measure_gpu.sh`).
