@@ -60,9 +60,9 @@ Name IoU: best overlap between each ground-truth name box and the engine's box f
 | tesseract-cpu | 89.6 | 119.9 | 1306.0 | — | — | — |
 | paddle-cpu | 102.3 | 107.9 | 2735.5 | — | — | — |
 | paddle-onnx-cpu | 840.2 | 986.4 | 2462.8 | — | — | — |
-| paddle-onnx-coreml | 102.4 | 148.5 | 9728.4 | — | — | — |
+| paddle-onnx-coreml | 102.4 | 148.5 | 9728.4 | — | 14.9 | 661.2 |
 | docling-cpu | 144.4 | 424.2 | 13308.1 | — | — | — |
-| docling-mps | 79.3 | 169.9 | 2422.0 | 12427.6 | — | — |
+| docling-mps | 79.3 | 169.9 | 2422.0 | 12427.6 | 71.3 | 7856.5 |
 
 
 ## Engine details

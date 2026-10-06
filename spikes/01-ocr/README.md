@@ -1,6 +1,6 @@
 # Spike 01 — OCR engine selection
 
-**Status:** results in — Docker image sizes and powermetrics GPU utilisation pending
+**Status:** decided — Docker image sizes pending
 
 ## Question
 
@@ -168,6 +168,10 @@ Apple M5 Max. Headline numbers (all pages; latency per page, warm):
    CoreML and CPU — **8× slower than CPU** (p99 6.2 s) with a 10 s cold start. The older
    `NeuralNetwork` CoreML format was faster but **broke recognition** (11 of 26 lines). Static input
    shapes might fix this; not pursued.
+   powermetrics confirms it: during the CoreML run the GPU was active only **14.9%** of the time
+   (0.66 W) and the Neural Engine drew **0 W** — the models effectively ran on CPU with constant
+   hand-offs. Docling on MPS, by contrast, kept the GPU **71.3%** active (7.9 W): real GPU use, but
+   it doesn't fix Docling's accuracy.
 5. **Bounding boxes:** Tesseract returns tight word boxes natively. Paddle locates names just as
    precisely horizontally (99% with x-IoU ≥ 0.8) but its word boxes span the full text-line height
    (1.7–2.0× glyph height), which is why its full IoU scores look lower. A cheap post-process —
@@ -179,7 +183,7 @@ Apple M5 Max. Headline numbers (all pages; latency per page, warm):
 
 ## Decision
 
-**Use PaddleOCR PP-OCRv5 mobile models on ONNX Runtime (CPU), via RapidOCR**, behind the
+**Accepted (2026-10-05). Use PaddleOCR PP-OCRv5 mobile models on ONNX Runtime (CPU), via RapidOCR**, behind the
 `OCREngine` interface:
 
 - Near-best accuracy (2.4% CER, 88% name recall; 99% of located names horizontally exact) at
@@ -194,4 +198,4 @@ Apple M5 Max. Headline numbers (all pages; latency per page, warm):
 
 Follow-ups: align RapidOCR det/rec parameters with PaddleOCR defaults to recover the `scan` gap;
 measure single-thread latency for worker sizing; Docker image size per engine
-(`measure_disk.py --docker`) and powermetrics GPU utilisation (`sudo measure_gpu.sh`).
+(`measure_disk.py --docker`).
