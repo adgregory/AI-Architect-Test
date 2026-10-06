@@ -68,6 +68,8 @@ class CpuActivities:
         try:
             with art.storage.local_path(art.input_pdf) as path:
                 pages = self._engines.ocr.page_count(str(path))
+        except FileNotFoundError:
+            raise ApplicationError("input PDF is missing from storage", type=INVALID_DOCUMENT, non_retryable=True)
         except (fitz.FileDataError, RuntimeError, ValueError) as exc:
             raise ApplicationError(f"not a readable PDF: {exc}", type=INVALID_DOCUMENT, non_retryable=True)
         if pages == 0:

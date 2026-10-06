@@ -56,6 +56,24 @@ class TemporalJobOrchestrator:
             log.info("workflow.already_started", job_id=job_id)
 
 
+class LazyTemporalOrchestrator:
+    """Connects on first use and reconnects after failures, so the API starts (and keeps
+    serving) when Temporal is down; failed starts are picked up by the reconciler."""
+
+    def __init__(self, settings: Settings):
+        self._settings = settings
+        self._delegate: TemporalJobOrchestrator | None = None
+
+    async def start_extraction(self, job_id: str, filename: str, query_names: list[dict]) -> None:
+        if self._delegate is None:
+            self._delegate = TemporalJobOrchestrator(await connect(self._settings), self._settings)
+        try:
+            await self._delegate.start_extraction(job_id, filename, query_names)
+        except Exception:
+            self._delegate = None  # reconnect next time
+            raise
+
+
 async def ensure_reconcile_schedule(client: Client, settings: Settings) -> None:
     """Create the reconciler schedule once (idempotent across worker restarts)."""
     try:
