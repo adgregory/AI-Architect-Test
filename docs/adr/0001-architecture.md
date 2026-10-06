@@ -165,7 +165,7 @@ Pools are closed on shutdown; pool sizes, timeouts and limits come from configur
 
 | Choice | Spike |
 |--------|-------|
-| OCR engine | 01 |
+| ~~OCR engine~~ → **PaddleOCR PP-OCRv5 mobile on ONNX Runtime CPU (RapidOCR)** | 01 (decided) |
 | NER model | 02 |
 | Embedding model | 03 |
 | Answer-cache similarity threshold | 04 |
