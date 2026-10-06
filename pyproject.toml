@@ -58,3 +58,7 @@ explicit = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "contract: same behaviour checked against every engine implementation (real models)",
+    "integration: end-to-end pipeline on the sample PDFs (real models)",
+]
