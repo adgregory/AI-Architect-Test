@@ -1,0 +1,16 @@
+# Opt-in: answer with Gemini on Vertex AI using your Application Default Credentials.
+#
+#   gcloud auth application-default login
+#   GOOGLE_CLOUD_PROJECT=<your-project> docker compose -f docker-compose.yml -f docker-compose.gcp.yml up -d --build
+#
+# or once in .env:  COMPOSE_FILE=docker-compose.yml:docker-compose.gcp.yml
+#
+# Kept out of the base file because a bind mount of a missing file makes Docker create an
+# empty directory at that host path (which later breaks `gcloud auth application-default login`).
+services:
+  agent:
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/adc.json
+    volumes:
+      # Mounted read-only at runtime, never baked into the image.
+      - ${GCLOUD_ADC:-~/.config/gcloud/application_default_credentials.json}:/secrets/adc.json:ro

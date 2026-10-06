@@ -1,5 +1,6 @@
 # Local stack. Published host ports are configurable (defaults avoid common clashes).
-#   docker compose up -d --build          # everything
+#   docker compose up -d --build          # everything (no cloud credentials needed)
+#   Gemini answers: add docker-compose.gcp.yml (see that file, or set COMPOSE_FILE in .env)
 #   docker compose up -d postgres temporal qdrant   # infrastructure only (run app/workers from the host)
 name: pdf-name-extractor
 
@@ -92,14 +93,12 @@ services:
     environment:
       QDRANT_HOST: qdrant
       LOG_JSON: "true"
-      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      # auto: Gemini when GOOGLE_CLOUD_PROJECT and credentials are present (see
+      # docker-compose.gcp.yml); otherwise answers are extracts of the retrieved passages, no LLM.
+      LLM_PROVIDER: ${LLM_PROVIDER:-auto}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
-      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}   # your GCP project id (agent needs it for Vertex)
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
       GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-global}
-      GOOGLE_APPLICATION_CREDENTIALS: /secrets/adc.json
-    volumes:
-      # Application Default Credentials, mounted read-only at runtime — never baked into the image.
-      - ${GCLOUD_ADC:-~/.config/gcloud/application_default_credentials.json}:/secrets/adc.json:ro
     ports: ["${AGENT_PORT:-18080}:8080"]
     depends_on:
       qdrant: {condition: service_started}
