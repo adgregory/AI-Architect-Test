@@ -63,7 +63,7 @@ Atlas, Forbes, NeurIPS, ICML.
 Scores are name-level, on the **Paddle-ONNX OCR output** (the chosen OCR engine, 150 pages)
 unless noted; "fuzzy" = similarity ≥ 0.9, the threshold `/extract` uses. Latency is per clean
 page (ground-truth text), warm. Configurations whose timing overlapped the powermetrics GPU pass
-were re-run; accuracy is independent of timing. Full JSON in [`results/`](results/).
+were re-run; accuracy is independent of timing. Metrics per configuration: [`summary.json`](summary.json).
 
 | Config | Clean-text F1 | F1 | Precision | Recall | False pos. | Org/place as person | Hard-scan F1 | p50 | p99 | Peak RSS |
 |--------|---------------|----|-----------|--------|-----------|---------------------|--------------|-----|-----|----------|

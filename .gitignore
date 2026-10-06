@@ -170,6 +170,8 @@ cython_debug/
 # Generated OCR page images (rebuild with spikes/01-ocr/dataset/build.py)
 spikes/01-ocr/data/
 spikes/*/results/raw/
+# Per-configuration run output; the committed record is spikes/<spike>/summary.json (spikes/summarize.py)
+spikes/*/results/**/*.json
 spikes/*/results/*-smoke.json
 spikes/*/results/*.log
 spikes/*/results/gpu/*.powermetrics.txt

@@ -128,7 +128,8 @@ spikes/01-ocr/
 │   └── docling/
 ├── run.py            # runs one configuration, writes results/<config>.json
 ├── report.py         # aggregates results into tables
-└── results/          # committed JSON + summary tables
+├── results/          # per-run JSON (git-ignored) + SUMMARY.md tables
+└── summary.json      # committed: every configuration's metrics (spikes/summarize.py)
 ```
 
 Each adapter returns the same structure (text + boxes in a common coordinate
@@ -136,7 +137,7 @@ space), so metrics are computed identically across engines.
 
 ## Results
 
-Full tables: [`results/SUMMARY.md`](results/SUMMARY.md). 150 pages × 3 reps per configuration,
+Full tables: [`results/SUMMARY.md`](results/SUMMARY.md); metrics per configuration: [`summary.json`](summary.json). 150 pages × 3 reps per configuration,
 Apple M5 Max. Headline numbers (all pages; latency per page, warm):
 
 | Config | CER | Name recall | Name located, word box (x-IoU ≥ 0.8)¹ | p50 | p99 | Cold start | CPU (cores busy) |

@@ -68,7 +68,7 @@ raw values are reported for context only.
 
 7 models; quality measured on PyTorch CPU (identical on MPS and ONNX — verified for every model
 that loaded on all three). Dataset: 113 graded pairs (35 hard-negative triplets + 43 graded
-pairs) and 30 questions over 33 chunks. Full JSON in [`results/`](results/).
+pairs) and 30 questions over 33 chunks. Metrics per configuration: [`summary.json`](summary.json).
 
 ### Quality
 

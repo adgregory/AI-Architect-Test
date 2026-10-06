@@ -12,9 +12,13 @@ part of the test suite.
 ```
 spikes/
 └── NN-short-name/
-    ├── README.md   # question, options compared, method, results, decision
-    └── *.py        # runnable experiment(s)
+    ├── README.md     # question, options compared, method, results, decision
+    ├── summary.json  # committed metrics for every configuration
+    ├── results/      # per-run output (git-ignored)
+    └── *.py          # runnable experiment(s)
 ```
+
+After re-running a spike, refresh the summaries with `python3 spikes/summarize.py`.
 
 Run a spike with the project environment:
 
