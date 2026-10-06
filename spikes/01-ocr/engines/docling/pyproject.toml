@@ -1,0 +1,15 @@
+[project]
+name = "ocr-spike-docling"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "docling>=2.0",
+    "easyocr",
+    "pillow",
+    "numpy",
+    "jiwer",
+    "psutil",
+]
+
+[tool.uv]
+package = false

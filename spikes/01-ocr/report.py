@@ -10,6 +10,7 @@ from pathlib import Path
 
 RESULTS = Path(__file__).resolve().parent / "results"
 ORDER = ["tesseract-cpu", "paddle-cpu", "paddle-onnx-cpu", "paddle-onnx-coreml", "docling-cpu", "docling-mps"]
+GRANULARITIES = ["word", "line", "segment", "block"]
 PROFILES = ["clean", "noise", "skew", "blur", "jpeg", "low_dpi", "scan"]
 
 
@@ -50,10 +51,13 @@ def main() -> None:
     parts.append("## Accuracy (all pages)\n")
     parts.append(table(
         ["Config", "CER", "WER", "Name recall", "Name recall (case-insens.)",
-         "Name IoU word (mean / ≥0.5)", "Name IoU line (mean / ≥0.5)"],
+         *(f"Name IoU {g} (mean / ≥0.5)" for g in GRANULARITIES)],
         [[r["config"], pct(r["overall"]["cer"]), pct(r["overall"]["wer"]), pct(r["overall"]["name_recall"]),
-          pct(r["overall"]["name_recall_ci"]), best_iou(r["overall"], "word"), best_iou(r["overall"], "line")]
+          pct(r["overall"]["name_recall_ci"]), *(best_iou(r["overall"], g) for g in GRANULARITIES)]
          for r in runs]))
+    parts.append("\n\nName IoU: best overlap between each ground-truth name box and the engine's box "
+                 "for it at that granularity (union of matching words, or the containing line/segment/"
+                 "block). A name that isn't recognised scores 0.")
 
     parts.append("\n\n## CER by degradation profile\n")
     parts.append(table(["Config", *PROFILES],
