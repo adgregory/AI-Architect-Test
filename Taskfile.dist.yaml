@@ -1,0 +1,106 @@
+# Task runner (https://taskfile.dev). Copy to Taskfile.yaml for local overrides (git-ignored).
+version: "3"
+
+vars:
+  STACK: '{{.STACK | default "chosen"}}'          # chosen | fallback
+  IMAGE: pdf-name-extractor
+  TAG: "{{.STACK}}"
+  PORT: '{{.PORT | default "8000"}}'
+  CONTAINER: "{{.IMAGE}}-{{.STACK}}"
+
+tasks:
+  default:
+    cmds: [task --list]
+    silent: true
+
+  # ------------------------------------------------------------------ setup
+  setup:
+    desc: Install all dependencies (both stacks + dev tools) and prepare models
+    cmds:
+      - uv sync --all-extras
+      - task: models:prepare
+
+  models:prepare:
+    desc: Download/export the models the configured engines need into MODELS_DIR
+    cmds:
+      - uv run python scripts/prepare_models.py
+
+  # ------------------------------------------------------------------ tests
+  test:
+    desc: Full suite (provided + unit + api + contract + integration)
+    cmds:
+      - uv run pytest {{.CLI_ARGS}}
+
+  test:fast:
+    desc: Tests that need no real models (provided unit tests + our unit/api tests)
+    cmds:
+      - uv run pytest -m "not contract and not integration" --ignore=tests/test_integration.py {{.CLI_ARGS}}
+
+  test:contract:
+    desc: Same behaviour checked against every engine implementation
+    cmds:
+      - uv run pytest -m contract {{.CLI_ARGS}}
+
+  test:integration:
+    desc: End-to-end pipeline on the sample PDFs
+    cmds:
+      - uv run pytest -m integration tests/test_integration.py tests/integration {{.CLI_ARGS}}
+
+  # ------------------------------------------------------------------ run locally
+  run:
+    desc: Run the API locally with reload
+    cmds:
+      - uv run uvicorn app.main:app --reload --port {{.PORT}}
+
+  # ------------------------------------------------------------------ docker
+  docker:build:
+    desc: "Build the image (STACK=chosen|fallback)"
+    preconditions:
+      - sh: '[ "{{.STACK}}" = "chosen" ] || [ "{{.STACK}}" = "fallback" ]'
+        msg: "STACK must be 'chosen' or 'fallback'"
+    cmds:
+      - docker build --build-arg STACK={{.STACK}} -t {{.IMAGE}}:{{.TAG}} .
+      - docker image ls {{.IMAGE}}:{{.TAG}} --format '{{"{{"}}.Repository{{"}}"}}:{{"{{"}}.Tag{{"}}"}} {{"{{"}}.Size{{"}}"}}'
+
+  docker:run:
+    desc: "Run the image detached on PORT (STACK=chosen|fallback)"
+    cmds:
+      - docker rm -f {{.CONTAINER}} >/dev/null 2>&1 || true
+      - docker run -d --name {{.CONTAINER}} -p {{.PORT}}:8000 {{.CLI_ARGS}} {{.IMAGE}}:{{.TAG}}
+      - task: docker:wait
+
+  docker:wait:
+    internal: true
+    cmds:
+      - |
+        for i in $(seq 1 60); do
+          status=$(docker inspect -f '{{"{{"}}.State.Health.Status{{"}}"}}' {{.CONTAINER}} 2>/dev/null)
+          [ "$status" = "healthy" ] && echo "{{.CONTAINER}} healthy on :{{.PORT}}" && exit 0
+          [ "$status" = "unhealthy" ] && break
+          sleep 2
+        done
+        docker logs --tail 50 {{.CONTAINER}}; exit 1
+
+  docker:smoke:
+    desc: "Build, run and exercise the image end to end (STACK=chosen|fallback)"
+    cmds:
+      - task: docker:build
+      - task: docker:run
+      - curl -fsS http://localhost:{{.PORT}}/health
+      - echo
+      - >-
+        curl -fsS -X POST http://localhost:{{.PORT}}/api/extract
+        -F "pdf_file=@sample_pdfs/meeting_minutes.pdf;type=application/pdf"
+        -F 'names=[{"first_name":"Richard","last_name":"Hernandez"},{"first_name":"Jenifer","last_name":"Liu"}]'
+        | uv run python -c "import json,sys; d=json.load(sys.stdin); print(len(d['extracted_names']), 'name boxes;', sorted({n['name'] for n in d['extracted_names']})); print('matches:', d['fuzzy_matches'])"
+    status: []
+
+  docker:logs:
+    desc: Follow the running container's logs
+    cmds:
+      - docker logs -f {{.CONTAINER}}
+
+  docker:stop:
+    desc: Stop and remove the running container
+    cmds:
+      - docker rm -f {{.CONTAINER}}

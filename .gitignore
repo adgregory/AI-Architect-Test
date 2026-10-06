@@ -175,3 +175,7 @@ spikes/*/results/*.log
 spikes/*/results/gpu/*.powermetrics.txt
 spikes/spikes_02_03.log
 .models/
+
+# Local task overrides
+Taskfile.yaml
+Taskfile.yml
