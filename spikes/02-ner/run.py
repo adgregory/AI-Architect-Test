@@ -69,7 +69,7 @@ def cold_start_once(args, out_path: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, choices=["spacy-sm", "spacy-trf", "bert-ner", "gliner"])
-    ap.add_argument("--backend", default="native", choices=["native", "torch", "onnx"])
+    ap.add_argument("--backend", default="native", choices=["native", "torch", "onnx", "onnx-int8"])
     ap.add_argument("--device", default="cpu", choices=["cpu", "mps"])
     ap.add_argument("--sources", nargs="*", default=["gt", *OCR_CONFIGS])
     ap.add_argument("--latency-reps", type=int, default=20, help="extra timed passes over the clean GT pages")

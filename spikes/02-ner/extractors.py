@@ -89,9 +89,10 @@ class GlinerExtractor:
     def __init__(self, backend: str, device: str):
         from gliner import GLiNER
 
-        if backend == "onnx":
+        if backend in ("onnx", "onnx-int8"):
+            onnx_file = "model_quantized.onnx" if backend == "onnx-int8" else "model.onnx"
             self.model = GLiNER.from_pretrained(str(ONNX_DIR / "gliner"), load_onnx_model=True,
-                                                onnx_model_file="model.onnx")
+                                                onnx_model_file=onnx_file)
         else:
             self.model = GLiNER.from_pretrained(GLINER).to(device)
         self.backend, self.device = backend, device
@@ -107,8 +108,9 @@ class GlinerExtractor:
         from importlib.metadata import version
 
         return {"version": f"gliner {version('gliner')}, {GLINER}, labels {self.LABELS}, threshold {self.THRESHOLD}",
-                "onnx": self.backend == "onnx",
-                "onnx_note": "No ONNX in the repo; exported locally with GLiNER.export_to_onnx (setup_onnx.py)."}
+                "onnx": self.backend.startswith("onnx"),
+                "onnx_note": "No ONNX in the repo; exported locally with GLiNER.export_to_onnx (setup_onnx.py); "
+                             "onnx-int8 = dynamic quantization (QUInt8 weights)."}
 
 
 def create(model: str, backend: str, device: str):
