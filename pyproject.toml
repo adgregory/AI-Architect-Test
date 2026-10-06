@@ -18,6 +18,11 @@ dependencies = [
     "httpx>=0.27,<1",           # LLM HTTP client (runtime, not only tests)
     "numpy>=1.26",
     "structlog>=24.4",
+    "temporalio>=1.8",
+    "psycopg[binary]>=3.2",
+    "psycopg-pool>=3.2",
+    "alembic>=1.13",
+    "sqlalchemy>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -58,6 +63,8 @@ explicit = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 markers = [
     "contract: same behaviour checked against every engine implementation (real models)",
     "integration: end-to-end pipeline on the sample PDFs (real models)",

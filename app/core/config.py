@@ -60,6 +60,28 @@ class Settings(BaseSettings):
 
     # Uploads
     max_upload_mb: int = Field(25, ge=1)
+    max_pages: int = Field(200, ge=1, description="Reject documents with more pages (non-retryable)")
+
+    # Object storage (local volume; S3 in AWS)
+    storage_dir: Path = Path(".data/storage")
+
+    # Postgres (jobs). Pools are per process and sized from config.
+    database_url: SecretStr = SecretStr("postgresql://app:app@localhost:55432/app")  # compose default
+    db_pool_min_size: int = Field(1, ge=0)
+    db_pool_max_size: int = Field(5, ge=1)
+    db_pool_timeout_s: float = Field(2.0, gt=0, description="Max wait to acquire a connection")
+    db_pool_max_waiting: int = Field(50, ge=0, description="Queue length before rejecting (backpressure)")
+    db_statement_timeout_ms: int = Field(15_000, ge=0)
+
+    # Temporal
+    temporal_address: str = "localhost:7233"
+    temporal_namespace: str = "default"
+    workflow_task_queue: str = "extraction-workflows"
+    cpu_task_queue: str = "extraction-cpu"
+    io_task_queue: str = "extraction-io"
+    cpu_worker_concurrency: int = Field(2, ge=1, description="Concurrent CPU activities per worker")
+    reconcile_interval_s: int = Field(60, ge=5)
+    reconcile_stale_after_s: int = Field(120, ge=10, description="Queued jobs older than this are re-started")
 
 
 @lru_cache
