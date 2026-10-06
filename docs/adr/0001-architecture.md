@@ -25,7 +25,8 @@ text for retrieval, and answers questions with RAG. Constraints:
 |-----------|----------------|
 | `api` | FastAPI backend: validation, sync extraction, job API, SSE, relays agent stream |
 | `outbox-relay` | Dispatches outbox rows to Temporal |
-| `worker` | Temporal worker: OCR, NER, box location, fuzzy matching, indexing |
+| `worker-cpu` | Temporal worker on the `cpu` queue: OCR, NER, box location, fuzzy matching, embedding — no DB connections |
+| `worker-io` | Temporal worker on the `io` queue: job status/result writes, `NOTIFY`, Qdrant upserts — sole owner of the worker-side DB pool |
 | `agent` | Strands agent (Gemini on Vertex via ADC), AgentCore runtime contract |
 | `postgres` | `jobs`, `outbox`, Temporal persistence |
 | `temporal`, `temporal-ui` | Workflow orchestration |
@@ -63,13 +64,14 @@ ExtractNamesWorkflow(job_id)
   4. extract_names                     (cpu)  NER → person spans
   5. locate_and_match                  (cpu)  name → word boxes (PDF space) + fuzzy match (≥ 90%)
   6. complete_job                      (io)   jobs.result, status, NOTIFY
-  child IndexDocumentWorkflow(job_id)  (abandon on parent close)  chunk → embed → Qdrant
+  child IndexDocumentWorkflow(job_id)  (abandon on parent close)  chunk + embed (cpu) → upsert Qdrant (io)
 ```
 
 - **References, not payloads:** page images, OCR words and intermediate results are
   stored in object storage; activities exchange paths (Temporal payloads ≈ 2 MB max).
-- **Task queues:** `cpu` (OCR/NER/embedding) and `io` (DB/Qdrant) scale independently.
-  Models load once per worker process.
+- **Task queues:** `cpu` (OCR/NER/embedding) and `io` (DB/Qdrant) are served by separate
+  worker deployments that scale independently. Models load once per `cpu` worker process;
+  only `io` workers hold database connections (see Connection management).
 - **Retries:** transient errors retry with backoff; invalid input (corrupt PDF, page
   limit) is non-retryable and fails fast. OCR activities heartbeat.
 - **Failure:** on terminal failure the workflow sets `status = failed` with a reason and
@@ -107,10 +109,25 @@ ExtractNamesWorkflow(job_id)
 No per-request connections anywhere. Every client is created once per process in the
 app lifespan / worker startup and injected:
 
+**Single owner of worker-side database access.** Temporal workers never connect to
+Temporal's persistence — only the Temporal server does, through its own pool
+(`maxConns`, `maxIdleConns`, `maxConnLifetime`). For application data, all activities that
+touch Postgres (`mark_running`, `complete_job`, `mark_failed`, `NOTIFY`) run on the `io`
+task queue, served by a dedicated `io` worker (1–2 replicas) that holds the only
+worker-side pool. `cpu` workers (OCR, NER, matching, embedding) hold **no** database
+connections, so they scale horizontally without changing the connection count; when
+the `io` worker is busy, tasks wait durably in Temporal's queue instead of on Postgres.
+A single shared connection was rejected: one connection runs one transaction at a time
+(head-of-line blocking) and is a single point of failure — a small pool behind one owner
+gives the same predictability with concurrency.
+
 | Resource | Approach |
 |----------|----------|
-| Postgres (`api`, `outbox-relay`, `worker`) | Async connection pool per process (`psycopg_pool.AsyncConnectionPool` or SQLAlchemy async engine) with explicit `min_size`/`max_size`, acquire timeout and max lifetime, sized from config |
-| Postgres budget | Σ (replicas × pool `max_size`) + Temporal server pool (`maxConns`) + headroom < `max_connections`; checked when scaling replicas |
+| Postgres pools | Async pool per process (`psycopg_pool.AsyncConnectionPool` or SQLAlchemy async engine) in `api`, `outbox-relay` and the `io` worker only, with `min_size`/`max_size`, acquire `timeout`, `max_waiting`, `max_lifetime`, `max_idle` and a reset/health check on checkout — all from config |
+| Postgres budget | `api` replicas × `api` pool + `io` replicas × `io` pool + relay pool + `LISTEN` connections + Temporal server `maxConns` + admin headroom < `max_connections`; independent of `cpu` worker count |
+| Query hygiene | `statement_timeout` and `idle_in_transaction_session_timeout` on the app role; connections acquired late and released early — never held across OCR, NER or LLM calls |
+| Backpressure | Pool exhaustion → fast `503` + `Retry-After` from the API (bounded `max_waiting`); async jobs absorb bursts in the outbox and Temporal queues |
+| Observability | Pool stats (in use, idle, waiting, acquire wait, timeouts) exported with the service metrics |
 | `LISTEN/NOTIFY` | One dedicated long-lived connection per process, outside the pool (LISTEN is session-scoped) |
 | PgBouncer | Added in transaction mode when replica count makes the budget tight; `LISTEN` connections bypass it |
 | Qdrant | One client per process (pooled HTTP keep-alive / gRPC channel), reused |
