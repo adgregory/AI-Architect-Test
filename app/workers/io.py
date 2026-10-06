@@ -16,6 +16,7 @@ from app.core.config import get_settings
 from app.core.container import Container
 from app.core.logging import configure_logging, get_logger
 from app.db import PostgresJobRepository, create_pool
+from app.services.indexing_service import DocumentIndexer
 from app.workers.runtime import connect_with_retry, run_until_signalled
 from app.workflows.activities import IoActivities
 from app.workflows.client import ensure_reconcile_schedule
@@ -31,7 +32,8 @@ async def main() -> None:
     pool = create_pool(settings)
     await pool.open()
     try:
-        activities = IoActivities(PostgresJobRepository(pool), container.storage, container.vector_store)
+        indexer = DocumentIndexer(container.chunker, settings.chunk_size, vector_store=container.vector_store)
+        activities = IoActivities(PostgresJobRepository(pool), container.storage, indexer)
         client = await connect_with_retry(settings)
         await ensure_reconcile_schedule(client, settings)
         workers = [

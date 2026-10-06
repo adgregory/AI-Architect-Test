@@ -14,6 +14,7 @@ from app.db import JobStatus
 from app.services.bbox_service import ConsecutiveWordNameLocator
 from app.services.extraction_service import ExtractionEngines
 from app.services.fuzzy_service import TokenSortNameMatcher
+from app.services.indexing_service import DocumentIndexer
 from app.services.ner_service import PersonNameNormalizer
 from app.services.ocr_service import OCRResult
 from app.services.rag_service import TextChunker
@@ -74,8 +75,9 @@ class Harness:
             TokenSortNameMatcher(),
             PersonNameNormalizer(),
         )
-        self.cpu = CpuActivities(engines, FakeEmbeddings(), self.storage, TextChunker(), chunk_size=50, max_pages=10)
-        self.io = IoActivities(self.repo, self.storage, self.store)
+        indexer = DocumentIndexer(TextChunker(), chunk_size=50, embeddings=FakeEmbeddings(), vector_store=self.store)
+        self.cpu = CpuActivities(engines, indexer, self.storage, max_pages=10)
+        self.io = IoActivities(self.repo, self.storage, indexer)
 
     async def new_job(self, query_names) -> ExtractRequest:
         job_id = str(uuid.uuid4())

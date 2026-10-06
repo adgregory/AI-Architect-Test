@@ -25,6 +25,7 @@ from app.db import JobEventHub, JobRepository, Pool
 from app.services.bbox_service import ConsecutiveWordNameLocator
 from app.services.extraction_service import ExtractionEngines, ExtractionSession
 from app.services.fuzzy_service import TokenSortNameMatcher
+from app.services.indexing_service import DocumentIndexer
 from app.services.ner_service import PersonNameNormalizer
 from app.services.rag_service import RAGService, TextChunker
 from app.storage import LocalFileStorage, ObjectStorage
@@ -84,6 +85,11 @@ class Container:
     @cached_property
     def chunker(self) -> TextChunker:
         return TextChunker()
+
+    @cached_property
+    def indexer(self) -> DocumentIndexer:
+        """Full indexer (chunk + embed + store) for in-process use (/api/ingest)."""
+        return DocumentIndexer(self.chunker, self.settings.chunk_size, self.embeddings, self.vector_store)
 
     @cached_property
     def http_clients(self):

@@ -1,15 +1,13 @@
-import json
-import os
-import tempfile
-
 from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import StreamingResponse
 
 from app.api.deps import get_container, get_rag_service
-from app.api.extract import read_pdf_upload
+from app.api.sse import SSE_HEADERS, sse_event
+from app.api.uploads import read_pdf_upload, temporary_pdf
 from app.core.container import Container
 from app.core.logging import get_logger
 from app.models.schemas import IngestResponse, RAGRequest, RAGResponse
+from app.storage import document_id_for
 
 router = APIRouter()
 log = get_logger(__name__)
@@ -23,25 +21,15 @@ def generate_answer(question: str, rag) -> dict:
 
 @router.post("/ingest", response_model=IngestResponse)
 def ingest_pdf(pdf_file: UploadFile = File(...), container: Container = Depends(get_container)):
-    """OCR a PDF, chunk it, embed the chunks and store them in the vector database."""
-    settings = container.settings
-    content = read_pdf_upload(pdf_file, settings.max_upload_mb * 2**20)
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(content)
-
-    try:
-        text = container.ocr.read(tmp.name).text
-        chunks = [c for c in container.chunker.chunk(text, settings.chunk_size) if c.strip()]
-        store = container.vector_store
-        store.ensure_collection()
-        document_id = store.upsert(
-            chunks, container.embeddings.embed_documents(chunks), metadata=[{"source": pdf_file.filename}] * len(chunks)
-        )
-        log.info("ingest.done", document_id=document_id, chunks=len(chunks))
-        return {"status": "success", "document_id": document_id, "chunks_stored": len(chunks)}
-    finally:
-        os.unlink(tmp.name)
+    """OCR a PDF and index it for /api/ask (chunk, embed, store) — synchronously.
+    The document ID is content-addressed: ingesting the same PDF again overwrites it."""
+    content = read_pdf_upload(pdf_file, container.settings.max_upload_bytes)
+    with temporary_pdf(content) as path:
+        text = container.ocr.read(path).text
+    document_id = document_id_for(content)
+    chunks_stored = container.indexer.index(document_id, text, source=pdf_file.filename or "document.pdf")
+    log.info("ingest.done", document_id=document_id, chunks=chunks_stored)
+    return {"status": "success", "document_id": document_id, "chunks_stored": chunks_stored}
 
 
 @router.post("/ask", response_model=RAGResponse)
@@ -60,7 +48,7 @@ async def ask_question_stream(request: RAGRequest, rag=Depends(get_rag_service))
     async def events():
         if hasattr(rag, "stream"):
             async for event in rag.stream(request.question):
-                yield f"event: {event['type']}\ndata: {json.dumps(event)}\n\n"
+                yield sse_event(event["type"], event)
         else:
             result = rag.answer(request.question)
             for event in (
@@ -68,8 +56,6 @@ async def ask_question_stream(request: RAGRequest, rag=Depends(get_rag_service))
                 {"type": "token", "text": result["answer"]},
                 {"type": "done", **result, "cached": False},
             ):
-                yield f"event: {event['type']}\ndata: {json.dumps(event)}\n\n"
+                yield sse_event(event["type"], event)
 
-    return StreamingResponse(
-        events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
-    )
+    return StreamingResponse(events(), media_type="text/event-stream", headers=SSE_HEADERS)

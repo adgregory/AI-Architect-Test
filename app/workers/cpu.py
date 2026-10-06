@@ -13,6 +13,7 @@ from temporalio.worker import Worker
 from app.core.config import get_settings
 from app.core.container import Container
 from app.core.logging import configure_logging, get_logger
+from app.services.indexing_service import DocumentIndexer
 from app.workers.runtime import connect_with_retry, run_until_signalled
 from app.workflows.activities import CpuActivities
 
@@ -24,14 +25,8 @@ async def main() -> None:
     configure_logging(settings)
     container = Container(settings)
     await asyncio.to_thread(container.warm_up)  # load models once, before polling for work
-    activities = CpuActivities(
-        container.extraction_engines,
-        container.embeddings,
-        container.storage,
-        container.chunker,
-        chunk_size=settings.chunk_size,
-        max_pages=settings.max_pages,
-    )
+    indexer = DocumentIndexer(container.chunker, settings.chunk_size, embeddings=container.embeddings)
+    activities = CpuActivities(container.extraction_engines, indexer, container.storage, max_pages=settings.max_pages)
     client = await connect_with_retry(settings)
     with ThreadPoolExecutor(max_workers=settings.cpu_worker_concurrency, thread_name_prefix="cpu-activity") as pool:
         worker = Worker(

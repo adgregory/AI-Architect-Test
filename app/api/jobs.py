@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import uuid
 from collections.abc import AsyncIterator
 
@@ -11,7 +10,8 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import StreamingResponse
 
 from app.api.deps import get_app_settings, get_container
-from app.api.extract import _parse_names, read_pdf_upload
+from app.api.sse import sse_comment, sse_event
+from app.api.uploads import parse_names, read_pdf_upload
 from app.core.config import Settings
 from app.core.container import Container
 from app.core.logging import get_logger
@@ -60,8 +60,8 @@ async def submit_job(
 
     If the workflow can't be started now (Temporal unavailable), the job stays `queued`
     and the reconciler starts it later — the client still gets its job ID."""
-    content = read_pdf_upload(pdf_file, settings.max_upload_mb * 2**20)
-    query_names = [q.model_dump() for q in _parse_names(names)]
+    content = read_pdf_upload(pdf_file, settings.max_upload_bytes)
+    query_names = [q.model_dump() for q in parse_names(names)]
     job_id = str(uuid.uuid4())
     art = JobArtifacts(container.storage, job_id)
 
@@ -117,7 +117,7 @@ async def job_events(
                     return
                 view = to_view(job).model_dump(mode="json")
                 if view != last:
-                    yield f"event: {view['status']}\ndata: {json.dumps(view)}\n\n"
+                    yield sse_event(view["status"], view)
                     last = view
                 if job.status.terminal:
                     return
@@ -127,7 +127,7 @@ async def job_events(
                     else:
                         await asyncio.sleep(SSE_POLL_S)
                 except TimeoutError:
-                    yield ": keep-alive\n\n"
+                    yield sse_comment("keep-alive")
         finally:
             if subscription is not None:
                 await subscription.__aexit__(None, None, None)

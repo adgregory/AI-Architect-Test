@@ -82,6 +82,7 @@ class Settings(BaseSettings):
 
     # Uploads
     max_upload_mb: int = Field(25, ge=1)
+    index_on_extract: bool = Field(True, description="Index /api/extract documents for /api/ask in the background")
     max_pages: int = Field(200, ge=1, description="Reject documents with more pages (non-retryable)")
 
     # Object storage (local volume; S3 in AWS)
@@ -104,6 +105,10 @@ class Settings(BaseSettings):
     cpu_worker_concurrency: int = Field(2, ge=1, description="Concurrent CPU activities per worker")
     reconcile_interval_s: int = Field(60, ge=5)
     reconcile_stale_after_s: int = Field(120, ge=10, description="Queued jobs older than this are re-started")
+
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.max_upload_mb * 2**20
 
 
 @lru_cache

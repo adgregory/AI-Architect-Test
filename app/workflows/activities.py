@@ -14,11 +14,9 @@ from temporalio.exceptions import ApplicationError
 
 from app.core.logging import get_logger
 from app.db import JobRepository
-from app.services.embedding_service import EmbeddingService
 from app.services.extraction_service import ExtractionEngines, NameExtraction
+from app.services.indexing_service import DocumentIndexer, EmbeddedChunks
 from app.services.ocr_service import OCRResult
-from app.services.rag_service import TextChunker
-from app.services.vector_service import VectorStore
 from app.storage import JobArtifacts, ObjectStorage, document_id_for
 from app.workflows.models import (
     CHUNK_AND_EMBED,
@@ -50,20 +48,10 @@ def _combine(pages: list[dict]) -> OCRResult:
 
 
 class CpuActivities:
-    def __init__(
-        self,
-        engines: ExtractionEngines,
-        embeddings: EmbeddingService,
-        storage: ObjectStorage,
-        chunker: TextChunker,
-        chunk_size: int,
-        max_pages: int,
-    ):
+    def __init__(self, engines: ExtractionEngines, indexer: DocumentIndexer, storage: ObjectStorage, max_pages: int):
         self._engines = engines
-        self._embeddings = embeddings
+        self._indexer = indexer
         self._storage = storage
-        self._chunker = chunker
-        self._chunk_size = chunk_size
         self._max_pages = max_pages
 
     def _pages(self, art: JobArtifacts, page_count: int) -> list[dict]:
@@ -110,17 +98,16 @@ class CpuActivities:
     @activity.defn(name=CHUNK_AND_EMBED)
     def chunk_and_embed(self, req: IndexRequest) -> int:
         art = JobArtifacts(self._storage, req.job_id)
-        text = _combine(self._pages(art, req.page_count)).text
-        chunks = [c for c in self._chunker.chunk(text, self._chunk_size) if c.strip()]
-        art.put_json(art.chunks, {"texts": chunks, "vectors": self._embeddings.embed_documents(chunks)})
-        return len(chunks)
+        chunks = self._indexer.embed(_combine(self._pages(art, req.page_count)).text)
+        art.put_json(art.chunks, chunks.to_dict())
+        return len(chunks.texts)
 
 
 class IoActivities:
-    def __init__(self, repo: JobRepository, storage: ObjectStorage, vector_store: VectorStore):
+    def __init__(self, repo: JobRepository, storage: ObjectStorage, indexer: DocumentIndexer):
         self._repo = repo
         self._storage = storage
-        self._vector_store = vector_store
+        self._indexer = indexer
 
     @activity.defn(name=MARK_RUNNING)
     async def mark_running(self, req: MarkRunning) -> None:
@@ -138,17 +125,8 @@ class IoActivities:
     @activity.defn(name=UPSERT_CHUNKS)
     async def upsert_chunks(self, req: IndexRequest) -> int:
         art = JobArtifacts(self._storage, req.job_id)
-        data = art.get_json(art.chunks)
-        if not data["texts"]:
-            return 0
-        self._vector_store.ensure_collection()
-        self._vector_store.upsert(
-            data["texts"],
-            data["vectors"],
-            document_id=req.document_id or req.job_id,
-            metadata=[{"source": req.filename}] * len(data["texts"]),
-        )
-        return len(data["texts"])
+        chunks = EmbeddedChunks.from_dict(art.get_json(art.chunks))
+        return self._indexer.store(req.document_id or req.job_id, chunks, source=req.filename)
 
     @activity.defn(name=FIND_STALE_JOBS)
     async def find_stale_jobs(self, req: ReconcileRequest) -> list[ExtractRequest]:
