@@ -95,7 +95,8 @@ class InMemoryVectorStore:
     def upsert(self, texts, vectors, document_id=None, metadata=None) -> str:
         document_id = document_id or f"doc-{len(self.points)}"
         for i, (text, vector) in enumerate(zip(texts, vectors)):
-            payload = {"text": text, "document_id": document_id, "chunk_index": i, **((metadata or [{}] * len(texts))[i])}
+            extra = (metadata or [{}] * len(texts))[i]
+            payload = {"text": text, "document_id": document_id, "chunk_index": i, **extra}
             self.points[f"{document_id}:{i}"] = {"vector": np.asarray(vector), "payload": payload}
         return document_id
 
@@ -159,8 +160,7 @@ class InMemoryJobRepository:
         self.jobs[job_id] = replace(self.jobs[job_id], **changes)
 
     async def mark_running(self, job_id, page_count=None):
-        self._set(job_id, status=JobStatus.RUNNING, page_count=page_count,
-                  attempts=self.jobs[job_id].attempts + 1)
+        self._set(job_id, status=JobStatus.RUNNING, page_count=page_count, attempts=self.jobs[job_id].attempts + 1)
 
     async def complete(self, job_id, result):
         self._set(job_id, status=JobStatus.SUCCEEDED, result=result)

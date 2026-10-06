@@ -39,9 +39,13 @@ class AgentRuntime:
             s = self.settings
             cache = None
             if s.answer_cache_enabled:
-                cache = QdrantSemanticCache(default_qdrant_client(s), s.answer_cache_collection,
-                                            vector_size=s.embedding_dim, threshold=s.answer_cache_threshold,
-                                            ttl_s=s.answer_cache_ttl_s)
+                cache = QdrantSemanticCache(
+                    default_qdrant_client(s),
+                    s.answer_cache_collection,
+                    vector_size=s.embedding_dim,
+                    threshold=s.answer_cache_threshold,
+                    ttl_s=s.answer_cache_ttl_s,
+                )
             return AnswerService(
                 embed_query=self._container.embeddings.embed_query,
                 retrieve=lambda vector, top_k: self._container.vector_store.search(vector, top_k),
@@ -53,11 +57,15 @@ class AgentRuntime:
     def warm_up(self) -> None:
         started = time.perf_counter()
         self._container.embeddings.embed_query("warm-up")
-        self.answers  # build the model client and cache
-        log.info("agent.ready", seconds=round(time.perf_counter() - started, 2),
-                 provider=self.settings.llm_provider,
-                 model=self.settings.gemini_model if self.settings.llm_provider == "gemini"
-                 else self.settings.bedrock_model_id)
+        _ = self.answers  # build the model client and cache
+        log.info(
+            "agent.ready",
+            seconds=round(time.perf_counter() - started, 2),
+            provider=self.settings.llm_provider,
+            model=self.settings.gemini_model
+            if self.settings.llm_provider == "gemini"
+            else self.settings.bedrock_model_id,
+        )
 
 
 app = BedrockAgentCoreApp()
@@ -85,4 +93,4 @@ if __name__ == "__main__":
     settings = get_settings()
     configure_logging(settings)
     runtime().warm_up()
-    app.run(port=8080, host="0.0.0.0")
+    app.run(port=8080, host="0.0.0.0")  # noqa: S104 - container entrypoint; reached via the service network

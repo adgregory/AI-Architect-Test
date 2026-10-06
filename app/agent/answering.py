@@ -6,8 +6,9 @@ Tool-based agentic retrieval is the upgrade path for multi-step questions.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
-from typing import Any, AsyncIterator, Callable, Protocol
+from typing import Any, Protocol
 
 from app.core.logging import get_logger
 from app.services.cache_service import SemanticCache
@@ -43,9 +44,14 @@ def build_prompt(question: str, chunks: list[dict]) -> str:
 
 
 class AnswerService:
-    def __init__(self, embed_query: Callable[[str], list[float]], retrieve: Callable[..., list[dict]],
-                 agent_factory: Callable[[], StreamingAgent], cache: SemanticCache | None = None,
-                 top_k: int = 3):
+    def __init__(
+        self,
+        embed_query: Callable[[str], list[float]],
+        retrieve: Callable[..., list[dict]],
+        agent_factory: Callable[[], StreamingAgent],
+        cache: SemanticCache | None = None,
+        top_k: int = 3,
+    ):
         self._embed_query = embed_query
         self._retrieve = retrieve
         self._agent_factory = agent_factory
@@ -61,8 +67,15 @@ class AnswerService:
                 log.info("answer.cache_hit", score=round(hit.score, 3), cached_question=hit.question)
                 yield AnswerEvent("sources", {"sources": hit.answer["sources"]}).to_dict()
                 yield AnswerEvent("token", {"text": hit.answer["answer"]}).to_dict()
-                yield AnswerEvent("done", {"answer": hit.answer["answer"], "sources": hit.answer["sources"],
-                                           "cached": True, "stop_reason": "cache_hit"}).to_dict()
+                yield AnswerEvent(
+                    "done",
+                    {
+                        "answer": hit.answer["answer"],
+                        "sources": hit.answer["sources"],
+                        "cached": True,
+                        "stop_reason": "cache_hit",
+                    },
+                ).to_dict()
                 return
 
         chunks = self._retrieve(vector, top_k=self._top_k)
@@ -70,8 +83,9 @@ class AnswerService:
         yield AnswerEvent("sources", {"sources": sources}).to_dict()
         if not chunks:
             yield AnswerEvent("token", {"text": NO_INFORMATION}).to_dict()
-            yield AnswerEvent("done", {"answer": NO_INFORMATION, "sources": [], "cached": False,
-                                       "stop_reason": "no_context"}).to_dict()
+            yield AnswerEvent(
+                "done", {"answer": NO_INFORMATION, "sources": [], "cached": False, "stop_reason": "no_context"}
+            ).to_dict()
             return
 
         # A fresh agent per question: no conversation history leaks between users.
@@ -79,7 +93,7 @@ class AnswerService:
         parts: list[str] = []
         stop_reason = "end_turn"
         async for event in agent.stream_async(build_prompt(question, chunks)):
-            if "data" in event and event["data"]:
+            if event.get("data"):
                 parts.append(event["data"])
                 yield AnswerEvent("token", {"text": event["data"]}).to_dict()
             elif "result" in event:
@@ -90,8 +104,9 @@ class AnswerService:
         if self._cache is not None and answer and stop_reason == "end_turn":
             self._cache.store(question, vector, {"answer": answer, "sources": sources})
         log.info("answer.generated", stop_reason=stop_reason, chars=len(answer), sources=len(sources))
-        yield AnswerEvent("done", {"answer": answer, "sources": sources, "cached": False,
-                                   "stop_reason": stop_reason}).to_dict()
+        yield AnswerEvent(
+            "done", {"answer": answer, "sources": sources, "cached": False, "stop_reason": stop_reason}
+        ).to_dict()
 
 
 def strands_agent_factory(model: Any) -> Callable[[], StreamingAgent]:

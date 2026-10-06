@@ -176,4 +176,3 @@ To keep PyTorch out of the embedding path, the same model was re-measured throug
 Identical quality, equivalent query latency, ~35% less memory and no PyTorch dependency; batch
 encoding is slower (relevant only for bulk ingestion, which runs in the worker). **The app serves
 bge-small-en-v1.5 through fastembed.**
-

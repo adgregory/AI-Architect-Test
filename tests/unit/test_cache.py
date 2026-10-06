@@ -11,24 +11,34 @@ from tests.fakes import FakeQdrantClient
 class TestQuestionGuard:
     guard = QuestionGuard()
 
-    @pytest.mark.parametrize("a, b", [
-        ("Who is the new head of engineering?", "who is the new head of engineering, please?"),
-        ("What is the overall research budget?", "What's the overall research budget?"),
-        ("How much did revenue grow, twelve percent?", "How much did revenue grow, 12%?"),
-        ("When is the board meeting again?", "Can you tell me when is the board meeting again?"),
-        ("Who reviewed the report of Dr. Olivia Chambers?", "Who reviewed Olivia Chambers's report?"),
-    ])
+    @pytest.mark.parametrize(
+        "a, b",
+        [
+            ("Who is the new head of engineering?", "who is the new head of engineering, please?"),
+            ("What is the overall research budget?", "What's the overall research budget?"),
+            ("How much did revenue grow, twelve percent?", "How much did revenue grow, 12%?"),
+            ("When is the board meeting again?", "Can you tell me when is the board meeting again?"),
+            ("Who reviewed the report of Dr. Olivia Chambers?", "Who reviewed Olivia Chambers's report?"),
+        ],
+    )
     def test_same_meaning(self, a, b):
         assert self.guard.same_meaning(a, b)
 
-    @pytest.mark.parametrize("a, b, why", [
-        ("Was the motion approved?", "Was the motion not approved?", "negation"),
-        ("Is the NIH grant worth $600K?", "Is the NIH grant worth $750K?", "number"),
-        ("Did Robert Chen present at NeurIPS?", "Did James Chen present at NeurIPS?", "entity"),
-        ("Does Sarah Williams report to James Anderson?", "Does James Anderson report to Sarah Williams?", "role swap"),
-        ("Will the ML division expand in 2025?", "Will the ML division shrink in 2025?", "antonym"),
-        ("Did revenue increase last year?", "Did revenue decrease last year?", "antonym"),
-    ])
+    @pytest.mark.parametrize(
+        "a, b, why",
+        [
+            ("Was the motion approved?", "Was the motion not approved?", "negation"),
+            ("Is the NIH grant worth $600K?", "Is the NIH grant worth $750K?", "number"),
+            ("Did Robert Chen present at NeurIPS?", "Did James Chen present at NeurIPS?", "entity"),
+            (
+                "Does Sarah Williams report to James Anderson?",
+                "Does James Anderson report to Sarah Williams?",
+                "role swap",
+            ),
+            ("Will the ML division expand in 2025?", "Will the ML division shrink in 2025?", "antonym"),
+            ("Did revenue increase last year?", "Did revenue decrease last year?", "antonym"),
+        ],
+    )
     def test_meaning_changes_are_rejected(self, a, b, why):
         assert not self.guard.same_meaning(a, b), why
 
@@ -66,8 +76,9 @@ def clock():
 
 @pytest.fixture
 def cache(clock):
-    return QdrantSemanticCache(SearchableFakeQdrant(), "answer_cache", vector_size=2, threshold=0.9, ttl_s=60,
-                               clock=lambda: clock.now)
+    return QdrantSemanticCache(
+        SearchableFakeQdrant(), "answer_cache", vector_size=2, threshold=0.9, ttl_s=60, clock=lambda: clock.now
+    )
 
 
 ANSWER = {"answer": "Robert Chen", "sources": ["chunk"]}

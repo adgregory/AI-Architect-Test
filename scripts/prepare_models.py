@@ -15,15 +15,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.core.config import get_settings  # noqa: E402
-from app.core.container import Container  # noqa: E402
-from app.core.logging import configure_logging, get_logger  # noqa: E402
+from app.core.config import get_settings
+from app.core.container import Container
+from app.core.logging import configure_logging, get_logger
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--components", default="ocr,ner,embeddings",
-                    help="comma-separated subset of: ocr, ner, embeddings")
+    ap.add_argument(
+        "--components", default="ocr,ner,embeddings", help="comma-separated subset of: ocr, ner, embeddings"
+    )
     components = set(ap.parse_args().components.split(","))
     settings = get_settings()
     configure_logging(settings)
@@ -34,13 +35,17 @@ def main() -> None:
         container.warm_up()
     else:
         if "ocr" in components:
-            container.ocr
+            _ = container.ocr
         if "ner" in components:
             container.ner.extract_names("Warm-up text mentioning Jane Doe.")
         if "embeddings" in components:
             container.embeddings.embed_query("warm-up")
-    log.info("models.ready", seconds=round(time.perf_counter() - started, 1), models_dir=str(settings.models_dir),
-             components=sorted(components))
+    log.info(
+        "models.ready",
+        seconds=round(time.perf_counter() - started, 1),
+        models_dir=str(settings.models_dir),
+        components=sorted(components),
+    )
 
 
 if __name__ == "__main__":

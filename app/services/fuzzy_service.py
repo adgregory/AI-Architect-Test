@@ -39,11 +39,13 @@ class TokenSortNameMatcher:
                 if score > best_score:
                     best_match, best_score = extracted, score
             if best_score >= self._threshold:
-                matches.append({
-                    "extracted_name": best_match,
-                    "matched_name": query_full,
-                    "score": best_score / 100.0,
-                })
+                matches.append(
+                    {
+                        "extracted_name": best_match,
+                        "matched_name": query_full,
+                        "score": best_score / 100.0,
+                    }
+                )
         return matches
 
 

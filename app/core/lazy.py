@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import threading
-from typing import Callable, Generic, TypeVar
-
-T = TypeVar("T")
+from collections.abc import Callable
 
 
-class Lazy(Generic[T]):
+class Lazy[T]:
     """Builds its target on first use (thread-safe) and forwards calls/attributes to it."""
 
     def __init__(self, factory: Callable[[], T]):

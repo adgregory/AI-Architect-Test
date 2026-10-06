@@ -114,4 +114,3 @@ Name IoU: best overlap between each ground-truth name box and the engine's box f
 - **ONNX:** False — Default pipeline is PyTorch end to end. Docling also ships an ONNX layout model (docling-layout-heron-onnx) and can use RapidOCR on onnxruntime — not the default.
 - **Device used:** accelerator=mps, easyocr reader device=mps
 - **Positional output:** Layout items (doc.texts) with prov bbox in page coordinates (image treated as 72 DPI, origin BOTTOMLEFT) — here a block per paragraph; underlying OCR cells (page.predictions.layout.clusters[].cells) are EasyOCR phrase segments with TOPLEFT rects and confidence. No word-level boxes.
-

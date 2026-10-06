@@ -25,8 +25,10 @@ def _db_ready() -> bool:
 
 
 if not _db_ready():
-    pytest.skip("Postgres with the jobs schema not available (docker compose up -d postgres && "
-                "uv run alembic upgrade head)", allow_module_level=True)
+    pytest.skip(
+        "Postgres with the jobs schema not available (docker compose up -d postgres && uv run alembic upgrade head)",
+        allow_module_level=True,
+    )
 
 
 CREATED: list[str] = []
@@ -84,8 +86,10 @@ async def test_stale_queued_only_returns_old_queued_jobs(repo):
         await repo.create(job_id, "f.pdf", "k", [])
     await repo.mark_running(running)
     async with repo._pool.connection() as conn:
-        await conn.execute("UPDATE jobs SET created_at = now() - interval '10 minutes' WHERE id IN (%s, %s)",
-                           (uuid.UUID(old), uuid.UUID(running)))
+        await conn.execute(
+            "UPDATE jobs SET created_at = now() - interval '10 minutes' WHERE id IN (%s, %s)",
+            (uuid.UUID(old), uuid.UUID(running)),
+        )
     stale = {j.id for j in await repo.stale_queued(older_than_s=60, limit=1000)}
     assert old in stale and fresh not in stale and running not in stale
 

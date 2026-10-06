@@ -14,15 +14,42 @@ SAMPLES = Path(__file__).resolve().parents[2] / "sample_pdfs"
 
 # Expected people per document, as listed in scripts/generate_test_pdfs.py.
 EXPECTED = {
-    "company_memo.pdf": {"Margaret Thompson", "Robert Chen", "Sarah Williams", "James Anderson",
-                         "Maria Garcia", "David Nakamura", "Patricia Okonkwo"},
-    "meeting_minutes.pdf": {"Richard Hernandez", "Elizabeth Park", "Thomas Muller", "Aisha Patel",
-                            "Kevin O'Brien", "Jennifer Liu", "Carlos Mendoza", "Yuki Tanaka",
-                            "Alexander Popov", "Catherine Dubois"},
-    "research_report.pdf": {"Olivia Chambers", "Benjamin Foster", "Priya Sharma", "Lucas Zimmermann",
-                            "Fatima Al-Rashidi", "Christopher Wong", "Anna Kowalski", "Michael O'Sullivan",
-                            "Elena Volkov", "Raj Krishnamurthy", "Hans Weber", "James Chen",
-                            "Margaret Thompson"},
+    "company_memo.pdf": {
+        "Margaret Thompson",
+        "Robert Chen",
+        "Sarah Williams",
+        "James Anderson",
+        "Maria Garcia",
+        "David Nakamura",
+        "Patricia Okonkwo",
+    },
+    "meeting_minutes.pdf": {
+        "Richard Hernandez",
+        "Elizabeth Park",
+        "Thomas Muller",
+        "Aisha Patel",
+        "Kevin O'Brien",
+        "Jennifer Liu",
+        "Carlos Mendoza",
+        "Yuki Tanaka",
+        "Alexander Popov",
+        "Catherine Dubois",
+    },
+    "research_report.pdf": {
+        "Olivia Chambers",
+        "Benjamin Foster",
+        "Priya Sharma",
+        "Lucas Zimmermann",
+        "Fatima Al-Rashidi",
+        "Christopher Wong",
+        "Anna Kowalski",
+        "Michael O'Sullivan",
+        "Elena Volkov",
+        "Raj Krishnamurthy",
+        "Hans Weber",
+        "James Chen",
+        "Margaret Thompson",
+    },
 }
 
 
@@ -36,9 +63,11 @@ def client():
 def test_extracts_expected_people_with_boxes(client, pdf):
     expected = EXPECTED[pdf]
     query = [{"first_name": n.split()[0], "last_name": n.split()[-1]} for n in sorted(expected)]
-    r = client.post("/api/extract",
-                    files={"pdf_file": (pdf, (SAMPLES / pdf).read_bytes(), "application/pdf")},
-                    data={"names": json.dumps(query)})
+    r = client.post(
+        "/api/extract",
+        files={"pdf_file": (pdf, (SAMPLES / pdf).read_bytes(), "application/pdf")},
+        data={"names": json.dumps(query)},
+    )
     assert r.status_code == 200
     body = r.json()
 
@@ -59,9 +88,11 @@ def test_extracts_expected_people_with_boxes(client, pdf):
 def test_typos_match_and_strangers_do_not(client):
     pdf = "company_memo.pdf"
     query = [{"first_name": "Margret", "last_name": "Thompson"}, {"first_name": "Zara", "last_name": "Xu"}]
-    r = client.post("/api/extract",
-                    files={"pdf_file": (pdf, (SAMPLES / pdf).read_bytes(), "application/pdf")},
-                    data={"names": json.dumps(query)})
+    r = client.post(
+        "/api/extract",
+        files={"pdf_file": (pdf, (SAMPLES / pdf).read_bytes(), "application/pdf")},
+        data={"names": json.dumps(query)},
+    )
     assert [(m["matched_name"], m["extracted_name"]) for m in r.json()["fuzzy_matches"]] == [
         ("Margret Thompson", "Margaret Thompson"),
     ]

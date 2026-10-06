@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import io
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Any, Iterator, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import fitz
 import numpy as np
@@ -125,9 +126,7 @@ class TesseractOCRService(_PageWiseOCR):
 
     def extract_text(self, pdf_path: str) -> str:
         self._require_tesseract()
-        return "".join(
-            pytesseract.image_to_string(img) + "\n" for _, img in self._renderer.pages(pdf_path)
-        )
+        return "".join(pytesseract.image_to_string(img) + "\n" for _, img in self._renderer.pages(pdf_path))
 
     def _read_image(self, img: Image.Image, page_num: int) -> tuple[list[str], list[dict]]:
         """image_to_data yields words, boxes and the line structure in one pass."""
@@ -135,7 +134,7 @@ class TesseractOCRService(_PageWiseOCR):
         scale = self._renderer.scale
         data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
         n = len(data["text"])
-        line_keys = list(zip(*(data.get(k) or [0] * n for k in ("block_num", "par_num", "line_num"))))
+        line_keys = list(zip(*(data.get(k) or [0] * n for k in ("block_num", "par_num", "line_num")), strict=True))
         page_lines: dict[tuple, list[str]] = {}
         words = []
         for i, raw in enumerate(data["text"]):
@@ -143,14 +142,16 @@ class TesseractOCRService(_PageWiseOCR):
             if not word:
                 continue
             page_lines.setdefault(line_keys[i], []).append(word)
-            words.append({
-                "word": word,
-                "page": page_num,
-                "x": data["left"][i] * scale,
-                "y": data["top"][i] * scale,
-                "width": data["width"][i] * scale,
-                "height": data["height"][i] * scale,
-            })
+            words.append(
+                {
+                    "word": word,
+                    "page": page_num,
+                    "x": data["left"][i] * scale,
+                    "y": data["top"][i] * scale,
+                    "width": data["width"][i] * scale,
+                    "height": data["height"][i] * scale,
+                }
+            )
         return [" ".join(ws) for ws in page_lines.values()], words
 
 
@@ -180,35 +181,47 @@ class RapidOCRService(_PageWiseOCR):
             for text, x0, y0, x1, y1 in self._merge_pieces(line_words):
                 if self._tighten:
                     y0, y1 = self._tighten_vertically(gray, x0, y0, x1, y1)
-                words.append({
-                    "word": text,
-                    "page": page_num,
-                    "x": x0 * scale,
-                    "y": y0 * scale,
-                    "width": (x1 - x0) * scale,
-                    "height": (y1 - y0) * scale,
-                })
+                words.append(
+                    {
+                        "word": text,
+                        "page": page_num,
+                        "x": x0 * scale,
+                        "y": y0 * scale,
+                        "width": (x1 - x0) * scale,
+                        "height": (y1 - y0) * scale,
+                    }
+                )
         return list(result.txts), words
 
     @staticmethod
     def _merge_pieces(pieces) -> list[tuple[str, float, float, float, float]]:
         """Recogniser pieces of one line → whitespace-delimited words with union boxes (pixels)."""
-        words, text, box = [], "", None
+        words: list[tuple[str, float, float, float, float]] = []
+        text: str = ""
+        box: list[float] | None = None
         for piece_text, _score, quad in pieces:
             xs = [float(p[0]) for p in quad]
             ys = [float(p[1]) for p in quad]
             piece_box = [min(xs), min(ys), max(xs), max(ys)]
             for token in piece_text.split(" "):
                 if not token:
-                    if text:
-                        words.append((text, *box))
+                    if text and box is not None:
+                        words.append((text, box[0], box[1], box[2], box[3]))
                     text, box = "", None
                     continue
                 text += token
-                box = piece_box if box is None else [min(box[0], piece_box[0]), min(box[1], piece_box[1]),
-                                                     max(box[2], piece_box[2]), max(box[3], piece_box[3])]
-            if text:  # pieces are words here; a new piece starts a new word
-                words.append((text, *box))
+                box = (
+                    piece_box
+                    if box is None
+                    else [
+                        min(box[0], piece_box[0]),
+                        min(box[1], piece_box[1]),
+                        max(box[2], piece_box[2]),
+                        max(box[3], piece_box[3]),
+                    ]
+                )
+            if text and box is not None:  # pieces are words here; a new piece starts a new word
+                words.append((text, box[0], box[1], box[2], box[3]))
                 text, box = "", None
         return words
 

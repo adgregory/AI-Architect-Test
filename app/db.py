@@ -5,13 +5,14 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import uuid
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import AsyncIterator, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from psycopg import AsyncConnection
-from psycopg.rows import dict_row
+from psycopg.rows import DictRow, dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool
 
@@ -51,7 +52,7 @@ class Job:
     finished_at: datetime | None = None
 
     @classmethod
-    def from_row(cls, row: dict) -> "Job":
+    def from_row(cls, row: dict) -> Job:
         return cls(**{**row, "id": str(row["id"]), "status": JobStatus(row["status"])})
 
 
@@ -70,21 +71,25 @@ class JobRepository(Protocol):
     async def stale_queued(self, older_than_s: int, limit: int = 100) -> list[Job]: ...
 
 
-def create_pool(settings: Settings) -> AsyncConnectionPool:
+Pool = AsyncConnectionPool[AsyncConnection[DictRow]]
+
+
+def create_pool(settings: Settings) -> Pool:
     """Per-process pool. Sized, bounded and recycled from config; opened by the caller."""
 
-    async def configure(conn: AsyncConnection) -> None:
-        conn.row_factory = dict_row
+    async def configure(conn: AsyncConnection[DictRow]) -> None:
         await conn.execute(f"SET statement_timeout = {int(settings.db_statement_timeout_ms)}")
         await conn.execute("SET idle_in_transaction_session_timeout = 30000")
         await conn.commit()
 
     return AsyncConnectionPool(
         conninfo=settings.database_url.get_secret_value(),
+        connection_class=AsyncConnection[DictRow],
+        kwargs={"row_factory": dict_row},
         min_size=settings.db_pool_min_size,
         max_size=settings.db_pool_max_size,
-        timeout=settings.db_pool_timeout_s,          # acquire wait → PoolTimeout (backpressure)
-        max_waiting=settings.db_pool_max_waiting,    # beyond this, reject immediately (TooManyRequests)
+        timeout=settings.db_pool_timeout_s,  # acquire wait → PoolTimeout (backpressure)
+        max_waiting=settings.db_pool_max_waiting,  # beyond this, reject immediately (TooManyRequests)
         max_lifetime=30 * 60,
         max_idle=5 * 60,
         configure=configure,
@@ -97,16 +102,19 @@ def create_pool(settings: Settings) -> AsyncConnectionPool:
 class PostgresJobRepository:
     """Short transactions only: a connection is held for one statement, never across OCR/NER."""
 
-    def __init__(self, pool: AsyncConnectionPool):
+    def __init__(self, pool: Pool):
         self._pool = pool
 
     async def create(self, job_id, filename, input_key, query_names) -> Job:
         async with self._pool.connection() as conn:
-            row = await (await conn.execute(
-                """INSERT INTO jobs (id, filename, input_key, query_names)
+            row = await (
+                await conn.execute(
+                    """INSERT INTO jobs (id, filename, input_key, query_names)
                    VALUES (%s, %s, %s, %s) RETURNING *""",
-                (uuid.UUID(job_id), filename, input_key, Jsonb(query_names)),
-            )).fetchone()
+                    (uuid.UUID(job_id), filename, input_key, Jsonb(query_names)),
+                )
+            ).fetchone()
+        assert row is not None  # INSERT ... RETURNING always yields the row
         return Job.from_row(row)
 
     async def get(self, job_id: str) -> Job | None:
@@ -143,20 +151,21 @@ class PostgresJobRepository:
 
     async def stale_queued(self, older_than_s: int, limit: int = 100) -> list[Job]:
         async with self._pool.connection() as conn:
-            rows = await (await conn.execute(
-                """SELECT * FROM jobs WHERE status = 'queued'
+            rows = await (
+                await conn.execute(
+                    """SELECT * FROM jobs WHERE status = 'queued'
                    AND created_at < now() - make_interval(secs => %s)
                    ORDER BY created_at LIMIT %s""",
-                (older_than_s, limit),
-            )).fetchall()
+                    (older_than_s, limit),
+                )
+            ).fetchall()
         return [Job.from_row(r) for r in rows]
 
     async def _transition(self, job_id: str, sql: str, params: tuple) -> None:
         # The NOTIFY is part of the same transaction: listeners hear about committed state only.
-        async with self._pool.connection() as conn:
-            async with conn.transaction():
-                await conn.execute(sql, params)
-                await conn.execute("SELECT pg_notify(%s, %s)", (JOB_EVENTS_CHANNEL, job_id))
+        async with self._pool.connection() as conn, conn.transaction():
+            await conn.execute(sql, params)
+            await conn.execute("SELECT pg_notify(%s, %s)", (JOB_EVENTS_CHANNEL, job_id))
 
 
 class JobEventHub:

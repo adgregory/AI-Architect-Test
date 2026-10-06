@@ -11,8 +11,8 @@ from temporalio.client import (
     ScheduleActionStartWorkflow,
     ScheduleAlreadyRunningError,
     ScheduleIntervalSpec,
-    SchedulePolicy,
     ScheduleOverlapPolicy,
+    SchedulePolicy,
     ScheduleSpec,
 )
 from temporalio.exceptions import WorkflowAlreadyStartedError
@@ -49,8 +49,10 @@ class TemporalJobOrchestrator:
     async def start_extraction(self, job_id: str, filename: str, query_names: list[dict]) -> None:
         try:
             await self._client.start_workflow(
-                ExtractNamesWorkflow.run, ExtractRequest(job_id, query_names, filename, self._queues),
-                id=job_id, task_queue=self._queues.workflows,
+                ExtractNamesWorkflow.run,
+                ExtractRequest(job_id, query_names, filename, self._queues),
+                id=job_id,
+                task_queue=self._queues.workflows,
             )
         except WorkflowAlreadyStartedError:
             log.info("workflow.already_started", job_id=job_id)
@@ -86,7 +88,9 @@ async def ensure_reconcile_schedule(client: Client, settings: Settings) -> None:
                     id="reconcile-queued-jobs-run",
                     task_queue=settings.workflow_task_queue,
                 ),
-                spec=ScheduleSpec(intervals=[ScheduleIntervalSpec(every=timedelta(seconds=settings.reconcile_interval_s))]),
+                spec=ScheduleSpec(
+                    intervals=[ScheduleIntervalSpec(every=timedelta(seconds=settings.reconcile_interval_s))]
+                ),
                 policy=SchedulePolicy(overlap=ScheduleOverlapPolicy.SKIP),
             ),
         )

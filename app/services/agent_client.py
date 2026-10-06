@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import AsyncIterator, Iterable, Iterator
+from collections.abc import AsyncIterator, Iterable, Iterator
 
 import httpx
 
@@ -32,7 +32,7 @@ class AgentAnswerClient:
 
     @staticmethod
     def _check(event: dict) -> None:
-        if event.get("type") == "error" or "error" in event and "type" not in event:
+        if event.get("type") == "error" or ("error" in event and "type" not in event):
             raise AgentUnavailableError(event.get("error", "agent error"))
 
     def answer(self, question: str) -> dict:

@@ -39,10 +39,12 @@ def configure_logging(settings: Settings) -> None:
     )
 
     handler = logging.StreamHandler()
-    handler.setFormatter(structlog.stdlib.ProcessorFormatter(
-        foreign_pre_chain=shared,
-        processors=[structlog.stdlib.ProcessorFormatter.remove_processors_meta, *exception_formatter, renderer],
-    ))
+    handler.setFormatter(
+        structlog.stdlib.ProcessorFormatter(
+            foreign_pre_chain=shared,
+            processors=[structlog.stdlib.ProcessorFormatter.remove_processors_meta, *exception_formatter, renderer],
+        )
+    )
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel(settings.log_level)

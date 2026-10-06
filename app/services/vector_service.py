@@ -24,7 +24,10 @@ class VectorStore(Protocol):
     def ensure_collection(self) -> None: ...
 
     def upsert(
-        self, texts: list[str], vectors: list[list[float]], document_id: str | None = None,
+        self,
+        texts: list[str],
+        vectors: list[list[float]],
+        document_id: str | None = None,
         metadata: list[dict] | None = None,
     ) -> str: ...
 
@@ -34,8 +37,13 @@ class VectorStore(Protocol):
 class QdrantVectorStore:
     """Qdrant collection with cosine distance. The client is injected."""
 
-    def __init__(self, client: Any, collection: str = COLLECTION_NAME, vector_size: int = VECTOR_SIZE,
-                 score_threshold: float = _settings.retrieval_score_threshold):
+    def __init__(
+        self,
+        client: Any,
+        collection: str = COLLECTION_NAME,
+        vector_size: int = VECTOR_SIZE,
+        score_threshold: float = _settings.retrieval_score_threshold,
+    ):
         self._client = client
         self._collection = collection
         self._vector_size = vector_size
@@ -54,13 +62,17 @@ class QdrantVectorStore:
         for a document, so re-ingesting it overwrites its own points instead of duplicating."""
         document_id = document_id or str(uuid.uuid4())
         points = []
-        for i, (text, vector) in enumerate(zip(texts, vectors)):
+        for i, (text, vector) in enumerate(zip(texts, vectors, strict=True)):
             payload = {"text": text, "document_id": document_id, "chunk_index": i}
             if metadata and i < len(metadata):
                 payload.update(metadata[i])
-            points.append(PointStruct(
-                id=str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{i}")), vector=vector, payload=payload,
-            ))
+            points.append(
+                PointStruct(
+                    id=str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{i}")),
+                    vector=vector,
+                    payload=payload,
+                )
+            )
         self._client.upsert(collection_name=self._collection, points=points)
         return document_id
 

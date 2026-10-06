@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import StreamingResponse
@@ -22,7 +22,7 @@ from app.storage import JobArtifacts
 router = APIRouter()
 log = get_logger(__name__)
 
-SSE_POLL_S = 5.0          # re-check the database even without a notification (hub down / missed event)
+SSE_POLL_S = 5.0  # re-check the database even without a notification (hub down / missed event)
 SSE_MAX_DURATION_S = 600  # clients reconnect after this
 
 
@@ -34,9 +34,16 @@ def get_job_repository(container: Container = Depends(get_container)) -> JobRepo
 
 def to_view(job: Job) -> JobView:
     return JobView(
-        job_id=job.id, status=job.status.value, filename=job.filename, page_count=job.page_count,
-        attempts=job.attempts, error=job.error, result=job.result, created_at=job.created_at,
-        started_at=job.started_at, finished_at=job.finished_at,
+        job_id=job.id,
+        status=job.status.value,
+        filename=job.filename,
+        page_count=job.page_count,
+        attempts=job.attempts,
+        error=job.error,
+        result=job.result,
+        created_at=job.created_at,
+        started_at=job.started_at,
+        finished_at=job.finished_at,
     )
 
 
@@ -61,6 +68,8 @@ async def submit_job(
     await asyncio.to_thread(container.storage.put_bytes, art.input_pdf, content)
     await repo.create(job_id, pdf_file.filename or "document.pdf", art.input_pdf, query_names)
     try:
+        if container.orchestrator is None:
+            raise RuntimeError("orchestrator not configured")
         await container.orchestrator.start_extraction(job_id, pdf_file.filename or "document.pdf", query_names)
     except Exception as exc:  # noqa: BLE001 - the reconciler will start it
         log.warning("workflow.start_deferred", job_id=job_id, error=str(exc))
@@ -104,6 +113,8 @@ async def job_events(
         try:
             while loop.time() < deadline:
                 job = await repo.get(job_key)
+                if job is None:  # deleted while streaming
+                    return
                 view = to_view(job).model_dump(mode="json")
                 if view != last:
                     yield f"event: {view['status']}\ndata: {json.dumps(view)}\n\n"
@@ -115,11 +126,12 @@ async def job_events(
                         await asyncio.wait_for(events.get(), timeout=SSE_POLL_S)
                     else:
                         await asyncio.sleep(SSE_POLL_S)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield ": keep-alive\n\n"
         finally:
             if subscription is not None:
                 await subscription.__aexit__(None, None, None)
 
-    return StreamingResponse(stream(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+    return StreamingResponse(
+        stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )

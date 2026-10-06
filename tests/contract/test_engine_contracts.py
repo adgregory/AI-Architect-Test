@@ -52,14 +52,14 @@ class TestOCRContract:
 
     def test_reads_every_page(self, minutes):
         assert "richard hernandez" in minutes.text.lower()  # page 1
-        assert "alexander popov" in minutes.text.lower()    # page 2
+        assert "alexander popov" in minutes.text.lower()  # page 2
         assert {w["page"] for w in minutes.words} == {0, 1}
 
     def test_boxes_are_in_pdf_points_within_the_page(self, minutes):
         width, height = LETTER_POINTS
         for w in minutes.words:
-            assert 0 <= w["x"] and w["x"] + w["width"] <= width + 1
-            assert 0 <= w["y"] and w["y"] + w["height"] <= height + 1
+            assert w["x"] >= 0 and w["x"] + w["width"] <= width + 1
+            assert w["y"] >= 0 and w["y"] + w["height"] <= height + 1
             assert w["width"] > 0 and w["height"] > 0
 
     def test_known_word_position(self, ocr):
@@ -89,8 +89,10 @@ class TestOCRContract:
 # --------------------------------------------------------------------------- #
 # NER
 # --------------------------------------------------------------------------- #
-TEXT = ("Margaret Thompson is the CEO of Acme Corporation. Robert Chen works at Google in London "
-        "and reports to James Anderson. Maria Garcia previously led the UX team.")
+TEXT = (
+    "Margaret Thompson is the CEO of Acme Corporation. Robert Chen works at Google in London "
+    "and reports to James Anderson. Maria Garcia previously led the UX team."
+)
 
 
 @pytest.fixture(scope="module", params=["gliner", "spacy"])
@@ -112,7 +114,7 @@ class TestNERContract:
 
     def test_positions_point_at_the_names(self, ner):
         for ent in ner.extract_names_with_positions(TEXT):
-            assert TEXT[ent["start_char"]:ent["end_char"]] == ent["name"]
+            assert TEXT[ent["start_char"] : ent["end_char"]] == ent["name"]
             assert ent["label"] == "PERSON"
 
     def test_no_names(self, ner):
@@ -137,17 +139,24 @@ class TestEmbeddingContract:
         assert np.allclose(np.linalg.norm(vectors, axis=1), 1.0, atol=1e-3)
 
     def test_paraphrase_closer_than_unrelated(self, embeddings):
-        a, para, other = map(np.array, embeddings.embed_documents([
-            "Robert Chen has been promoted to Vice President of Engineering.",
-            "Robert Chen is the new VP of Engineering.",
-            "Tomatoes grow best in full sun.",
-        ]))
+        a, para, other = map(
+            np.array,
+            embeddings.embed_documents(
+                [
+                    "Robert Chen has been promoted to Vice President of Engineering.",
+                    "Robert Chen is the new VP of Engineering.",
+                    "Tomatoes grow best in full sun.",
+                ]
+            ),
+        )
         assert a @ para > a @ other
 
     def test_query_retrieves_the_relevant_document(self, embeddings):
-        docs = ["The cloud migration to AWS is expected by Q3 2024.",
-                "Maria Garcia has been appointed Head of Product Design.",
-                "The NIH grant is worth $600K."]
+        docs = [
+            "The cloud migration to AWS is expected by Q3 2024.",
+            "Maria Garcia has been appointed Head of Product Design.",
+            "The NIH grant is worth $600K.",
+        ]
         q = np.array(embeddings.embed_query("Who leads product design?"))
         assert int(np.argmax(np.array(embeddings.embed_documents(docs)) @ q)) == 1
 

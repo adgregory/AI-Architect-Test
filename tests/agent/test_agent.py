@@ -17,8 +17,10 @@ from app.services.agent_client import AgentAnswerClient, AgentUnavailableError
 from tests.api.test_routes import FakeContainer
 from tests.fakes import FakeEmbeddings, InMemoryVectorStore
 
-DOCS = ["Robert Chen has been promoted to Vice President of Engineering.",
-        "The cloud migration to AWS is expected to be completed by Q3 2024."]
+DOCS = [
+    "Robert Chen has been promoted to Vice President of Engineering.",
+    "The cloud migration to AWS is expected to be completed by Q3 2024.",
+]
 
 
 class ScriptedAgent:
@@ -72,8 +74,13 @@ class TestAnswerService:
         events = await collect(service, "Who was promoted to Vice President of Engineering?")
         assert [e["type"] for e in events] == ["sources", "token", "token", "done"]
         assert events[0]["sources"] == [DOCS[0]]
-        assert events[-1] == {"type": "done", "answer": "Robert Chen.", "sources": [DOCS[0]],
-                              "cached": False, "stop_reason": "end_turn"}
+        assert events[-1] == {
+            "type": "done",
+            "answer": "Robert Chen.",
+            "sources": [DOCS[0]],
+            "cached": False,
+            "stop_reason": "end_turn",
+        }
         assert "Question: Who was promoted" in prompts[0] and f"[1] {DOCS[0]}" in prompts[0]
 
     async def test_cache_hit_skips_retrieval_and_model(self):
@@ -136,9 +143,11 @@ class TestAgentCoreServer:
 @pytest.fixture
 def backend(agent_runtime):
     """Backend API whose answering backend is the real AgentCore app, reached over ASGI."""
-    client = AgentAnswerClient("http://agent", StarletteClient(server.app, base_url="http://agent"),
-                               httpx.AsyncClient(transport=httpx.ASGITransport(app=server.app),
-                                                 base_url="http://agent"))
+    client = AgentAnswerClient(
+        "http://agent",
+        StarletteClient(server.app, base_url="http://agent"),
+        httpx.AsyncClient(transport=httpx.ASGITransport(app=server.app), base_url="http://agent"),
+    )
     container = FakeContainer()
     container.rag = client
     backend_app.dependency_overrides[get_container] = lambda: container
@@ -170,7 +179,10 @@ class TestBackendToAgent:
 
 
 def test_client_rejects_streams_without_a_final_answer():
-    transport = httpx.MockTransport(lambda req: httpx.Response(200, text='data: {"type": "token", "text": "x"}\n\n'))
-    client = AgentAnswerClient("http://agent", httpx.Client(transport=transport), httpx.AsyncClient(transport=transport))
+    body = 'data: {"type": "token", "text": "x"}\n\n'
+    transport = httpx.MockTransport(lambda req: httpx.Response(200, text=body))
+    client = AgentAnswerClient(
+        "http://agent", httpx.Client(transport=transport), httpx.AsyncClient(transport=transport)
+    )
     with pytest.raises(AgentUnavailableError):
         client.answer("Q?")

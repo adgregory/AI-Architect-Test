@@ -30,8 +30,13 @@ async def lifespan(app: FastAPI):
     container = Container(settings)
     started = time.perf_counter()
     await run_in_threadpool(container.warm_up)  # model loading is blocking: keep it off the event loop
-    log.info("startup.ready", seconds=round(time.perf_counter() - started, 2),
-             ocr=settings.ocr_engine, ner=settings.ner_engine, embeddings=settings.embedding_engine)
+    log.info(
+        "startup.ready",
+        seconds=round(time.perf_counter() - started, 2),
+        ocr=settings.ocr_engine,
+        ner=settings.ner_engine,
+        embeddings=settings.embedding_engine,
+    )
     await container.open_async()
     app.state.container = container
     try:
@@ -61,8 +66,7 @@ async def request_context(request: Request, call_next):
     except Exception:
         log.exception("request.failed")
         raise
-    log.info("request.done", status=response.status_code,
-             duration_ms=round((time.perf_counter() - started) * 1000, 1))
+    log.info("request.done", status=response.status_code, duration_ms=round((time.perf_counter() - started) * 1000, 1))
     response.headers["x-request-id"] = request_id
     return response
 
@@ -77,8 +81,9 @@ async def missing_engine(_: Request, exc: MissingEngineError) -> JSONResponse:
 @app.exception_handler(httpx.HTTPError)
 async def agent_unavailable(_: Request, exc: Exception) -> JSONResponse:
     log.error("agent.unavailable", error=str(exc) or type(exc).__name__)
-    return JSONResponse(status_code=503, content={"detail": "answering service unavailable"},
-                        headers={"Retry-After": "5"})
+    return JSONResponse(
+        status_code=503, content={"detail": "answering service unavailable"}, headers={"Retry-After": "5"}
+    )
 
 
 @app.exception_handler(PoolTimeout)
@@ -86,8 +91,9 @@ async def agent_unavailable(_: Request, exc: Exception) -> JSONResponse:
 async def database_busy(_: Request, exc: Exception) -> JSONResponse:
     """Pool exhausted: shed load quickly instead of queueing requests indefinitely."""
     log.warning("db.pool_exhausted", error=type(exc).__name__)
-    return JSONResponse(status_code=503, content={"detail": "database busy, retry shortly"},
-                        headers={"Retry-After": "2"})
+    return JSONResponse(
+        status_code=503, content={"detail": "database busy, retry shortly"}, headers={"Retry-After": "2"}
+    )
 
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])

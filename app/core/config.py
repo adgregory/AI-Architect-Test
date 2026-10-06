@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # Vector store
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
-    qdrant_timeout_s: float = 10.0
+    qdrant_timeout_s: int = 10
     qdrant_collection: str = "pdf_documents"
     retrieval_top_k: int = Field(3, ge=1, le=50)
     retrieval_score_threshold: float = Field(0.5, ge=-1.0, le=1.0)

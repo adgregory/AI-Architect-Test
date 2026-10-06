@@ -10,16 +10,19 @@ from tests.fakes import word
 
 
 class TestPersonNameNormalizer:
-    @pytest.mark.parametrize("raw, expected", [
-        ("Dr. Aisha Patel", "Aisha Patel"),
-        ("Prof. Michael O'Sullivan", "Michael O'Sullivan"),
-        ("Kevin O'Brien,", "Kevin O'Brien"),
-        ("Fatima Al-Rashidi", "Fatima Al-Rashidi"),
-        ("Robert Chen's", "Robert Chen"),
-        ("Aisha\nPatel", "Aisha Patel"),
-        ("  Jennifer   Liu  ", "Jennifer Liu"),
-        ("Dr.", ""),
-    ])
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            ("Dr. Aisha Patel", "Aisha Patel"),
+            ("Prof. Michael O'Sullivan", "Michael O'Sullivan"),
+            ("Kevin O'Brien,", "Kevin O'Brien"),
+            ("Fatima Al-Rashidi", "Fatima Al-Rashidi"),
+            ("Robert Chen's", "Robert Chen"),
+            ("Aisha\nPatel", "Aisha Patel"),
+            ("  Jennifer   Liu  ", "Jennifer Liu"),
+            ("Dr.", ""),
+        ],
+    )
     def test_normalize(self, raw, expected):
         assert PersonNameNormalizer().normalize(raw) == expected
 
@@ -37,13 +40,22 @@ class TestConsecutiveWordNameLocator:
         assert (box["x"], box["y"], box["width"], box["page"]) == (10, 20, 95, 0)
 
     def test_requires_consecutive_words_on_one_page(self):
-        boxes = [word("John", 0, 10, 20), word("met", 0, 45, 20), word("Smith", 0, 80, 20),
-                 word("John", 0, 10, 700), word("Smith", 1, 10, 20)]
+        boxes = [
+            word("John", 0, 10, 20),
+            word("met", 0, 45, 20),
+            word("Smith", 0, 80, 20),
+            word("John", 0, 10, 700),
+            word("Smith", 1, 10, 20),
+        ]
         assert self.locator.locate(["John Smith"], boxes) == []
 
     def test_returns_every_occurrence_in_document_order(self):
-        boxes = [word("Jennifer", 1, 10, 50), word("Liu", 1, 45, 50),
-                 word("Jennifer", 0, 10, 300), word("Liu", 0, 45, 300)]
+        boxes = [
+            word("Jennifer", 1, 10, 50),
+            word("Liu", 1, 45, 50),
+            word("Jennifer", 0, 10, 300),
+            word("Liu", 0, 45, 300),
+        ]
         found = self.locator.locate(["Jennifer Liu", "Jennifer Liu"], boxes)
         assert [(b["page"], b["y"]) for b in found] == [(0, 300), (1, 50)]
 
@@ -56,14 +68,17 @@ class TestConsecutiveWordNameLocator:
 class TestTokenSortNameMatcher:
     matcher = TokenSortNameMatcher(SIMILARITY_THRESHOLD)
 
-    @pytest.mark.parametrize("extracted, first, last, should_match", [
-        ("Robert Chen", "Robert", "Chen", True),          # exact
-        ("Chen Robert", "Robert", "Chen", True),          # reversed order
-        ("ROBERT CHEN", "robert", "chen", True),          # case
-        ("Margret Thopmson", "Margaret", "Thompson", True),  # OCR-style typos (score 91)
-        ("John Smith", "Jo", "Sm", False),                # partial names
-        ("Robert Chen", "James", "Chen", False),          # same surname, different person
-    ])
+    @pytest.mark.parametrize(
+        "extracted, first, last, should_match",
+        [
+            ("Robert Chen", "Robert", "Chen", True),  # exact
+            ("Chen Robert", "Robert", "Chen", True),  # reversed order
+            ("ROBERT CHEN", "robert", "chen", True),  # case
+            ("Margret Thopmson", "Margaret", "Thompson", True),  # OCR-style typos (score 91)
+            ("John Smith", "Jo", "Sm", False),  # partial names
+            ("Robert Chen", "James", "Chen", False),  # same surname, different person
+        ],
+    )
     def test_threshold_decisions(self, extracted, first, last, should_match):
         matches = self.matcher.match([extracted], [{"first_name": first, "last_name": last}])
         assert bool(matches) is should_match

@@ -53,8 +53,9 @@ class TestFactories:
 
     def test_missing_extra_fails_fast_with_guidance(self, monkeypatch):
         real_find_spec = importlib.util.find_spec
-        monkeypatch.setattr(importlib.util, "find_spec",
-                            lambda name, *a: None if name == "pytesseract" else real_find_spec(name, *a))
+        monkeypatch.setattr(
+            importlib.util, "find_spec", lambda name, *a: None if name == "pytesseract" else real_find_spec(name, *a)
+        )
         with pytest.raises(MissingEngineError, match="fallback"):
             OCRServiceFactory.create(Settings(_env_file=None, ocr_engine="tesseract"))
 

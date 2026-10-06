@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from app.services.bbox_service import NameLocator
 from app.services.fuzzy_service import NameMatcher
@@ -31,8 +31,13 @@ class ExtractionResultBuilder:
             "extracted_names": [
                 {
                     "name": nb["name"],
-                    "bounding_box": {"page_number": nb["page"], "x": nb["x"], "y": nb["y"],
-                                     "width": nb["width"], "height": nb["height"]},
+                    "bounding_box": {
+                        "page_number": nb["page"],
+                        "x": nb["x"],
+                        "y": nb["y"],
+                        "width": nb["width"],
+                        "height": nb["height"],
+                    },
                 }
                 for nb in name_boxes
             ],

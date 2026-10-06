@@ -35,11 +35,22 @@ async def main() -> None:
         client = await connect_with_retry(settings)
         await ensure_reconcile_schedule(client, settings)
         workers = [
-            Worker(client, task_queue=settings.workflow_task_queue,
-                   workflows=[ExtractNamesWorkflow, IndexDocumentWorkflow, ReconcileQueuedJobsWorkflow]),
-            Worker(client, task_queue=settings.io_task_queue,
-                   activities=[activities.mark_running, activities.complete_job, activities.fail_job,
-                               activities.upsert_chunks, activities.find_stale_jobs]),
+            Worker(
+                client,
+                task_queue=settings.workflow_task_queue,
+                workflows=[ExtractNamesWorkflow, IndexDocumentWorkflow, ReconcileQueuedJobsWorkflow],
+            ),
+            Worker(
+                client,
+                task_queue=settings.io_task_queue,
+                activities=[
+                    activities.mark_running,
+                    activities.complete_job,
+                    activities.fail_job,
+                    activities.upsert_chunks,
+                    activities.find_stale_jobs,
+                ],
+            ),
         ]
         await run_until_signalled(workers)
     finally:

@@ -30,13 +30,15 @@ def make_client():
     def _make(container):
         app.dependency_overrides[get_container] = lambda: container
         return TestClient(app)
+
     yield _make
     app.dependency_overrides.clear()
 
 
 def submit(client, content=PDF, filename="minutes.pdf", names=NAMES):
-    return client.post("/api/jobs", files={"pdf_file": (filename, content, "application/pdf")},
-                       data={"names": json.dumps(names)})
+    return client.post(
+        "/api/jobs", files={"pdf_file": (filename, content, "application/pdf")}, data={"names": json.dumps(names)}
+    )
 
 
 def test_submit_stores_records_and_starts_the_workflow(make_client, tmp_path):
@@ -76,9 +78,15 @@ def test_status_and_result(make_client, tmp_path):
     assert client.get(f"/api/jobs/{job_id}").json()["status"] == "queued"
 
     repo: InMemoryJobRepository = container.job_repository
-    result = {"extracted_names": [{"name": "Richard Hernandez", "bounding_box": {
-        "page_number": 0, "x": 1.0, "y": 2.0, "width": 3.0, "height": 4.0}}],
-        "fuzzy_matches": [{"extracted_name": "Richard Hernandez", "matched_name": "Richard Hernandez", "score": 1.0}]}
+    result = {
+        "extracted_names": [
+            {
+                "name": "Richard Hernandez",
+                "bounding_box": {"page_number": 0, "x": 1.0, "y": 2.0, "width": 3.0, "height": 4.0},
+            }
+        ],
+        "fuzzy_matches": [{"extracted_name": "Richard Hernandez", "matched_name": "Richard Hernandez", "score": 1.0}],
+    }
     repo.jobs[job_id] = replace(repo.jobs[job_id], status=JobStatus.SUCCEEDED, page_count=1, result=result)
     view = client.get(f"/api/jobs/{job_id}").json()
     assert view["status"] == "succeeded" and view["result"] == result and view["page_count"] == 1

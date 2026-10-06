@@ -49,8 +49,15 @@ def _combine(pages: list[dict]) -> OCRResult:
 
 
 class CpuActivities:
-    def __init__(self, engines: ExtractionEngines, embeddings: EmbeddingService, storage: ObjectStorage,
-                 chunker: TextChunker, chunk_size: int, max_pages: int):
+    def __init__(
+        self,
+        engines: ExtractionEngines,
+        embeddings: EmbeddingService,
+        storage: ObjectStorage,
+        chunker: TextChunker,
+        chunk_size: int,
+        max_pages: int,
+    ):
         self._engines = engines
         self._embeddings = embeddings
         self._storage = storage
@@ -68,15 +75,18 @@ class CpuActivities:
         try:
             with art.storage.local_path(art.input_pdf) as path:
                 pages = self._engines.ocr.page_count(str(path))
-        except FileNotFoundError:
-            raise ApplicationError("input PDF is missing from storage", type=INVALID_DOCUMENT, non_retryable=True)
+        except FileNotFoundError as exc:
+            raise ApplicationError(
+                "input PDF is missing from storage", type=INVALID_DOCUMENT, non_retryable=True
+            ) from exc
         except (fitz.FileDataError, RuntimeError, ValueError) as exc:
-            raise ApplicationError(f"not a readable PDF: {exc}", type=INVALID_DOCUMENT, non_retryable=True)
+            raise ApplicationError(f"not a readable PDF: {exc}", type=INVALID_DOCUMENT, non_retryable=True) from exc
         if pages == 0:
             raise ApplicationError("PDF has no pages", type=INVALID_DOCUMENT, non_retryable=True)
         if pages > self._max_pages:
-            raise ApplicationError(f"PDF has {pages} pages; the limit is {self._max_pages}",
-                                   type=INVALID_DOCUMENT, non_retryable=True)
+            raise ApplicationError(
+                f"PDF has {pages} pages; the limit is {self._max_pages}", type=INVALID_DOCUMENT, non_retryable=True
+            )
         return pages
 
     @activity.defn(name=OCR_PAGE)
@@ -129,8 +139,12 @@ class IoActivities:
         if not data["texts"]:
             return 0
         self._vector_store.ensure_collection()
-        self._vector_store.upsert(data["texts"], data["vectors"], document_id=req.job_id,
-                                  metadata=[{"source": req.filename}] * len(data["texts"]))
+        self._vector_store.upsert(
+            data["texts"],
+            data["vectors"],
+            document_id=req.job_id,
+            metadata=[{"source": req.filename}] * len(data["texts"]),
+        )
         return len(data["texts"])
 
     @activity.defn(name=FIND_STALE_JOBS)

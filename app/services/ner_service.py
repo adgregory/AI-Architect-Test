@@ -66,8 +66,7 @@ class GLiNERNERService:
     (never cutting a name in half) and offsets are mapped back to the full text.
     """
 
-    def __init__(self, model: Any, threshold: float = 0.3, labels: tuple[str, ...] = ("person",),
-                 max_words: int = 200):
+    def __init__(self, model: Any, threshold: float = 0.3, labels: tuple[str, ...] = ("person",), max_words: int = 200):
         self._model = model
         self._threshold = threshold
         self._labels = list(labels)
@@ -90,13 +89,15 @@ class GLiNERNERService:
         found = []
         for offset, chunk in self._windows(text):
             for ent in self._model.predict_entities(chunk, self._labels, threshold=self._threshold):
-                found.append({
-                    "name": ent["text"],
-                    "start_char": offset + ent["start"],
-                    "end_char": offset + ent["end"],
-                    "label": PERSON_LABEL,
-                    "score": float(ent["score"]),
-                })
+                found.append(
+                    {
+                        "name": ent["text"],
+                        "start_char": offset + ent["start"],
+                        "end_char": offset + ent["end"],
+                        "label": PERSON_LABEL,
+                        "score": float(ent["score"]),
+                    }
+                )
         return found
 
     def extract_names(self, text: str) -> list[str]:

@@ -1,7 +1,6 @@
 """Workflow behaviour on Temporal's time-skipping test server, with the real activity classes
 wired to in-memory fakes (no models, no database)."""
 
-import asyncio
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import AsyncExitStack
@@ -11,7 +10,7 @@ from temporalio.client import WorkflowFailureError
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-from app.db import Job, JobStatus
+from app.db import JobStatus
 from app.services.bbox_service import ConsecutiveWordNameLocator
 from app.services.extraction_service import ExtractionEngines
 from app.services.fuzzy_service import TokenSortNameMatcher
@@ -27,8 +26,13 @@ from tests.fakes import FakeEmbeddings, FakeNER, FakeOCR, InMemoryJobRepository,
 QUEUES = TaskQueues(workflows="wf", cpu="cpu", io="io")
 OCR = OCRResult(
     text="",
-    words=[word("Richard", 0, 60, 166), word("Hernandez", 0, 95, 166),
-           word("met", 0, 140, 166), word("Jennifer", 1, 10, 40), word("Liu", 1, 50, 40)],
+    words=[
+        word("Richard", 0, 60, 166),
+        word("Hernandez", 0, 95, 166),
+        word("met", 0, 140, 166),
+        word("Jennifer", 1, 10, 40),
+        word("Liu", 1, 50, 40),
+    ],
 )
 
 
@@ -63,8 +67,13 @@ class Harness:
         self.storage = LocalFileStorage(tmp_path)
         self.store = InMemoryVectorStore()
         self.ocr = ocr
-        engines = ExtractionEngines(ocr, FakeNER(["Richard Hernandez", "Jennifer Liu"]),
-                                    ConsecutiveWordNameLocator(), TokenSortNameMatcher(), PersonNameNormalizer())
+        engines = ExtractionEngines(
+            ocr,
+            FakeNER(["Richard Hernandez", "Jennifer Liu"]),
+            ConsecutiveWordNameLocator(),
+            TokenSortNameMatcher(),
+            PersonNameNormalizer(),
+        )
         self.cpu = CpuActivities(engines, FakeEmbeddings(), self.storage, TextChunker(), chunk_size=50, max_pages=10)
         self.io = IoActivities(self.repo, self.storage, self.store)
 
@@ -77,11 +86,19 @@ class Harness:
 
     def workers(self, client, stack: AsyncExitStack, executor):
         cpu = [self.cpu.prepare_document, self.cpu.ocr_page, self.cpu.extract_and_match, self.cpu.chunk_and_embed]
-        io = [self.io.mark_running, self.io.complete_job, self.io.fail_job, self.io.upsert_chunks,
-              self.io.find_stale_jobs]
+        io = [
+            self.io.mark_running,
+            self.io.complete_job,
+            self.io.fail_job,
+            self.io.upsert_chunks,
+            self.io.find_stale_jobs,
+        ]
         return [
-            Worker(client, task_queue=QUEUES.workflows,
-                   workflows=[ExtractNamesWorkflow, IndexDocumentWorkflow, ReconcileQueuedJobsWorkflow]),
+            Worker(
+                client,
+                task_queue=QUEUES.workflows,
+                workflows=[ExtractNamesWorkflow, IndexDocumentWorkflow, ReconcileQueuedJobsWorkflow],
+            ),
             Worker(client, task_queue=QUEUES.cpu, activities=cpu, activity_executor=executor),
             Worker(client, task_queue=QUEUES.io, activities=io),
         ]
@@ -100,8 +117,9 @@ async def test_extracts_pages_in_parallel_completes_and_indexes(env, tmp_path):
     req = await h.new_job([{"first_name": "Jenifer", "last_name": "Liu"}])
 
     async def scenario():
-        outcome = await env.client.execute_workflow(ExtractNamesWorkflow.run, req, id=req.job_id,
-                                                    task_queue=QUEUES.workflows)
+        outcome = await env.client.execute_workflow(
+            ExtractNamesWorkflow.run, req, id=req.job_id, task_queue=QUEUES.workflows
+        )
         indexed = await env.client.get_workflow_handle(f"index-{req.job_id}").result()
         return outcome, indexed
 
@@ -123,8 +141,7 @@ async def test_invalid_document_fails_fast_and_marks_job_failed(env, tmp_path):
 
     async def scenario():
         with pytest.raises(WorkflowFailureError):
-            await env.client.execute_workflow(ExtractNamesWorkflow.run, req, id=req.job_id,
-                                              task_queue=QUEUES.workflows)
+            await env.client.execute_workflow(ExtractNamesWorkflow.run, req, id=req.job_id, task_queue=QUEUES.workflows)
 
     await run_workers(env, h, scenario)
     job = h.repo.jobs[req.job_id]
@@ -137,8 +154,9 @@ async def test_transient_page_failure_is_retried(env, tmp_path):
     req = await h.new_job([])
 
     async def scenario():
-        return await env.client.execute_workflow(ExtractNamesWorkflow.run, req, id=req.job_id,
-                                                 task_queue=QUEUES.workflows)
+        return await env.client.execute_workflow(
+            ExtractNamesWorkflow.run, req, id=req.job_id, task_queue=QUEUES.workflows
+        )
 
     outcome = await run_workers(env, h, scenario)
     assert h.ocr.failed and outcome.names == 2
@@ -152,8 +170,11 @@ async def test_reconciler_restarts_stale_jobs_once(env, tmp_path):
 
     async def scenario():
         first = await env.client.execute_workflow(
-            ReconcileQueuedJobsWorkflow.run, ReconcileRequest(60, QUEUES), id=f"reconcile-{uuid.uuid4()}",
-            task_queue=QUEUES.workflows)
+            ReconcileQueuedJobsWorkflow.run,
+            ReconcileRequest(60, QUEUES),
+            id=f"reconcile-{uuid.uuid4()}",
+            task_queue=QUEUES.workflows,
+        )
         await env.client.get_workflow_handle(req.job_id).result()
         return first
 

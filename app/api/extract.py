@@ -39,8 +39,9 @@ def read_pdf_upload(pdf_file: UploadFile, max_bytes: int) -> bytes:
     filename = (pdf_file.filename or "").lower()
     content = pdf_file.file.read(max_bytes + 1)
     if len(content) > max_bytes:
-        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            f"PDF exceeds the {max_bytes // 2**20} MB upload limit")
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"PDF exceeds the {max_bytes // 2**20} MB upload limit"
+        )
     if not filename.endswith(".pdf") or not content.startswith(PDF_SIGNATURE):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Uploaded file must be a PDF document")
     return content
@@ -68,16 +69,13 @@ def extract_names_from_pdf(
     content = read_pdf_upload(pdf_file, settings.max_upload_mb * 2**20)
     query_names = _parse_names(names)
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    tmp.write(content)
-    tmp.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(content)
 
     try:
         text = extract_text_from_pdf(tmp.name, session)
         name_boxes = find_name_bounding_boxes(tmp.name, text, session)
-        matches = fuzzy_match_names(
-            [nb["name"] for nb in name_boxes], [q.model_dump() for q in query_names], session
-        )
+        matches = fuzzy_match_names([nb["name"] for nb in name_boxes], [q.model_dump() for q in query_names], session)
         log.info("extract.done", names=len(name_boxes), matches=len(matches), query_names=len(query_names))
 
         return ExtractionResultBuilder.build(name_boxes, matches)

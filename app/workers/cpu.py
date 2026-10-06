@@ -1,6 +1,6 @@
 """CPU worker: OCR, NER, matching and embedding activities. Holds no database connections.
 
-    python -m app.workers.cpu
+python -m app.workers.cpu
 """
 
 from __future__ import annotations
@@ -25,16 +25,24 @@ async def main() -> None:
     container = Container(settings)
     await asyncio.to_thread(container.warm_up)  # load models once, before polling for work
     activities = CpuActivities(
-        container.extraction_engines, container.embeddings, container.storage, container.chunker,
-        chunk_size=settings.chunk_size, max_pages=settings.max_pages,
+        container.extraction_engines,
+        container.embeddings,
+        container.storage,
+        container.chunker,
+        chunk_size=settings.chunk_size,
+        max_pages=settings.max_pages,
     )
     client = await connect_with_retry(settings)
     with ThreadPoolExecutor(max_workers=settings.cpu_worker_concurrency, thread_name_prefix="cpu-activity") as pool:
         worker = Worker(
             client,
             task_queue=settings.cpu_task_queue,
-            activities=[activities.prepare_document, activities.ocr_page,
-                        activities.extract_and_match, activities.chunk_and_embed],
+            activities=[
+                activities.prepare_document,
+                activities.ocr_page,
+                activities.extract_and_match,
+                activities.chunk_and_embed,
+            ],
             activity_executor=pool,
             max_concurrent_activities=settings.cpu_worker_concurrency,
         )

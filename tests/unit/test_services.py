@@ -22,15 +22,26 @@ from tests.fakes import (
 
 MEMO = OCRResult(
     text="To: All staff\nFrom: Dr. Aisha Patel, CTO\nRobert Chen joins Acme Corp.\nAisha Patel will review.",
-    words=[word("Dr.", 0, 10, 20), word("Aisha", 0, 40, 20), word("Patel,", 0, 75, 20),
-           word("Robert", 0, 10, 40), word("Chen", 0, 50, 40),
-           word("Aisha", 1, 10, 60), word("Patel", 1, 45, 60)],
+    words=[
+        word("Dr.", 0, 10, 20),
+        word("Aisha", 0, 40, 20),
+        word("Patel,", 0, 75, 20),
+        word("Robert", 0, 10, 40),
+        word("Chen", 0, 50, 40),
+        word("Aisha", 1, 10, 60),
+        word("Patel", 1, 45, 60),
+    ],
 )
 
 
 def make_session(ocr: FakeOCR, names: list[str]) -> ExtractionSession:
-    engines = ExtractionEngines(ocr=ocr, ner=FakeNER(names), locator=ConsecutiveWordNameLocator(),
-                                matcher=TokenSortNameMatcher(), normalizer=PersonNameNormalizer())
+    engines = ExtractionEngines(
+        ocr=ocr,
+        ner=FakeNER(names),
+        locator=ConsecutiveWordNameLocator(),
+        matcher=TokenSortNameMatcher(),
+        normalizer=PersonNameNormalizer(),
+    )
     return ExtractionSession(lambda: engines)
 
 
@@ -56,7 +67,9 @@ class TestExtractionSession:
         session = make_session(FakeOCR(MEMO), ["Dr. Aisha Patel", "Robert Chen", "Aisha Patel"])
         boxes = session.find_name_boxes("memo.pdf", session.extract_text("memo.pdf"))
         assert [(b["name"], b["page"]) for b in boxes] == [
-            ("Aisha Patel", 0), ("Robert Chen", 0), ("Aisha Patel", 1),
+            ("Aisha Patel", 0),
+            ("Robert Chen", 0),
+            ("Aisha Patel", 1),
         ]
 
     def test_match_deduplicates_occurrences(self):
@@ -66,7 +79,7 @@ class TestExtractionSession:
 
     def test_engines_resolve_lazily(self):
         built = []
-        session = ExtractionSession(lambda: built.append(1) or None)
+        ExtractionSession(lambda: built.append(1) or None)
         assert built == []  # creating a session never builds engines
 
 
@@ -75,8 +88,10 @@ class TestRAGService:
         self.embeddings = FakeEmbeddings()
         self.store = InMemoryVectorStore(score_threshold=0.1)
         self.llm = FakeLLM("Robert Chen leads engineering.")
-        texts = ["Robert Chen was promoted to Vice President of Engineering.",
-                 "The cloud migration to AWS is expected by Q3 2024."]
+        texts = [
+            "Robert Chen was promoted to Vice President of Engineering.",
+            "The cloud migration to AWS is expected by Q3 2024.",
+        ]
         self.store.upsert(texts, self.embeddings.embed_documents(texts))
         self.rag = RAGService(self.embeddings.embed_query, self.store.search, self.llm, top_k=1)
 
@@ -85,8 +100,10 @@ class TestRAGService:
         prompt = self.llm.prompts[0]
         assert "Who was promoted to Vice President of Engineering?" in prompt
         assert "Robert Chen was promoted" in prompt
-        assert result == {"answer": "Robert Chen leads engineering.",
-                          "sources": ["Robert Chen was promoted to Vice President of Engineering."]}
+        assert result == {
+            "answer": "Robert Chen leads engineering.",
+            "sources": ["Robert Chen was promoted to Vice President of Engineering."],
+        }
 
     def test_no_context_skips_the_llm(self):
         rag = RAGService(self.embeddings.embed_query, InMemoryVectorStore().search, self.llm)

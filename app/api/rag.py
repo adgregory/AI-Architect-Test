@@ -27,17 +27,17 @@ def ingest_pdf(pdf_file: UploadFile = File(...), container: Container = Depends(
     settings = container.settings
     content = read_pdf_upload(pdf_file, settings.max_upload_mb * 2**20)
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    tmp.write(content)
-    tmp.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(content)
 
     try:
         text = container.ocr.read(tmp.name).text
         chunks = [c for c in container.chunker.chunk(text, settings.chunk_size) if c.strip()]
         store = container.vector_store
         store.ensure_collection()
-        document_id = store.upsert(chunks, container.embeddings.embed_documents(chunks),
-                                   metadata=[{"source": pdf_file.filename}] * len(chunks))
+        document_id = store.upsert(
+            chunks, container.embeddings.embed_documents(chunks), metadata=[{"source": pdf_file.filename}] * len(chunks)
+        )
         log.info("ingest.done", document_id=document_id, chunks=len(chunks))
         return {"status": "success", "document_id": document_id, "chunks_stored": len(chunks)}
     finally:
@@ -63,10 +63,13 @@ async def ask_question_stream(request: RAGRequest, rag=Depends(get_rag_service))
                 yield f"event: {event['type']}\ndata: {json.dumps(event)}\n\n"
         else:
             result = rag.answer(request.question)
-            for event in ({"type": "sources", "sources": result["sources"]},
-                          {"type": "token", "text": result["answer"]},
-                          {"type": "done", **result, "cached": False}):
+            for event in (
+                {"type": "sources", "sources": result["sources"]},
+                {"type": "token", "text": result["answer"]},
+                {"type": "done", **result, "cached": False},
+            ):
                 yield f"event: {event['type']}\ndata: {json.dumps(event)}\n\n"
 
-    return StreamingResponse(events(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+    return StreamingResponse(
+        events(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )

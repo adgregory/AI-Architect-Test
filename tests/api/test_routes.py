@@ -23,8 +23,13 @@ from tests.fakes import FakeEmbeddings, FakeLLM, FakeNER, FakeOCR, InMemoryVecto
 PDF = b"%PDF-1.7 test document"
 OCR = OCRResult(
     text="Minutes\nRichard Hernandez opened the meeting.\nDr. Aisha Patel reviewed costs.",
-    words=[word("Richard", 0, 60, 166, w=40), word("Hernandez", 0, 102, 166, w=44),
-           word("Dr.", 1, 10, 50, w=12), word("Aisha", 1, 25, 50), word("Patel", 1, 58, 50)],
+    words=[
+        word("Richard", 0, 60, 166, w=40),
+        word("Hernandez", 0, 102, 166, w=44),
+        word("Dr.", 1, 10, 50, w=12),
+        word("Aisha", 1, 25, 50),
+        word("Patel", 1, 58, 50),
+    ],
 )
 
 
@@ -40,9 +45,13 @@ class FakeContainer:
         self.llm = FakeLLM("Richard Hernandez chaired the meeting.")
         self.chunker = TextChunker()
         self.rag = RAGService(self.embeddings.embed_query, self.vector_store.search, self.llm, top_k=2)
-        self._engines = ExtractionEngines(self.ocr, self.ner, ConsecutiveWordNameLocator(),
-                                          TokenSortNameMatcher(self.settings.similarity_threshold),
-                                          PersonNameNormalizer())
+        self._engines = ExtractionEngines(
+            self.ocr,
+            self.ner,
+            ConsecutiveWordNameLocator(),
+            TokenSortNameMatcher(self.settings.similarity_threshold),
+            PersonNameNormalizer(),
+        )
 
     def extraction_session(self) -> ExtractionSession:
         return ExtractionSession(lambda: self._engines)
@@ -61,25 +70,38 @@ def client(container):
 
 
 def post_extract(client, names, content=PDF, filename="doc.pdf"):
-    return client.post("/api/extract", files={"pdf_file": (filename, content, "application/pdf")},
-                       data={"names": json.dumps(names) if not isinstance(names, str) else names})
+    return client.post(
+        "/api/extract",
+        files={"pdf_file": (filename, content, "application/pdf")},
+        data={"names": json.dumps(names) if not isinstance(names, str) else names},
+    )
 
 
 class TestExtract:
     def test_returns_names_boxes_pages_and_matches(self, client, container):
-        r = post_extract(client, [{"first_name": "Richard", "last_name": "Hernandez"},
-                                  {"first_name": "Aisha", "last_name": "Patl"},
-                                  {"first_name": "Zara", "last_name": "Xu"}])
+        r = post_extract(
+            client,
+            [
+                {"first_name": "Richard", "last_name": "Hernandez"},
+                {"first_name": "Aisha", "last_name": "Patl"},
+                {"first_name": "Zara", "last_name": "Xu"},
+            ],
+        )
         assert r.status_code == 200
         body = r.json()
         assert body["extracted_names"] == [
-            {"name": "Richard Hernandez",
-             "bounding_box": {"page_number": 0, "x": 60.0, "y": 166.0, "width": 86.0, "height": 10.0}},
-            {"name": "Aisha Patel",
-             "bounding_box": {"page_number": 1, "x": 25.0, "y": 50.0, "width": 63.0, "height": 10.0}},
+            {
+                "name": "Richard Hernandez",
+                "bounding_box": {"page_number": 0, "x": 60.0, "y": 166.0, "width": 86.0, "height": 10.0},
+            },
+            {
+                "name": "Aisha Patel",
+                "bounding_box": {"page_number": 1, "x": 25.0, "y": 50.0, "width": 63.0, "height": 10.0},
+            },
         ]
         assert [(m["matched_name"], m["extracted_name"]) for m in body["fuzzy_matches"]] == [
-            ("Richard Hernandez", "Richard Hernandez"), ("Aisha Patl", "Aisha Patel"),
+            ("Richard Hernandez", "Richard Hernandez"),
+            ("Aisha Patl", "Aisha Patel"),
         ]
         assert len(container.ocr.reads) == 1  # one OCR pass per request
 
@@ -99,6 +121,7 @@ class TestExtract:
     def test_missing_engine_returns_503(self, client, container):
         def unavailable():
             raise MissingEngineError("engine 'gliner' needs the `chosen` extra")
+
         container.extraction_session = lambda: ExtractionSession(unavailable)
         r = post_extract(client, [])
         assert r.status_code == 503 and "chosen" in r.json()["detail"]

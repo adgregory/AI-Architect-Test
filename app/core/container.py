@@ -21,12 +21,14 @@ from app.core.factories import (
 )
 from app.core.lazy import Lazy
 from app.core.logging import get_logger
+from app.db import JobEventHub, JobRepository, Pool
 from app.services.bbox_service import ConsecutiveWordNameLocator
 from app.services.extraction_service import ExtractionEngines, ExtractionSession
 from app.services.fuzzy_service import TokenSortNameMatcher
 from app.services.ner_service import PersonNameNormalizer
 from app.services.rag_service import RAGService, TextChunker
 from app.storage import LocalFileStorage, ObjectStorage
+from app.workflows.client import JobOrchestrator
 
 log = get_logger(__name__)
 
@@ -36,10 +38,10 @@ class Container:
         self.settings = settings
         self._lock = threading.RLock()  # first use may race across threadpool workers
         # Async resources (opened in the lifespan / worker startup)
-        self.db_pool = None
-        self.job_repository = None
-        self.event_hub = None
-        self.orchestrator = None
+        self.db_pool: Pool | None = None
+        self.job_repository: JobRepository | None = None
+        self.event_hub: JobEventHub | None = None
+        self.orchestrator: JobOrchestrator | None = None
 
     def _build(self, name: str, build):
         with self._lock:
@@ -124,7 +126,7 @@ class Container:
     # Lifecycle ------------------------------------------------------------ #
     def warm_up(self) -> None:
         """Load every model now so the first request doesn't pay for it."""
-        self.extraction_engines
+        _ = self.extraction_engines
         self.embeddings.embed_query("warm-up")
         self.ner.extract_names("Warm-up text mentioning Jane Doe.")
 
@@ -135,12 +137,13 @@ class Container:
     async def open_async(self) -> None:
         """Jobs infrastructure. Each part degrades independently: the sync API keeps working
         without Postgres/Temporal; job starts fall back to the reconciler; SSE falls back to polling."""
-        from app.db import JobEventHub, PostgresJobRepository, create_pool
+        from app.db import PostgresJobRepository, create_pool
         from app.workflows.client import LazyTemporalOrchestrator
 
-        self.db_pool = create_pool(self.settings)
-        await self.db_pool.open(wait=False)  # don't block startup on the database
-        self.job_repository = PostgresJobRepository(self.db_pool)
+        pool = create_pool(self.settings)
+        await pool.open(wait=False)  # don't block startup on the database
+        self.db_pool = pool
+        self.job_repository = PostgresJobRepository(pool)
         self.orchestrator = LazyTemporalOrchestrator(self.settings)
         hub = JobEventHub(self.settings.database_url.get_secret_value())
         try:

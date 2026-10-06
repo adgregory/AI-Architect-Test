@@ -7,7 +7,8 @@ the provider changes — prompts, retrieval and streaming are identical.
 
 from __future__ import annotations
 
-from typing import Any, Callable, ClassVar
+from collections.abc import Callable
+from typing import Any, ClassVar
 
 from app.core.config import Settings
 from app.core.factories import _require
@@ -22,8 +23,11 @@ class ModelProviderFactory:
 
         # Pre-built Vertex client: credentials come from ADC (google.auth.default), never a key.
         client = genai.Client(vertexai=True, project=s.gemini_project, location=s.gemini_location)
-        return GeminiModel(client=client, model_id=s.gemini_model,
-                           params={"temperature": s.llm_temperature, "max_output_tokens": s.llm_max_output_tokens})
+        return GeminiModel(
+            client=client,
+            model_id=s.gemini_model,
+            params={"temperature": s.llm_temperature, "max_output_tokens": s.llm_max_output_tokens},
+        )
 
     @staticmethod
     def _bedrock(s: Settings) -> Any:
@@ -31,8 +35,12 @@ class ModelProviderFactory:
         from strands.models import BedrockModel
 
         # Credentials from the AgentCore runtime execution role (IAM), scoped to this model ARN.
-        return BedrockModel(model_id=s.bedrock_model_id, region_name=s.aws_region,
-                            temperature=s.llm_temperature, max_tokens=s.llm_max_output_tokens)
+        return BedrockModel(
+            model_id=s.bedrock_model_id,
+            region_name=s.aws_region,
+            temperature=s.llm_temperature,
+            max_tokens=s.llm_max_output_tokens,
+        )
 
     builders: ClassVar[dict[str, Callable[[Settings], Any]]] = {"gemini": _gemini, "bedrock": _bedrock}
 

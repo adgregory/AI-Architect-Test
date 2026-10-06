@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Callable, Protocol, runtime_checkable
+from collections.abc import Callable
+from typing import Protocol, runtime_checkable
 
 import httpx
 
@@ -67,8 +68,7 @@ class TextChunker:
                 if cut > start:
                     end = cut + 1
                 else:  # word longer than chunk_size: extend to its end
-                    nxt = min((i for i in (text.find(" ", end), text.find("\n", end)) if i != -1),
-                              default=len(text))
+                    nxt = min((i for i in (text.find(" ", end), text.find("\n", end)) if i != -1), default=len(text))
                     end = nxt + 1 if nxt < len(text) else len(text)
             chunks.append(text[start:end])
             start = end
@@ -78,8 +78,13 @@ class TextChunker:
 class RAGService:
     """Embed the question, retrieve top-k chunks, and ask the LLM to answer from them."""
 
-    def __init__(self, embed_query: Callable[[str], list[float]],
-                 retrieve: Callable[..., list[dict]], llm: LLMClient, top_k: int = 3):
+    def __init__(
+        self,
+        embed_query: Callable[[str], list[float]],
+        retrieve: Callable[..., list[dict]],
+        llm: LLMClient,
+        top_k: int = 3,
+    ):
         self._embed_query = embed_query
         self._retrieve = retrieve
         self._llm = llm
@@ -101,8 +106,10 @@ class RAGService:
 class _ModuleRAG:
     def generate_answer(self, question: str) -> dict:
         llm = OpenAICompatibleChatClient(
-            api_key=OPENAI_API_KEY, base_url=_settings.llm_base_url,
-            model=_settings.llm_model, timeout_s=_settings.llm_timeout_s,
+            api_key=OPENAI_API_KEY,
+            base_url=_settings.llm_base_url,
+            model=_settings.llm_model,
+            timeout_s=_settings.llm_timeout_s,
         )
         return RAGService(get_query_embedding, search_similar, llm, _settings.retrieval_top_k).answer(question)
 

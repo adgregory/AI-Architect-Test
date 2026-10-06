@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from app.services.ocr_service import get_word_bounding_boxes
 from app.services.ner_service import extract_names
+from app.services.ocr_service import get_word_bounding_boxes
 
 
 @runtime_checkable
@@ -48,8 +48,14 @@ class ConsecutiveWordNameLocator:
         min_y = min(b["y"] for b in run)
         max_x = max(b["x"] + b["width"] for b in run)
         max_y = max(b["y"] + b["height"] for b in run)
-        return {"name": name, "page": run[0]["page"], "x": min_x, "y": min_y,
-                "width": max_x - min_x, "height": max_y - min_y}
+        return {
+            "name": name,
+            "page": run[0]["page"],
+            "x": min_x,
+            "y": min_y,
+            "width": max_x - min_x,
+            "height": max_y - min_y,
+        }
 
 
 # --------------------------------------------------------------------------- #
