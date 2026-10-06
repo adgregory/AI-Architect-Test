@@ -1,0 +1,105 @@
+# Local stack. Published host ports are configurable (defaults avoid common clashes).
+#   docker compose up -d --build          # everything
+#   docker compose up -d postgres temporal qdrant   # infrastructure only (run app/workers from the host)
+name: pdf-name-extractor
+
+x-app: &app
+  build:
+    context: .
+    args:
+      STACK: ${STACK:-chosen}
+  image: pdf-name-extractor:${STACK:-chosen}
+  environment: &app-env
+    DATABASE_URL: postgresql://app:app@postgres:5432/app
+    TEMPORAL_ADDRESS: temporal:7233
+    QDRANT_HOST: qdrant
+    STORAGE_DIR: /data/storage
+    LOG_JSON: "true"
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  volumes:
+    - storage:/data
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    command: ["postgres", "-c", "max_connections=200"]
+    ports: ["${POSTGRES_PORT:-55432}:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  temporal:
+    image: temporalio/auto-setup:1.28.1   # dev image: creates its schema in the same Postgres
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: app
+      POSTGRES_PWD: app
+      POSTGRES_SEEDS: postgres
+      SQL_MAX_CONNS: 20   # Temporal's own pool, part of the connection budget
+    ports: ["${TEMPORAL_PORT:-7233}:7233"]
+    healthcheck:
+      test: ["CMD-SHELL", "tctl --address temporal:7233 cluster health | grep -q SERVING"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  temporal-ui:
+    image: temporalio/ui:2.40.1
+    depends_on: [temporal]
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    ports: ["${TEMPORAL_UI_PORT:-8233}:8080"]
+
+  qdrant:
+    image: qdrant/qdrant:v1.15.4
+    ports: ["${QDRANT_PORT:-6333}:6333"]
+    volumes: [qdrant:/qdrant/storage]
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+  api:
+    <<: *app
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      temporal: {condition: service_healthy}
+      qdrant: {condition: service_started}
+    ports: ["${API_PORT:-8000}:8000"]
+
+  worker-io:
+    <<: *app
+    command: ["python", "-m", "app.workers.io"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      temporal: {condition: service_healthy}
+    healthcheck: {disable: true}
+
+  worker-cpu:
+    <<: *app
+    command: ["python", "-m", "app.workers.cpu"]
+    depends_on:
+      temporal: {condition: service_healthy}
+    healthcheck: {disable: true}
+    deploy:
+      replicas: ${CPU_WORKERS:-1}
+
+volumes:
+  pgdata:
+  qdrant:
+  storage:
