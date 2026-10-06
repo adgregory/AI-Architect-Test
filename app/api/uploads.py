@@ -21,9 +21,7 @@ def read_pdf_upload(pdf_file: UploadFile, max_bytes: int) -> bytes:
     filename = (pdf_file.filename or "").lower()
     content = pdf_file.file.read(max_bytes + 1)
     if len(content) > max_bytes:
-        raise HTTPException(
-            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"PDF exceeds the {max_bytes // 2**20} MB upload limit"
-        )
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, f"PDF exceeds the {max_bytes // 2**20} MB upload limit")
     if not filename.endswith(".pdf") or not content.startswith(PDF_SIGNATURE):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Uploaded file must be a PDF document")
     return content
@@ -34,7 +32,7 @@ def parse_names(names: str) -> list[NamePair]:
         return _NAME_PAIRS.validate_json(names)
     except ValidationError as exc:
         raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, "names must be a JSON list of {first_name, last_name} objects"
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "names must be a JSON list of {first_name, last_name} objects"
         ) from exc
 
 
