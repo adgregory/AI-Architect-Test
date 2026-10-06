@@ -18,6 +18,7 @@ import json  # noqa: E402
 import platform  # noqa: E402
 import subprocess  # noqa: E402
 import sys  # noqa: E402
+import tempfile  # noqa: E402
 from dataclasses import asdict  # noqa: E402
 from pathlib import Path  # noqa: E402
 
@@ -72,7 +73,7 @@ def mean(xs):
     return round(sum(xs) / len(xs), 4) if xs else None
 
 
-def cold_start_once(engine_name: str, device: str) -> None:
+def cold_start_once(engine_name: str, device: str, out_path: str) -> None:
     """Fresh-process measurement: imports + model load + first page."""
     page = load_pages(["clean"], 1)[0]
     engine = load_engine(engine_name, device)
@@ -81,7 +82,8 @@ def cold_start_once(engine_name: str, device: str) -> None:
     t1 = time.perf_counter()
     engine.ocr(page["pil"])
     t2 = time.perf_counter()
-    print(json.dumps({
+    # Written to a file: some runtimes (CoreML) print diagnostics to stdout.
+    Path(out_path).write_text(json.dumps({
         "process_to_ready_s": round(t1 - T_PROCESS_START, 3),
         "model_load_s": round(t1 - t0, 3),
         "first_page_s": round(t2 - t1, 3),
@@ -92,11 +94,13 @@ def cold_start_once(engine_name: str, device: str) -> None:
 def cold_starts(engine_name: str, device: str, runs: int) -> list[dict]:
     out = []
     for i in range(runs):
-        proc = subprocess.run(
-            [sys.executable, __file__, "--engine", engine_name, "--device", device, "--cold-start-once"],
-            capture_output=True, text=True, check=True,
-        )
-        out.append(json.loads(proc.stdout.strip().splitlines()[-1]))
+        with tempfile.NamedTemporaryFile(suffix=".json") as tmp:
+            subprocess.run(
+                [sys.executable, __file__, "--engine", engine_name, "--device", device,
+                 "--cold-start-once", tmp.name],
+                capture_output=True, text=True, check=True,
+            )
+            out.append(json.loads(Path(tmp.name).read_text()))
         print(f"  cold start {i + 1}/{runs}: {out[-1]['cold_start_total_s']}s", flush=True)
     return out
 
@@ -137,11 +141,11 @@ def main() -> None:
     ap.add_argument("--profiles", nargs="*")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--tag", default="", help="suffix for result file names (smoke tests)")
-    ap.add_argument("--cold-start-once", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--cold-start-once", metavar="OUT_JSON", help=argparse.SUPPRESS)
     args = ap.parse_args()
 
     if args.cold_start_once:
-        cold_start_once(args.engine, args.device)
+        cold_start_once(args.engine, args.device, args.cold_start_once)
         return
 
     config = f"{args.engine}-{args.device}{args.tag}"
