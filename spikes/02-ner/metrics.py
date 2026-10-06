@@ -13,6 +13,8 @@ TRACKED_NON_PERSONS = [
     "human resources", "headquarters", "board",
 ]
 FUZZY_THRESHOLD = 0.9  # same threshold the /extract fuzzy matching uses
+# Lenient level: the model found the person but OCR garbled the spelling ("Anna Kowaisk").
+DETECT_THRESHOLD = 0.6
 
 
 def normalize_name(raw: str) -> str:
@@ -45,9 +47,12 @@ def score_page(gt_names: set[str], predicted_raw: list[str]) -> dict:
     fuzzy_tp = {p for p in predicted if any(similar(p, g) >= FUZZY_THRESHOLD for g in gt_names)}
     found_exact = {g for g in gt_names if g.lower() in {p.lower() for p in predicted}}
     found_fuzzy = {g for g in gt_names if any(similar(p, g) >= FUZZY_THRESHOLD for p in predicted)}
-    partial = {p for p in predicted - fuzzy_tp
+    detect_tp = {p for p in predicted if any(similar(p, g) >= DETECT_THRESHOLD for g in gt_names)}
+    found_detect = {g for g in gt_names if any(similar(p, g) >= DETECT_THRESHOLD for p in predicted)}
+    garbled = detect_tp - fuzzy_tp
+    partial = {p for p in predicted - detect_tp
                if any(set(p.lower().split()) < set(g.lower().split()) for g in gt_names)}
-    false_pos = predicted - fuzzy_tp - partial
+    false_pos = predicted - detect_tp - partial
     tracked_fp = {p for p in false_pos if any(t in p.lower() for t in TRACKED_NON_PERSONS)}
     single_token = {p for p in predicted if len(p.split()) < 2}
 
@@ -55,10 +60,11 @@ def score_page(gt_names: set[str], predicted_raw: list[str]) -> dict:
         "gt": len(gt_names), "predicted": len(predicted),
         "exact_tp": len(exact_tp), "fuzzy_tp": len(fuzzy_tp),
         "found_exact": len(found_exact), "found_fuzzy": len(found_fuzzy),
+        "detect_tp": len(detect_tp), "found_detect": len(found_detect), "garbled": sorted(garbled),
         "partial": sorted(partial), "false_positives": sorted(false_pos), "tracked_fp": sorted(tracked_fp),
         "single_token": len(single_token),
         "needs_cleanup": sum(needs_cleanup(p) for p in predicted_raw), "raw_spans": len(predicted_raw),
-        "missed": sorted(gt_names - found_fuzzy),
+        "missed": sorted(gt_names - found_detect),
     }
 
 
@@ -75,6 +81,8 @@ def aggregate(pages: list[dict]) -> dict:
         "pages": len(pages),
         "exact": prf(s("exact_tp"), s("found_exact")),
         "fuzzy": prf(s("fuzzy_tp"), s("found_fuzzy")),
+        "detected": prf(s("detect_tp"), s("found_detect")),
+        "ocr_garbled_names": sum(len(p["garbled"]) for p in pages),
         "partial_names": sum(len(p["partial"]) for p in pages),
         "false_positives": sum(len(p["false_positives"]) for p in pages),
         "tracked_org_loc_as_person": sum(len(p["tracked_fp"]) for p in pages),

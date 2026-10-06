@@ -110,8 +110,9 @@ def main() -> None:
                 entry["by_profile"] = {pr: aggregate([p for p in scored if p["profile"] == pr]) for pr in profiles}
             entry["false_positive_examples"] = sorted({fp for p in scored for fp in p["false_positives"]})[:40]
             by_source[source] = entry
-            print(f"[{config}] {source}: fuzzy F1 {entry['overall']['fuzzy']['f1']} "
-                  f"exact F1 {entry['overall']['exact']['f1']} FP {entry['overall']['false_positives']}", flush=True)
+            o = entry["overall"]
+            print(f"[{config}] {source}: exact F1 {o['exact']['f1']} fuzzy F1 {o['fuzzy']['f1']} "
+                  f"detected F1 {o['detected']['f1']} FP {o['false_positives']}", flush=True)
 
         clean_latency = []
         for _ in range(args.latency_reps):
