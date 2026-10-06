@@ -84,7 +84,27 @@ class Container:
         return TextChunker()
 
     @cached_property
-    def rag(self) -> RAGService:
+    def http_clients(self):
+        """Shared HTTP clients for the agent service: pooled, bounded, with timeouts."""
+        import httpx
+
+        limits = httpx.Limits(max_connections=50, max_keepalive_connections=10)
+        timeout = httpx.Timeout(self.settings.agent_timeout_s, connect=5.0)
+        return httpx.Client(limits=limits, timeout=timeout), httpx.AsyncClient(limits=limits, timeout=timeout)
+
+    @cached_property
+    def rag(self):
+        """Answering backend for /api/ask: the agent service (default) or the in-process
+        reference RAGService. Both expose answer(question) -> {answer, sources}."""
+        if self.settings.answer_backend == "agent":
+            from app.services.agent_client import AgentAnswerClient
+
+            http, ahttp = self.http_clients
+            return AgentAnswerClient(self.settings.agent_url, http, ahttp)
+        return self.inline_rag
+
+    @cached_property
+    def inline_rag(self) -> RAGService:
         # Collaborators resolve on first use: building the service never loads a model.
         return RAGService(
             embed_query=lambda q: self.embeddings.embed_query(q),
@@ -130,6 +150,10 @@ class Container:
             log.warning("job_event_hub.unavailable", error=str(exc))
 
     async def close_async(self) -> None:
+        if "http_clients" in self.__dict__:
+            http, ahttp = self.http_clients
+            http.close()
+            await ahttp.aclose()
         if self.event_hub:
             await self.event_hub.stop()
         if self.db_pool:

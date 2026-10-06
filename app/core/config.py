@@ -58,6 +58,22 @@ class Settings(BaseSettings):
     # RAG chunking
     chunk_size: int = Field(500, ge=50, description="Target chunk size in characters")
 
+    # Answering backend for /api/ask: the agent service (default) or the in-process
+    # OpenAI-compatible client (reference implementation exercised by the provided tests)
+    answer_backend: Literal["agent", "inline"] = "agent"
+    agent_url: str = "http://localhost:8080"
+    agent_timeout_s: float = 60.0
+
+    # Agent service model (Strands). Gemini on Vertex via ADC locally; Bedrock on AgentCore in AWS.
+    llm_provider: Literal["gemini", "bedrock"] = "gemini"
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_project: str | None = Field(None, validation_alias="GOOGLE_CLOUD_PROJECT")
+    gemini_location: str = Field("global", validation_alias="GOOGLE_CLOUD_LOCATION")
+    bedrock_model_id: str = "anthropic.claude-haiku-4-5-20251001-v1:0"
+    aws_region: str = "us-east-1"
+    llm_temperature: float = Field(0.1, ge=0.0, le=2.0)
+    llm_max_output_tokens: int = Field(1024, ge=64)
+
     # LLM (OpenAI-compatible chat completions API)
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-3.5-turbo"

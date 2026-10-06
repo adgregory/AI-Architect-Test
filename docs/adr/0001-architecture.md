@@ -102,8 +102,11 @@ ExtractNamesWorkflow(job_id)
   differ. The Bedrock model ID is stack configuration.
 - Built to the **AgentCore Runtime contract** (`POST /invocations`, `GET /ping`, port
   8080) so the same image can be deployed to AgentCore later.
-- Retrieval (embed question → Qdrant search → semantic cache) is a Strands tool inside
-  the agent. The embedding model lives in a shared internal package used by both the
+- Inside the agent: embed the question → **semantic cache** (cosine ≥ 0.90 + QuestionGuard,
+  spike 04) → retrieve top-k chunks from Qdrant → stream a grounded answer from a fresh Strands
+  `Agent` per request → cache complete answers. **Retrieve-then-generate** rather than retrieval
+  as a Strands tool: one model call, predictable latency, sources = the retrieved chunks; tool-based
+  agentic retrieval is the upgrade path for multi-step questions. The embedding model lives in a shared internal package used by both the
   worker (indexing) and the agent (queries) so vectors stay identical.
 - **Streaming is passed through:** client ← SSE ← `api` ← streamed HTTP ← `agent`.
   No broker. Trade-off: no resume after disconnect; one open connection per answer.

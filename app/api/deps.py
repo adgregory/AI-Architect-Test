@@ -9,7 +9,6 @@ from fastapi import Depends, Request
 from app.core.config import Settings, get_settings
 from app.core.container import Container
 from app.services.extraction_service import ExtractionSession
-from app.services.rag_service import RAGService
 
 _fallback_lock = threading.Lock()
 
@@ -35,5 +34,6 @@ def get_extraction_session(container: Container = Depends(get_container)) -> Ext
     return container.extraction_session()
 
 
-def get_rag_service(container: Container = Depends(get_container)) -> RAGService:
+def get_rag_service(container: Container = Depends(get_container)):
+    """The configured answering backend: exposes answer(question) (and stream() for the agent)."""
     return container.rag

@@ -2,6 +2,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
+import httpx
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
@@ -16,6 +17,7 @@ from app.core.container import Container
 from app.core.factories import MissingEngineError
 from app.core.logging import configure_logging, get_logger
 from app.models.schemas import HealthResponse
+from app.services.agent_client import AgentUnavailableError
 
 log = get_logger(__name__)
 
@@ -69,6 +71,14 @@ async def request_context(request: Request, call_next):
 async def missing_engine(_: Request, exc: MissingEngineError) -> JSONResponse:
     log.error("engine.unavailable", error=str(exc))
     return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+
+@app.exception_handler(AgentUnavailableError)
+@app.exception_handler(httpx.HTTPError)
+async def agent_unavailable(_: Request, exc: Exception) -> JSONResponse:
+    log.error("agent.unavailable", error=str(exc) or type(exc).__name__)
+    return JSONResponse(status_code=503, content={"detail": "answering service unavailable"},
+                        headers={"Retry-After": "5"})
 
 
 @app.exception_handler(PoolTimeout)
