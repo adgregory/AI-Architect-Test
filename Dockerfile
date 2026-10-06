@@ -3,6 +3,7 @@
 # PDF Name Extractor & RAG API.
 #   STACK=chosen   (default) PaddleOCR ONNX + GLiNER int8 + bge-small via fastembed
 #   STACK=fallback           Tesseract + spaCy + sentence-transformers
+#   STACK=agent              Strands agent service (AgentCore contract) + bge-small embeddings only
 #
 #   docker build --build-arg STACK=chosen -t pdf-name-extractor:chosen .
 
@@ -49,8 +50,10 @@ RUN if [ "$STACK" = "fallback" ]; then \
     else \
       printf 'OCR_ENGINE=rapidocr\nNER_ENGINE=gliner\nEMBEDDING_ENGINE=fastembed\n' > .env; \
     fi
-# Download / export models with the same code path the app's lifespan uses.
-RUN /app/.venv/bin/python scripts/prepare_models.py \
+# Download / export models with the same code path the app's lifespan uses
+# (the agent only needs the embedding model).
+RUN if [ "$STACK" = "agent" ]; then components=embeddings; else components=ocr,ner,embeddings; fi \
+ && /app/.venv/bin/python scripts/prepare_models.py --components "$components" \
  && if [ "$STACK" = "chosen" ]; then rm -rf /app/.models/hf; fi  # GLiNER source weights only needed for export
 
 # --------------------------------------------------------------------------- #
