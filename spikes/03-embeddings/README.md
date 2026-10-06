@@ -1,6 +1,6 @@
 # Spike 03 — Text embedding model
 
-**Status:** decided — dataset pending user review
+**Status:** decided — dataset reviewed by the user
 
 ## Question
 
@@ -138,7 +138,7 @@ Cold start (fresh process, model load + first query) is 4–7 s for every model 
 ### Caveats
 
 - **Small, hand-labelled dataset:** 30 questions (one question = 3.3 points of Recall@3) and 113
-  pairs written and graded by the author; pending user review. Differences of one or two
+  pairs written and graded by the author; reviewed by the user. Differences of one or two
   questions between models are within noise; the hard-negative pattern (role swap 0% everywhere,
   AUC < 0.65 everywhere) is robust.
 - **Domain:** corporate memo / minutes / research-report English only.

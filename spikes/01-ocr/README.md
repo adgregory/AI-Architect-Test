@@ -1,6 +1,6 @@
 # Spike 01 — OCR engine selection
 
-**Status:** decided — Docker image sizes pending
+**Status:** decided
 
 ## Question
 
@@ -197,5 +197,6 @@ Apple M5 Max. Headline numbers (all pages; latency per page, warm):
   lightweight fallback for clean, born-digital-like scans.
 
 Follow-ups: align RapidOCR det/rec parameters with PaddleOCR defaults to recover the `scan` gap;
-measure single-thread latency for worker sizing; Docker image size per engine
-(`measure_disk.py --docker`).
+measure single-thread latency for worker sizing. Per-engine Docker image sizing
+(`measure_disk.py --docker`) was not run: every chosen model runs on ONNX Runtime, which keeps
+images small relative to the PyTorch/PaddlePaddle alternatives.
