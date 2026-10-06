@@ -1,0 +1,1615 @@
+{
+ "config": "bert-ner-onnx-cpu",
+ "model": "bert-ner",
+ "backend": "onnx",
+ "device": "cpu",
+ "info": {
+  "version": "transformers 4.57.6, dslim/bert-base-NER",
+  "onnx": true,
+  "onnx_note": "Repo ships onnx/model.onnx; run with optimum ORTModelForTokenClassification (CPU EP)."
+ },
+ "latency_ms": {
+  "clean_page": {
+   "n": 100,
+   "mean": 35.06,
+   "p50": 35.74,
+   "p90": 40.68,
+   "p95": 41.91,
+   "p99": 43.19
+  },
+  "all_calls": {
+   "n": 905,
+   "mean": 31.74,
+   "p50": 33.9,
+   "p90": 39.95,
+   "p95": 41.64,
+   "p99": 44.1
+  }
+ },
+ "cold_start": [
+  {
+   "process_to_ready_s": 3.1,
+   "model_load_s": 3.061,
+   "first_call_s": 0.026,
+   "cold_start_total_s": 3.126
+  },
+  {
+   "process_to_ready_s": 2.876,
+   "model_load_s": 2.843,
+   "first_call_s": 0.024,
+   "cold_start_total_s": 2.9
+  },
+  {
+   "process_to_ready_s": 3.011,
+   "model_load_s": 2.977,
+   "first_call_s": 0.016,
+   "cold_start_total_s": 3.027
+  }
+ ],
+ "resources": {
+  "samples": 562,
+  "logical_cores": 18,
+  "cpu_pct_mean": 823.6,
+  "cpu_pct_peak": 939.9,
+  "system_cpu_pct_mean": 16.5,
+  "rss_peak_mb": 1415.9,
+  "gpu_mem_peak_mb": null
+ },
+ "by_source": {
+  "gt": {
+   "overall": {
+    "pages": 5,
+    "exact": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0
+    },
+    "fuzzy": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0
+    },
+    "detected": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0
+    },
+    "ocr_garbled_names": 0,
+    "partial_names": 0,
+    "false_positives": 0,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 0,
+    "raw_spans_needing_cleanup_pct": 0.0
+   },
+   "false_positive_examples": []
+  },
+  "tesseract-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.801,
+     "recall": 0.7577,
+     "f1": 0.7788
+    },
+    "fuzzy": {
+     "precision": 0.8636,
+     "recall": 0.8033,
+     "f1": 0.8324
+    },
+    "detected": {
+     "precision": 0.9365,
+     "recall": 0.8537,
+     "f1": 0.8932
+    },
+    "ocr_garbled_names": 85,
+    "partial_names": 15,
+    "false_positives": 59,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 99,
+    "raw_spans_needing_cleanup_pct": 0.0035
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.6639,
+      "recall": 0.6585,
+      "f1": 0.6612
+     },
+     "fuzzy": {
+      "precision": 0.7377,
+      "recall": 0.7317,
+      "f1": 0.7347
+     },
+     "detected": {
+      "precision": 0.9098,
+      "recall": 0.8699,
+      "f1": 0.8894
+     },
+     "ocr_garbled_names": 21,
+     "partial_names": 0,
+     "false_positives": 11,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 13,
+     "raw_spans_needing_cleanup_pct": 0.0065
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.968,
+      "recall": 0.9837,
+      "f1": 0.9758
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.6224,
+      "recall": 0.7439,
+      "f1": 0.6778
+     },
+     "fuzzy": {
+      "precision": 0.8061,
+      "recall": 0.8902,
+      "f1": 0.8461
+     },
+     "detected": {
+      "precision": 0.9184,
+      "recall": 0.9756,
+      "f1": 0.9461
+     },
+     "ocr_garbled_names": 11,
+     "partial_names": 1,
+     "false_positives": 7,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 9,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.8015,
+      "recall": 0.8862,
+      "f1": 0.8417
+     },
+     "fuzzy": {
+      "precision": 0.875,
+      "recall": 0.9431,
+      "f1": 0.9078
+     },
+     "detected": {
+      "precision": 0.9375,
+      "recall": 0.9837,
+      "f1": 0.9601
+     },
+     "ocr_garbled_names": 17,
+     "partial_names": 11,
+     "false_positives": 6,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 32,
+     "raw_spans_needing_cleanup_pct": 0.0091
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.6486,
+      "recall": 0.4499,
+      "f1": 0.5313
+     },
+     "fuzzy": {
+      "precision": 0.7297,
+      "recall": 0.5014,
+      "f1": 0.5944
+     },
+     "detected": {
+      "precision": 0.8571,
+      "recall": 0.5718,
+      "f1": 0.686
+     },
+     "ocr_garbled_names": 33,
+     "partial_names": 3,
+     "false_positives": 34,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 42,
+     "raw_spans_needing_cleanup_pct": 0.0033
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9799,
+      "recall": 0.9919,
+      "f1": 0.9859
+     },
+     "fuzzy": {
+      "precision": 0.9839,
+      "recall": 0.9919,
+      "f1": 0.9879
+     },
+     "detected": {
+      "precision": 0.996,
+      "recall": 1.0,
+      "f1": 0.998
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 2,
+     "raw_spans_needing_cleanup_pct": 0.0
+    }
+   },
+   "false_positive_examples": [
+    "A",
+    "ANNUAL",
+    "Ane",
+    "Brien",
+    "Chakman",
+    "Chiel",
+    "Chiet",
+    "Counset",
+    "Creme",
+    "Crepe",
+    "Crfrapen",
+    "Deen",
+    "Dt",
+    "Exzabet",
+    "Ezabm",
+    "Fama A Rae",
+    "Fay",
+    "Garcla",
+    "Hemande",
+    "Heriandezinecdued",
+    "J Bate",
+    "Kiet",
+    "Macrae O",
+    "Michae",
+    "Michaei o",
+    "O",
+    "Oh",
+    "Or",
+    "Pkhiard",
+    "Prot",
+    "Prune",
+    "Publehed",
+    "Qi",
+    "Que",
+    "Rashidi",
+    "Rashii",
+    "Rashisl",
+    "Sefilor",
+    "Seniof",
+    "Suflivan"
+   ]
+  },
+  "paddle-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.8421,
+     "recall": 0.8927,
+     "f1": 0.8667
+    },
+    "fuzzy": {
+     "precision": 0.905,
+     "recall": 0.9398,
+     "f1": 0.9221
+    },
+    "detected": {
+     "precision": 0.9594,
+     "recall": 0.9829,
+     "f1": 0.971
+    },
+    "ocr_garbled_names": 71,
+    "partial_names": 3,
+    "false_positives": 50,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 55,
+    "raw_spans_needing_cleanup_pct": 0.0006
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.8846,
+      "recall": 0.935,
+      "f1": 0.9091
+     },
+     "fuzzy": {
+      "precision": 0.9615,
+      "recall": 0.9919,
+      "f1": 0.9765
+     },
+     "detected": {
+      "precision": 0.9846,
+      "recall": 1.0,
+      "f1": 0.9922
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 2,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 2,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.96,
+      "recall": 0.9756,
+      "f1": 0.9677
+     },
+     "fuzzy": {
+      "precision": 0.968,
+      "recall": 0.9837,
+      "f1": 0.9758
+     },
+     "detected": {
+      "precision": 0.984,
+      "recall": 1.0,
+      "f1": 0.9919
+     },
+     "ocr_garbled_names": 2,
+     "partial_names": 0,
+     "false_positives": 2,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 3,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9647,
+      "recall": 0.9878,
+      "f1": 0.9761
+     },
+     "fuzzy": {
+      "precision": 0.9765,
+      "recall": 1.0,
+      "f1": 0.9881
+     },
+     "detected": {
+      "precision": 0.9882,
+      "recall": 1.0,
+      "f1": 0.9941
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9283,
+      "recall": 0.9472,
+      "f1": 0.9376
+     },
+     "fuzzy": {
+      "precision": 0.9641,
+      "recall": 0.9715,
+      "f1": 0.9678
+     },
+     "detected": {
+      "precision": 0.9841,
+      "recall": 0.9878,
+      "f1": 0.9859
+     },
+     "ocr_garbled_names": 5,
+     "partial_names": 1,
+     "false_positives": 3,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 3,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.6194,
+      "recall": 0.71,
+      "f1": 0.6616
+     },
+     "fuzzy": {
+      "precision": 0.7636,
+      "recall": 0.8266,
+      "f1": 0.7938
+     },
+     "detected": {
+      "precision": 0.9007,
+      "recall": 0.9512,
+      "f1": 0.9253
+     },
+     "ocr_garbled_names": 58,
+     "partial_names": 2,
+     "false_positives": 40,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 44,
+     "raw_spans_needing_cleanup_pct": 0.002
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.984,
+      "recall": 1.0,
+      "f1": 0.9919
+     },
+     "fuzzy": {
+      "precision": 0.984,
+      "recall": 1.0,
+      "f1": 0.9919
+     },
+     "detected": {
+      "precision": 0.992,
+      "recall": 1.0,
+      "f1": 0.996
+     },
+     "ocr_garbled_names": 2,
+     "partial_names": 0,
+     "false_positives": 2,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 2,
+     "raw_spans_needing_cleanup_pct": 0.0
+    }
+   },
+   "false_positive_examples": [
+    "A",
+    "ANNUAL",
+    "Absent Cance Mendoza",
+    "Adias",
+    "Bersarin",
+    "Chaiman",
+    "Chalrman",
+    "Charman",
+    "Counse",
+    "D",
+    "Duboes",
+    "Faima A",
+    "Fatina A",
+    "Fatma A",
+    "Fatme",
+    "Feame Al",
+    "Grans",
+    "Jerrster",
+    "Lu",
+    "O",
+    "Okonkiwo",
+    "Okorkwo",
+    "Or",
+    "Prot",
+    "Rashia",
+    "Rashid",
+    "RashidI",
+    "Rashidi",
+    "Rashidi Senlor",
+    "Rashio",
+    "Rastud",
+    "Stantord",
+    "Sultivan",
+    "Zunch",
+    "Zurch"
+   ]
+  },
+  "paddle-onnx-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.8116,
+     "recall": 0.8618,
+     "f1": 0.836
+    },
+    "fuzzy": {
+     "precision": 0.8966,
+     "recall": 0.9293,
+     "f1": 0.9127
+    },
+    "detected": {
+     "precision": 0.9556,
+     "recall": 0.974,
+     "f1": 0.9647
+    },
+    "ocr_garbled_names": 77,
+    "partial_names": 5,
+    "false_positives": 53,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 66,
+    "raw_spans_needing_cleanup_pct": 0.0025
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9134,
+      "recall": 0.9431,
+      "f1": 0.928
+     },
+     "fuzzy": {
+      "precision": 0.9843,
+      "recall": 0.9919,
+      "f1": 0.988
+     },
+     "detected": {
+      "precision": 0.9921,
+      "recall": 1.0,
+      "f1": 0.996
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9677,
+      "recall": 0.9756,
+      "f1": 0.9717
+     },
+     "fuzzy": {
+      "precision": 0.9839,
+      "recall": 0.9919,
+      "f1": 0.9879
+     },
+     "detected": {
+      "precision": 0.9919,
+      "recall": 1.0,
+      "f1": 0.996
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9639,
+      "recall": 0.9756,
+      "f1": 0.9697
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9012,
+      "recall": 0.9268,
+      "f1": 0.9138
+     },
+     "fuzzy": {
+      "precision": 0.9526,
+      "recall": 0.9634,
+      "f1": 0.958
+     },
+     "detected": {
+      "precision": 0.9842,
+      "recall": 0.9919,
+      "f1": 0.988
+     },
+     "ocr_garbled_names": 8,
+     "partial_names": 0,
+     "false_positives": 4,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 3,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.5324,
+      "recall": 0.6233,
+      "f1": 0.5743
+     },
+     "fuzzy": {
+      "precision": 0.7269,
+      "recall": 0.7967,
+      "f1": 0.7602
+     },
+     "detected": {
+      "precision": 0.8819,
+      "recall": 0.9214,
+      "f1": 0.9012
+     },
+     "ocr_garbled_names": 67,
+     "partial_names": 4,
+     "false_positives": 47,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 60,
+     "raw_spans_needing_cleanup_pct": 0.0082
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9959,
+      "recall": 0.9959,
+      "f1": 0.9959
+     },
+     "fuzzy": {
+      "precision": 0.9959,
+      "recall": 0.9959,
+      "f1": 0.9959
+     },
+     "detected": {
+      "precision": 0.9959,
+      "recall": 0.9959,
+      "f1": 0.9959
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 1,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    }
+   },
+   "false_positive_examples": [
+    "Absent",
+    "Asha",
+    "Chalrman",
+    "Charman",
+    "Chiet Dath Scientst",
+    "Counse",
+    "Crwel",
+    "D",
+    "Dule",
+    "Fatena A",
+    "Fatma A",
+    "Fatme",
+    "Genera Counse Jeneiter",
+    "Kishty",
+    "NeH Gramt",
+    "O",
+    "Oli",
+    "Ooneral Counse Jenter Lu",
+    "Or",
+    "Otficer",
+    "Piease",
+    "Plese",
+    "Puesnee",
+    "Rashia",
+    "Rashias",
+    "Rashid",
+    "Rashide",
+    "Rashidi",
+    "Rashidi Senlor",
+    "Rashio",
+    "Rasthud",
+    "Saran Witkarne",
+    "Stantord",
+    "Subvan",
+    "Suevan",
+    "Sulvan",
+    "Sutrnited",
+    "Zunch"
+   ]
+  },
+  "paddle-onnx-coreml": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.8116,
+     "recall": 0.8618,
+     "f1": 0.836
+    },
+    "fuzzy": {
+     "precision": 0.8966,
+     "recall": 0.9293,
+     "f1": 0.9127
+    },
+    "detected": {
+     "precision": 0.9556,
+     "recall": 0.974,
+     "f1": 0.9647
+    },
+    "ocr_garbled_names": 77,
+    "partial_names": 5,
+    "false_positives": 53,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 66,
+    "raw_spans_needing_cleanup_pct": 0.0025
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9134,
+      "recall": 0.9431,
+      "f1": 0.928
+     },
+     "fuzzy": {
+      "precision": 0.9843,
+      "recall": 0.9919,
+      "f1": 0.988
+     },
+     "detected": {
+      "precision": 0.9921,
+      "recall": 1.0,
+      "f1": 0.996
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9677,
+      "recall": 0.9756,
+      "f1": 0.9717
+     },
+     "fuzzy": {
+      "precision": 0.9839,
+      "recall": 0.9919,
+      "f1": 0.9879
+     },
+     "detected": {
+      "precision": 0.9919,
+      "recall": 1.0,
+      "f1": 0.996
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9639,
+      "recall": 0.9756,
+      "f1": 0.9697
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9012,
+      "recall": 0.9268,
+      "f1": 0.9138
+     },
+     "fuzzy": {
+      "precision": 0.9526,
+      "recall": 0.9634,
+      "f1": 0.958
+     },
+     "detected": {
+      "precision": 0.9842,
+      "recall": 0.9919,
+      "f1": 0.988
+     },
+     "ocr_garbled_names": 8,
+     "partial_names": 0,
+     "false_positives": 4,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 3,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.5324,
+      "recall": 0.6233,
+      "f1": 0.5743
+     },
+     "fuzzy": {
+      "precision": 0.7269,
+      "recall": 0.7967,
+      "f1": 0.7602
+     },
+     "detected": {
+      "precision": 0.8819,
+      "recall": 0.9214,
+      "f1": 0.9012
+     },
+     "ocr_garbled_names": 67,
+     "partial_names": 4,
+     "false_positives": 47,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 60,
+     "raw_spans_needing_cleanup_pct": 0.0082
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9959,
+      "recall": 0.9959,
+      "f1": 0.9959
+     },
+     "fuzzy": {
+      "precision": 0.9959,
+      "recall": 0.9959,
+      "f1": 0.9959
+     },
+     "detected": {
+      "precision": 0.9959,
+      "recall": 0.9959,
+      "f1": 0.9959
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 1,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    }
+   },
+   "false_positive_examples": [
+    "Absent",
+    "Asha",
+    "Chalrman",
+    "Charman",
+    "Chiet Dath Scientst",
+    "Counse",
+    "Crwel",
+    "D",
+    "Dule",
+    "Fatena A",
+    "Fatma A",
+    "Fatme",
+    "Genera Counse Jeneiter",
+    "Kishty",
+    "NeH Gramt",
+    "O",
+    "Oli",
+    "Ooneral Counse Jenter Lu",
+    "Or",
+    "Otficer",
+    "Piease",
+    "Plese",
+    "Puesnee",
+    "Rashia",
+    "Rashias",
+    "Rashid",
+    "Rashide",
+    "Rashidi",
+    "Rashidi Senlor",
+    "Rashio",
+    "Rasthud",
+    "Saran Witkarne",
+    "Stantord",
+    "Subvan",
+    "Suevan",
+    "Sulvan",
+    "Sutrnited",
+    "Zunch"
+   ]
+  },
+  "docling-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.7719,
+     "recall": 0.5724,
+     "f1": 0.6573
+    },
+    "fuzzy": {
+     "precision": 0.8509,
+     "recall": 0.6195,
+     "f1": 0.717
+    },
+    "detected": {
+     "precision": 0.9298,
+     "recall": 0.6683,
+     "f1": 0.7777
+    },
+    "ocr_garbled_names": 72,
+    "partial_names": 18,
+    "false_positives": 46,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 77,
+    "raw_spans_needing_cleanup_pct": 0.0055
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.8889,
+      "recall": 0.3252,
+      "f1": 0.4762
+     },
+     "fuzzy": {
+      "precision": 0.9111,
+      "recall": 0.3333,
+      "f1": 0.4881
+     },
+     "detected": {
+      "precision": 0.9778,
+      "recall": 0.3577,
+      "f1": 0.5238
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 0.9512,
+      "recall": 0.9512,
+      "f1": 0.9512
+     },
+     "fuzzy": {
+      "precision": 0.9512,
+      "recall": 0.9512,
+      "f1": 0.9512
+     },
+     "detected": {
+      "precision": 0.9512,
+      "recall": 0.9512,
+      "f1": 0.9512
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 1,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 2,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.7984,
+      "recall": 0.8049,
+      "f1": 0.8016
+     },
+     "fuzzy": {
+      "precision": 0.879,
+      "recall": 0.878,
+      "f1": 0.8785
+     },
+     "detected": {
+      "precision": 0.9435,
+      "recall": 0.9268,
+      "f1": 0.9351
+     },
+     "ocr_garbled_names": 8,
+     "partial_names": 0,
+     "false_positives": 7,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 7,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.6933,
+      "recall": 0.6341,
+      "f1": 0.6624
+     },
+     "fuzzy": {
+      "precision": 0.84,
+      "recall": 0.7195,
+      "f1": 0.7751
+     },
+     "detected": {
+      "precision": 0.9467,
+      "recall": 0.7683,
+      "f1": 0.8482
+     },
+     "ocr_garbled_names": 8,
+     "partial_names": 2,
+     "false_positives": 2,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 6,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.724,
+      "recall": 0.565,
+      "f1": 0.6347
+     },
+     "fuzzy": {
+      "precision": 0.8333,
+      "recall": 0.6341,
+      "f1": 0.7202
+     },
+     "detected": {
+      "precision": 0.9167,
+      "recall": 0.6911,
+      "f1": 0.788
+     },
+     "ocr_garbled_names": 16,
+     "partial_names": 4,
+     "false_positives": 12,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 17,
+     "raw_spans_needing_cleanup_pct": 0.0044
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.6188,
+      "recall": 0.3035,
+      "f1": 0.4073
+     },
+     "fuzzy": {
+      "precision": 0.7735,
+      "recall": 0.3659,
+      "f1": 0.4967
+     },
+     "detected": {
+      "precision": 0.9006,
+      "recall": 0.4201,
+      "f1": 0.5729
+     },
+     "ocr_garbled_names": 23,
+     "partial_names": 1,
+     "false_positives": 17,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 22,
+     "raw_spans_needing_cleanup_pct": 0.0244
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.878,
+      "recall": 0.9065,
+      "f1": 0.892
+     },
+     "fuzzy": {
+      "precision": 0.8819,
+      "recall": 0.9106,
+      "f1": 0.896
+     },
+     "detected": {
+      "precision": 0.937,
+      "recall": 0.9634,
+      "f1": 0.95
+     },
+     "ocr_garbled_names": 14,
+     "partial_names": 10,
+     "false_positives": 6,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 22,
+     "raw_spans_needing_cleanup_pct": 0.0
+    }
+   },
+   "false_positive_examples": [
+    "Benjamin Foster Serilor Researcheis Sharma",
+    "Brien",
+    "Cead",
+    "Chalman",
+    "Chalrman",
+    "Chiet",
+    "Chiet Dala",
+    "Chlef Execuiive",
+    "Coiporate Se\u00ebr\u00ebtary",
+    "Crien \u00c9ngineering",
+    "Dara Scienrist",
+    "Dev\u00ebl\u00f8ped",
+    "FINANCIAL",
+    "Fatim\u00e1 \u00c4l",
+    "For",
+    "He",
+    "Headquanters",
+    "Jares",
+    "Lam",
+    "Learning",
+    "MINUFES",
+    "Micha\u00ebL",
+    "Moilon",
+    "Olticer",
+    "PERSONNEL",
+    "Priya Nolable",
+    "Rashidi",
+    "Rashidi Senlor",
+    "Senlor",
+    "Tean"
+   ]
+  },
+  "docling-mps": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.7719,
+     "recall": 0.5724,
+     "f1": 0.6573
+    },
+    "fuzzy": {
+     "precision": 0.8509,
+     "recall": 0.6195,
+     "f1": 0.717
+    },
+    "detected": {
+     "precision": 0.9298,
+     "recall": 0.6683,
+     "f1": 0.7777
+    },
+    "ocr_garbled_names": 72,
+    "partial_names": 18,
+    "false_positives": 46,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 77,
+    "raw_spans_needing_cleanup_pct": 0.0055
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.8889,
+      "recall": 0.3252,
+      "f1": 0.4762
+     },
+     "fuzzy": {
+      "precision": 0.9111,
+      "recall": 0.3333,
+      "f1": 0.4881
+     },
+     "detected": {
+      "precision": 0.9778,
+      "recall": 0.3577,
+      "f1": 0.5238
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 0.9512,
+      "recall": 0.9512,
+      "f1": 0.9512
+     },
+     "fuzzy": {
+      "precision": 0.9512,
+      "recall": 0.9512,
+      "f1": 0.9512
+     },
+     "detected": {
+      "precision": 0.9512,
+      "recall": 0.9512,
+      "f1": 0.9512
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 1,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 2,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.7984,
+      "recall": 0.8049,
+      "f1": 0.8016
+     },
+     "fuzzy": {
+      "precision": 0.879,
+      "recall": 0.878,
+      "f1": 0.8785
+     },
+     "detected": {
+      "precision": 0.9435,
+      "recall": 0.9268,
+      "f1": 0.9351
+     },
+     "ocr_garbled_names": 8,
+     "partial_names": 0,
+     "false_positives": 7,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 7,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.6933,
+      "recall": 0.6341,
+      "f1": 0.6624
+     },
+     "fuzzy": {
+      "precision": 0.84,
+      "recall": 0.7195,
+      "f1": 0.7751
+     },
+     "detected": {
+      "precision": 0.9467,
+      "recall": 0.7683,
+      "f1": 0.8482
+     },
+     "ocr_garbled_names": 8,
+     "partial_names": 2,
+     "false_positives": 2,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 6,
+     "raw_spans_needing_cleanup_pct": 0.0
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.724,
+      "recall": 0.565,
+      "f1": 0.6347
+     },
+     "fuzzy": {
+      "precision": 0.8333,
+      "recall": 0.6341,
+      "f1": 0.7202
+     },
+     "detected": {
+      "precision": 0.9167,
+      "recall": 0.6911,
+      "f1": 0.788
+     },
+     "ocr_garbled_names": 16,
+     "partial_names": 4,
+     "false_positives": 12,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 17,
+     "raw_spans_needing_cleanup_pct": 0.0044
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.6188,
+      "recall": 0.3035,
+      "f1": 0.4073
+     },
+     "fuzzy": {
+      "precision": 0.7735,
+      "recall": 0.3659,
+      "f1": 0.4967
+     },
+     "detected": {
+      "precision": 0.9006,
+      "recall": 0.4201,
+      "f1": 0.5729
+     },
+     "ocr_garbled_names": 23,
+     "partial_names": 1,
+     "false_positives": 17,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 22,
+     "raw_spans_needing_cleanup_pct": 0.0244
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.878,
+      "recall": 0.9065,
+      "f1": 0.892
+     },
+     "fuzzy": {
+      "precision": 0.8819,
+      "recall": 0.9106,
+      "f1": 0.896
+     },
+     "detected": {
+      "precision": 0.937,
+      "recall": 0.9634,
+      "f1": 0.95
+     },
+     "ocr_garbled_names": 14,
+     "partial_names": 10,
+     "false_positives": 6,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 22,
+     "raw_spans_needing_cleanup_pct": 0.0
+    }
+   },
+   "false_positive_examples": [
+    "Benjamin Foster Serilor Researcheis Sharma",
+    "Brien",
+    "Cead",
+    "Chalman",
+    "Chalrman",
+    "Chiet",
+    "Chiet Dala",
+    "Chlef Execuiive",
+    "Coiporate Se\u00ebr\u00ebtary",
+    "Crien \u00c9ngineering",
+    "Dara Scienrist",
+    "Dev\u00ebl\u00f8ped",
+    "FINANCIAL",
+    "Fatim\u00e1 \u00c4l",
+    "For",
+    "He",
+    "Headquanters",
+    "Jares",
+    "Lam",
+    "Learning",
+    "MINUFES",
+    "Micha\u00ebL",
+    "Moilon",
+    "Olticer",
+    "PERSONNEL",
+    "Priya Nolable",
+    "Rashidi",
+    "Rashidi Senlor",
+    "Senlor",
+    "Tean"
+   ]
+  }
+ },
+ "gt_examples": {
+  "company_memo_p0": {
+   "raw_spans": [
+    "David Nakamura",
+    "James Anderson",
+    "Margaret Thompson",
+    "Maria Garcia",
+    "Patricia Okonkwo",
+    "Robert Chen",
+    "Sarah Williams"
+   ],
+   "first_last": [
+    "David | Nakamura",
+    "James | Anderson",
+    "Margaret | Thompson",
+    "Maria | Garcia",
+    "Patricia | Okonkwo",
+    "Robert | Chen",
+    "Sarah | Williams"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "meeting_minutes_p0": {
+   "raw_spans": [
+    "Aisha Patel",
+    "Carlos Mendoza",
+    "Elizabeth Park",
+    "Jennifer Liu",
+    "Kevin O'Brien",
+    "Richard Hernandez",
+    "Thomas Muller"
+   ],
+   "first_last": [
+    "Aisha | Patel",
+    "Carlos | Mendoza",
+    "Elizabeth | Park",
+    "Jennifer | Liu",
+    "Kevin | O'Brien",
+    "Richard | Hernandez",
+    "Thomas | Muller"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "meeting_minutes_p1": {
+   "raw_spans": [
+    "Aisha Patel",
+    "Alexander Popov",
+    "Catherine Dubois",
+    "Jennifer Liu",
+    "Kevin O'Brien",
+    "Richard Hernandez",
+    "Thomas Muller",
+    "Yuki Tanaka"
+   ],
+   "first_last": [
+    "Aisha | Patel",
+    "Alexander | Popov",
+    "Catherine | Dubois",
+    "Jennifer | Liu",
+    "Kevin | O'Brien",
+    "Richard | Hernandez",
+    "Thomas | Muller",
+    "Yuki | Tanaka"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "research_report_p0": {
+   "raw_spans": [
+    "Anna Kowalski",
+    "Benjamin Foster",
+    "Christopher Wong",
+    "Elena Volkov",
+    "Fatima Al-Rashidi",
+    "Hans Weber",
+    "Lucas Zimmermann",
+    "Michael O'Sullivan",
+    "Olivia Chambers",
+    "Priya Sharma",
+    "Raj Krishnamurthy"
+   ],
+   "first_last": [
+    "Anna | Kowalski",
+    "Benjamin | Foster",
+    "Christopher | Wong",
+    "Elena | Volkov",
+    "Fatima | Al-Rashidi",
+    "Hans | Weber",
+    "Lucas | Zimmermann",
+    "Michael | O'Sullivan",
+    "Olivia | Chambers",
+    "Priya | Sharma",
+    "Raj | Krishnamurthy"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "research_report_p1": {
+   "raw_spans": [
+    "Anna Kowalski",
+    "Benjamin Foster",
+    "Christopher Wong",
+    "Fatima Al-Rashidi",
+    "James Chen",
+    "Margaret Thompson",
+    "Michael O'Sullivan",
+    "Olivia Chambers"
+   ],
+   "first_last": [
+    "Anna | Kowalski",
+    "Benjamin | Foster",
+    "Christopher | Wong",
+    "Fatima | Al-Rashidi",
+    "James | Chen",
+    "Margaret | Thompson",
+    "Michael | O'Sullivan",
+    "Olivia | Chambers"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  }
+ }
+}

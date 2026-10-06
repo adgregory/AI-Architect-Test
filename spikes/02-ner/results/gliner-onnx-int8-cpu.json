@@ -1,0 +1,1405 @@
+{
+ "config": "gliner-onnx-int8-cpu",
+ "model": "gliner",
+ "backend": "onnx-int8",
+ "device": "cpu",
+ "info": {
+  "version": "gliner 0.2.29, urchade/gliner_small-v2.1, labels ['person'], threshold 0.5",
+  "onnx": true,
+  "onnx_note": "No ONNX in the repo; exported locally with GLiNER.export_to_onnx (setup_onnx.py); onnx-int8 = dynamic quantization (QUInt8 weights)."
+ },
+ "latency_ms": {
+  "clean_page": {
+   "n": 100,
+   "mean": 39.77,
+   "p50": 39.76,
+   "p90": 43.46,
+   "p95": 45.16,
+   "p99": 48.58
+  },
+  "all_calls": {
+   "n": 905,
+   "mean": 31.34,
+   "p50": 33.75,
+   "p90": 42.27,
+   "p95": 44.12,
+   "p99": 49.36
+  }
+ },
+ "cold_start": [
+  {
+   "process_to_ready_s": 2.356,
+   "model_load_s": 2.285,
+   "first_call_s": 0.007,
+   "cold_start_total_s": 2.363
+  },
+  {
+   "process_to_ready_s": 1.928,
+   "model_load_s": 1.893,
+   "first_call_s": 0.007,
+   "cold_start_total_s": 1.935
+  },
+  {
+   "process_to_ready_s": 1.906,
+   "model_load_s": 1.872,
+   "first_call_s": 0.007,
+   "cold_start_total_s": 1.913
+  }
+ ],
+ "resources": {
+  "samples": 547,
+  "logical_cores": 18,
+  "cpu_pct_mean": 900.5,
+  "cpu_pct_peak": 978.0,
+  "system_cpu_pct_mean": 18.9,
+  "rss_peak_mb": 1150.7,
+  "gpu_mem_peak_mb": null
+ },
+ "by_source": {
+  "gt": {
+   "overall": {
+    "pages": 5,
+    "exact": {
+     "precision": 1.0,
+     "recall": 0.9024,
+     "f1": 0.9487
+    },
+    "fuzzy": {
+     "precision": 1.0,
+     "recall": 0.9024,
+     "f1": 0.9487
+    },
+    "detected": {
+     "precision": 1.0,
+     "recall": 0.9024,
+     "f1": 0.9487
+    },
+    "ocr_garbled_names": 0,
+    "partial_names": 0,
+    "false_positives": 0,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 0,
+    "raw_spans_needing_cleanup_pct": 0.3922
+   },
+   "false_positive_examples": []
+  },
+  "tesseract-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.9485,
+     "recall": 0.6293,
+     "f1": 0.7566
+    },
+    "fuzzy": {
+     "precision": 0.9828,
+     "recall": 0.6455,
+     "f1": 0.7792
+    },
+    "detected": {
+     "precision": 1.0,
+     "recall": 0.6537,
+     "f1": 0.7906
+    },
+    "ocr_garbled_names": 14,
+    "partial_names": 0,
+    "false_positives": 0,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 3,
+    "raw_spans_needing_cleanup_pct": 0.3548
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.8519,
+      "recall": 0.561,
+      "f1": 0.6765
+     },
+     "fuzzy": {
+      "precision": 0.9012,
+      "recall": 0.5772,
+      "f1": 0.7037
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.6341,
+      "f1": 0.7761
+     },
+     "ocr_garbled_names": 8,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.2963
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.9512,
+      "f1": 0.975
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9512,
+      "f1": 0.975
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9512,
+      "f1": 0.975
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3774
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9821,
+      "recall": 0.8943,
+      "f1": 0.9362
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.3553
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.8077,
+      "recall": 0.5122,
+      "f1": 0.6269
+     },
+     "fuzzy": {
+      "precision": 0.9615,
+      "recall": 0.5854,
+      "f1": 0.7277
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.5854,
+      "f1": 0.7385
+     },
+     "ocr_garbled_names": 2,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.2985
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9461,
+      "recall": 0.6423,
+      "f1": 0.7651
+     },
+     "fuzzy": {
+      "precision": 0.994,
+      "recall": 0.6667,
+      "f1": 0.7981
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.6667,
+      "f1": 0.8
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.3511
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.9424,
+      "recall": 0.355,
+      "f1": 0.5157
+     },
+     "fuzzy": {
+      "precision": 0.9784,
+      "recall": 0.3686,
+      "f1": 0.5354
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.3767,
+      "f1": 0.5472
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 1,
+     "raw_spans_needing_cleanup_pct": 0.367
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9956,
+      "recall": 0.9146,
+      "f1": 0.9534
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9146,
+      "f1": 0.9554
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9146,
+      "f1": 0.9554
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3786
+    }
+   },
+   "false_positive_examples": []
+  },
+  "paddle-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.9433,
+     "recall": 0.7967,
+     "f1": 0.8639
+    },
+    "fuzzy": {
+     "precision": 0.9846,
+     "recall": 0.8203,
+     "f1": 0.895
+    },
+    "detected": {
+     "precision": 1.0,
+     "recall": 0.8325,
+     "f1": 0.9086
+    },
+    "ocr_garbled_names": 16,
+    "partial_names": 0,
+    "false_positives": 0,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 0,
+    "raw_spans_needing_cleanup_pct": 0.3788
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.906,
+      "recall": 0.8618,
+      "f1": 0.8833
+     },
+     "fuzzy": {
+      "precision": 0.9915,
+      "recall": 0.9106,
+      "f1": 0.9493
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9106,
+      "f1": 0.9532
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3896
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3846
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.878,
+      "f1": 0.9351
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.878,
+      "f1": 0.9351
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.878,
+      "f1": 0.9351
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3733
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9747,
+      "recall": 0.9268,
+      "f1": 0.9502
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.381
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9725,
+      "recall": 0.8618,
+      "f1": 0.9138
+     },
+     "fuzzy": {
+      "precision": 0.9908,
+      "recall": 0.878,
+      "f1": 0.931
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.8862,
+      "f1": 0.9397
+     },
+     "ocr_garbled_names": 2,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3912
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.851,
+      "recall": 0.5854,
+      "f1": 0.6936
+     },
+     "fuzzy": {
+      "precision": 0.949,
+      "recall": 0.6341,
+      "f1": 0.7603
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.6694,
+      "f1": 0.8019
+     },
+     "ocr_garbled_names": 13,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3601
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9912,
+      "recall": 0.9106,
+      "f1": 0.9492
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9106,
+      "f1": 0.9532
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9106,
+      "f1": 0.9532
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3831
+    }
+   },
+   "false_positive_examples": []
+  },
+  "paddle-onnx-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.9261,
+     "recall": 0.7528,
+     "f1": 0.8305
+    },
+    "fuzzy": {
+     "precision": 0.984,
+     "recall": 0.7894,
+     "f1": 0.876
+    },
+    "detected": {
+     "precision": 1.0,
+     "recall": 0.8008,
+     "f1": 0.8894
+    },
+    "ocr_garbled_names": 16,
+    "partial_names": 0,
+    "false_positives": 0,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 0,
+    "raw_spans_needing_cleanup_pct": 0.3629
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9304,
+      "recall": 0.8699,
+      "f1": 0.8992
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9187,
+      "f1": 0.9576
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9187,
+      "f1": 0.9576
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3896
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3846
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.375
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9718,
+      "recall": 0.8415,
+      "f1": 0.902
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.8537,
+      "f1": 0.9211
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.8537,
+      "f1": 0.9211
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.398
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9434,
+      "recall": 0.813,
+      "f1": 0.8734
+     },
+     "fuzzy": {
+      "precision": 0.9858,
+      "recall": 0.8415,
+      "f1": 0.908
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.8537,
+      "f1": 0.9211
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3759
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.7668,
+      "recall": 0.4607,
+      "f1": 0.5756
+     },
+     "fuzzy": {
+      "precision": 0.9417,
+      "recall": 0.5447,
+      "f1": 0.6902
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.5745,
+      "f1": 0.7298
+     },
+     "ocr_garbled_names": 13,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.2918
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.381
+    }
+   },
+   "false_positive_examples": []
+  },
+  "paddle-onnx-coreml": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.9261,
+     "recall": 0.7528,
+     "f1": 0.8305
+    },
+    "fuzzy": {
+     "precision": 0.984,
+     "recall": 0.7894,
+     "f1": 0.876
+    },
+    "detected": {
+     "precision": 1.0,
+     "recall": 0.8008,
+     "f1": 0.8894
+    },
+    "ocr_garbled_names": 16,
+    "partial_names": 0,
+    "false_positives": 0,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 0,
+    "raw_spans_needing_cleanup_pct": 0.3629
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9304,
+      "recall": 0.8699,
+      "f1": 0.8992
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9187,
+      "f1": 0.9576
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9187,
+      "f1": 0.9576
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3896
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9268,
+      "f1": 0.962
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3846
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9024,
+      "f1": 0.9487
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.375
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9718,
+      "recall": 0.8415,
+      "f1": 0.902
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.8537,
+      "f1": 0.9211
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.8537,
+      "f1": 0.9211
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.398
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9434,
+      "recall": 0.813,
+      "f1": 0.8734
+     },
+     "fuzzy": {
+      "precision": 0.9858,
+      "recall": 0.8415,
+      "f1": 0.908
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.8537,
+      "f1": 0.9211
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3759
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.7668,
+      "recall": 0.4607,
+      "f1": 0.5756
+     },
+     "fuzzy": {
+      "precision": 0.9417,
+      "recall": 0.5447,
+      "f1": 0.6902
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.5745,
+      "f1": 0.7298
+     },
+     "ocr_garbled_names": 13,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.2918
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.939,
+      "f1": 0.9686
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.381
+    }
+   },
+   "false_positive_examples": []
+  },
+  "docling-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.9025,
+     "recall": 0.474,
+     "f1": 0.6215
+    },
+    "fuzzy": {
+     "precision": 0.9737,
+     "recall": 0.5041,
+     "f1": 0.6643
+    },
+    "detected": {
+     "precision": 0.9954,
+     "recall": 0.5171,
+     "f1": 0.6806
+    },
+    "ocr_garbled_names": 14,
+    "partial_names": 0,
+    "false_positives": 3,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 2,
+    "raw_spans_needing_cleanup_pct": 0.3313
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.907,
+      "recall": 0.3171,
+      "f1": 0.4699
+     },
+     "fuzzy": {
+      "precision": 0.9302,
+      "recall": 0.3252,
+      "f1": 0.4819
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.3496,
+      "f1": 0.5181
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3214
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 0.973,
+      "recall": 0.878,
+      "f1": 0.9231
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.878,
+      "f1": 0.9351
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.878,
+      "f1": 0.9351
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3958
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.8791,
+      "recall": 0.6504,
+      "f1": 0.7477
+     },
+     "fuzzy": {
+      "precision": 0.989,
+      "recall": 0.7154,
+      "f1": 0.8303
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.7236,
+      "f1": 0.8396
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.35
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9167,
+      "recall": 0.5366,
+      "f1": 0.6769
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.561,
+      "f1": 0.7188
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.561,
+      "f1": 0.7188
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3559
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.8594,
+      "recall": 0.4472,
+      "f1": 0.5882
+     },
+     "fuzzy": {
+      "precision": 0.9609,
+      "recall": 0.4919,
+      "f1": 0.6507
+     },
+     "detected": {
+      "precision": 0.9844,
+      "recall": 0.5,
+      "f1": 0.6632
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 2,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 2,
+     "raw_spans_needing_cleanup_pct": 0.2687
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.812,
+      "recall": 0.2575,
+      "f1": 0.3909
+     },
+     "fuzzy": {
+      "precision": 0.9573,
+      "recall": 0.2981,
+      "f1": 0.4546
+     },
+     "detected": {
+      "precision": 0.9915,
+      "recall": 0.3117,
+      "f1": 0.4742
+     },
+     "ocr_garbled_names": 4,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3077
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9835,
+      "recall": 0.7276,
+      "f1": 0.8364
+     },
+     "fuzzy": {
+      "precision": 0.9835,
+      "recall": 0.7276,
+      "f1": 0.8364
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.748,
+      "f1": 0.8558
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.36
+    }
+   },
+   "false_positive_examples": [
+    "CEO",
+    "Fatim\u00e1 \u00c4l-Rashidi presented at N\u00eburIPS \u00e4longside James Chen",
+    "Priya Nolable"
+   ]
+  },
+  "docling-mps": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.9025,
+     "recall": 0.474,
+     "f1": 0.6215
+    },
+    "fuzzy": {
+     "precision": 0.9737,
+     "recall": 0.5041,
+     "f1": 0.6643
+    },
+    "detected": {
+     "precision": 0.9954,
+     "recall": 0.5171,
+     "f1": 0.6806
+    },
+    "ocr_garbled_names": 14,
+    "partial_names": 0,
+    "false_positives": 3,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 2,
+    "raw_spans_needing_cleanup_pct": 0.3313
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.907,
+      "recall": 0.3171,
+      "f1": 0.4699
+     },
+     "fuzzy": {
+      "precision": 0.9302,
+      "recall": 0.3252,
+      "f1": 0.4819
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.3496,
+      "f1": 0.5181
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3214
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 0.973,
+      "recall": 0.878,
+      "f1": 0.9231
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.878,
+      "f1": 0.9351
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.878,
+      "f1": 0.9351
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3958
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.8791,
+      "recall": 0.6504,
+      "f1": 0.7477
+     },
+     "fuzzy": {
+      "precision": 0.989,
+      "recall": 0.7154,
+      "f1": 0.8303
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.7236,
+      "f1": 0.8396
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.35
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9167,
+      "recall": 0.5366,
+      "f1": 0.6769
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.561,
+      "f1": 0.7188
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.561,
+      "f1": 0.7188
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3559
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.8594,
+      "recall": 0.4472,
+      "f1": 0.5882
+     },
+     "fuzzy": {
+      "precision": 0.9609,
+      "recall": 0.4919,
+      "f1": 0.6507
+     },
+     "detected": {
+      "precision": 0.9844,
+      "recall": 0.5,
+      "f1": 0.6632
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 2,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 2,
+     "raw_spans_needing_cleanup_pct": 0.2687
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.812,
+      "recall": 0.2575,
+      "f1": 0.3909
+     },
+     "fuzzy": {
+      "precision": 0.9573,
+      "recall": 0.2981,
+      "f1": 0.4546
+     },
+     "detected": {
+      "precision": 0.9915,
+      "recall": 0.3117,
+      "f1": 0.4742
+     },
+     "ocr_garbled_names": 4,
+     "partial_names": 0,
+     "false_positives": 1,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3077
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.9835,
+      "recall": 0.7276,
+      "f1": 0.8364
+     },
+     "fuzzy": {
+      "precision": 0.9835,
+      "recall": 0.7276,
+      "f1": 0.8364
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.748,
+      "f1": 0.8558
+     },
+     "ocr_garbled_names": 3,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.36
+    }
+   },
+   "false_positive_examples": [
+    "CEO",
+    "Fatim\u00e1 \u00c4l-Rashidi presented at N\u00eburIPS \u00e4longside James Chen",
+    "Priya Nolable"
+   ]
+  }
+ },
+ "gt_examples": {
+  "company_memo_p0": {
+   "raw_spans": [
+    "Dr. Sarah Williams",
+    "Margaret Thompson",
+    "Maria Garcia",
+    "Patricia Okonkwo",
+    "Robert Chen"
+   ],
+   "first_last": [
+    "Margaret | Thompson",
+    "Maria | Garcia",
+    "Patricia | Okonkwo",
+    "Robert | Chen",
+    "Sarah | Williams"
+   ],
+   "missed": [
+    "David Nakamura",
+    "James Anderson"
+   ],
+   "false_positives": [],
+   "partial": []
+  },
+  "meeting_minutes_p0": {
+   "raw_spans": [
+    "Carlos Mendoza",
+    "Dr. Aisha Patel",
+    "Elizabeth Park",
+    "Jennifer Liu",
+    "Kevin O'Brien",
+    "Richard Hernandez",
+    "Thomas Muller"
+   ],
+   "first_last": [
+    "Aisha | Patel",
+    "Carlos | Mendoza",
+    "Elizabeth | Park",
+    "Jennifer | Liu",
+    "Kevin | O'Brien",
+    "Richard | Hernandez",
+    "Thomas | Muller"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "meeting_minutes_p1": {
+   "raw_spans": [
+    "Alexander Popov",
+    "Catherine Dubois",
+    "Dr. Aisha Patel",
+    "Dr. Yuki Tanaka",
+    "Kevin O'Brien",
+    "Richard Hernandez",
+    "Thomas Muller"
+   ],
+   "first_last": [
+    "Aisha | Patel",
+    "Alexander | Popov",
+    "Catherine | Dubois",
+    "Kevin | O'Brien",
+    "Richard | Hernandez",
+    "Thomas | Muller",
+    "Yuki | Tanaka"
+   ],
+   "missed": [
+    "Jennifer Liu"
+   ],
+   "false_positives": [],
+   "partial": []
+  },
+  "research_report_p0": {
+   "raw_spans": [
+    "Anna Kowalski",
+    "Christopher Wong",
+    "Dr. Benjamin Foster",
+    "Dr. Elena Volkov",
+    "Dr. Fatima Al-Rashidi",
+    "Dr. Olivia Chambers",
+    "Dr. Priya Sharma",
+    "Lucas Zimmermann",
+    "Prof. Hans Weber",
+    "Prof. Michael O'Sullivan",
+    "Raj Krishnamurthy"
+   ],
+   "first_last": [
+    "Anna | Kowalski",
+    "Benjamin | Foster",
+    "Christopher | Wong",
+    "Elena | Volkov",
+    "Fatima | Al-Rashidi",
+    "Hans | Weber",
+    "Lucas | Zimmermann",
+    "Michael | O'Sullivan",
+    "Olivia | Chambers",
+    "Priya | Sharma",
+    "Raj | Krishnamurthy"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "research_report_p1": {
+   "raw_spans": [
+    "Anna Kowalski",
+    "Christopher Wong",
+    "Dr. Benjamin Foster",
+    "Dr. Fatima Al-Rashidi",
+    "Dr. James Chen",
+    "Dr. Olivia Chambers",
+    "Margaret Thompson"
+   ],
+   "first_last": [
+    "Anna | Kowalski",
+    "Benjamin | Foster",
+    "Christopher | Wong",
+    "Fatima | Al-Rashidi",
+    "James | Chen",
+    "Margaret | Thompson",
+    "Olivia | Chambers"
+   ],
+   "missed": [
+    "Michael O'Sullivan"
+   ],
+   "false_positives": [],
+   "partial": []
+  }
+ }
+}

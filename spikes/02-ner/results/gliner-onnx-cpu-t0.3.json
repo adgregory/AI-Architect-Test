@@ -1,0 +1,401 @@
+{
+ "config": "gliner-onnx-cpu-t0.3",
+ "model": "gliner",
+ "backend": "onnx",
+ "device": "cpu",
+ "info": {
+  "version": "gliner 0.2.29, urchade/gliner_small-v2.1, labels ['person'], threshold 0.3",
+  "onnx": true,
+  "onnx_note": "No ONNX in the repo; exported locally with GLiNER.export_to_onnx (setup_onnx.py); onnx-int8 = dynamic quantization (QUInt8 weights)."
+ },
+ "latency_ms": {
+  "clean_page": {
+   "n": 25,
+   "mean": 33.46,
+   "p50": 34.16,
+   "p90": 35.5,
+   "p95": 37.6,
+   "p99": 41.2
+  },
+  "all_calls": {
+   "n": 155,
+   "mean": 30.43,
+   "p50": 29.93,
+   "p90": 35.95,
+   "p95": 37.68,
+   "p99": 41.73
+  }
+ },
+ "cold_start": [],
+ "resources": {
+  "samples": 95,
+  "logical_cores": 18,
+  "cpu_pct_mean": 900.2,
+  "cpu_pct_peak": 958.3,
+  "system_cpu_pct_mean": 19.5,
+  "rss_peak_mb": 2070.8,
+  "gpu_mem_peak_mb": null
+ },
+ "by_source": {
+  "gt": {
+   "overall": {
+    "pages": 5,
+    "exact": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0
+    },
+    "fuzzy": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0
+    },
+    "detected": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0
+    },
+    "ocr_garbled_names": 0,
+    "partial_names": 0,
+    "false_positives": 0,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 0,
+    "raw_spans_needing_cleanup_pct": 0.3818
+   },
+   "false_positive_examples": []
+  },
+  "paddle-onnx-cpu": {
+   "overall": {
+    "pages": 150,
+    "exact": {
+     "precision": 0.8339,
+     "recall": 0.8642,
+     "f1": 0.8488
+    },
+    "fuzzy": {
+     "precision": 0.935,
+     "recall": 0.9407,
+     "f1": 0.9378
+    },
+    "detected": {
+     "precision": 0.9953,
+     "recall": 0.9854,
+     "f1": 0.9903
+    },
+    "ocr_garbled_names": 77,
+    "partial_names": 0,
+    "false_positives": 6,
+    "tracked_org_loc_as_person": 0,
+    "single_token_predictions": 3,
+    "raw_spans_needing_cleanup_pct": 0.3456
+   },
+   "by_profile": {
+    "blur": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.928,
+      "recall": 0.9431,
+      "f1": 0.9355
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9919,
+      "f1": 0.9959
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9919,
+      "f1": 0.9959
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3841
+    },
+    "clean": {
+     "pages": 5,
+     "exact": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3818
+    },
+    "jpeg": {
+     "pages": 15,
+     "exact": {
+      "precision": 0.9677,
+      "recall": 0.9756,
+      "f1": 0.9717
+     },
+     "fuzzy": {
+      "precision": 0.9919,
+      "recall": 0.9919,
+      "f1": 0.9919
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 1,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3758
+    },
+    "low_dpi": {
+     "pages": 10,
+     "exact": {
+      "precision": 0.9639,
+      "recall": 0.9756,
+      "f1": 0.9697
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3818
+    },
+    "noise": {
+     "pages": 30,
+     "exact": {
+      "precision": 0.924,
+      "recall": 0.939,
+      "f1": 0.9315
+     },
+     "fuzzy": {
+      "precision": 0.98,
+      "recall": 0.9797,
+      "f1": 0.9798
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+     },
+     "ocr_garbled_names": 5,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.3727
+    },
+    "scan": {
+     "pages": 45,
+     "exact": {
+      "precision": 0.5662,
+      "recall": 0.6233,
+      "f1": 0.5934
+     },
+     "fuzzy": {
+      "precision": 0.8113,
+      "recall": 0.8238,
+      "f1": 0.8175
+     },
+     "detected": {
+      "precision": 0.9853,
+      "recall": 0.9566,
+      "f1": 0.9708
+     },
+     "ocr_garbled_names": 71,
+     "partial_names": 0,
+     "false_positives": 6,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 3,
+     "raw_spans_needing_cleanup_pct": 0.2643
+    },
+    "skew": {
+     "pages": 30,
+     "exact": {
+      "precision": 1.0,
+      "recall": 0.9959,
+      "f1": 0.998
+     },
+     "fuzzy": {
+      "precision": 1.0,
+      "recall": 0.9959,
+      "f1": 0.998
+     },
+     "detected": {
+      "precision": 1.0,
+      "recall": 0.9959,
+      "f1": 0.998
+     },
+     "ocr_garbled_names": 0,
+     "partial_names": 0,
+     "false_positives": 0,
+     "tracked_org_loc_as_person": 0,
+     "single_token_predictions": 0,
+     "raw_spans_needing_cleanup_pct": 0.383
+    }
+   },
+   "false_positive_examples": [
+    "Jererster Lu",
+    "Notabie Puesnee",
+    "Notabse",
+    "Ooneral Counse Jenter Lu",
+    "Saran Witkarne",
+    "ginee"
+   ]
+  }
+ },
+ "gt_examples": {
+  "company_memo_p0": {
+   "raw_spans": [
+    "David Nakamura",
+    "Dr. Sarah Williams",
+    "James Anderson",
+    "Margaret Thompson",
+    "Maria Garcia",
+    "Patricia Okonkwo",
+    "Robert Chen"
+   ],
+   "first_last": [
+    "David | Nakamura",
+    "James | Anderson",
+    "Margaret | Thompson",
+    "Maria | Garcia",
+    "Patricia | Okonkwo",
+    "Robert | Chen",
+    "Sarah | Williams"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "meeting_minutes_p0": {
+   "raw_spans": [
+    "Carlos Mendoza",
+    "Dr. Aisha Patel",
+    "Elizabeth Park",
+    "Jennifer Liu",
+    "Kevin O'Brien",
+    "Richard Hernandez",
+    "Thomas Muller"
+   ],
+   "first_last": [
+    "Aisha | Patel",
+    "Carlos | Mendoza",
+    "Elizabeth | Park",
+    "Jennifer | Liu",
+    "Kevin | O'Brien",
+    "Richard | Hernandez",
+    "Thomas | Muller"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "meeting_minutes_p1": {
+   "raw_spans": [
+    "Alexander Popov",
+    "Catherine Dubois",
+    "Dr. Aisha Patel",
+    "Dr. Yuki Tanaka",
+    "Jennifer Liu",
+    "Kevin O'Brien",
+    "Richard Hernandez",
+    "Thomas Muller"
+   ],
+   "first_last": [
+    "Aisha | Patel",
+    "Alexander | Popov",
+    "Catherine | Dubois",
+    "Jennifer | Liu",
+    "Kevin | O'Brien",
+    "Richard | Hernandez",
+    "Thomas | Muller",
+    "Yuki | Tanaka"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "research_report_p0": {
+   "raw_spans": [
+    "Anna Kowalski",
+    "Christopher Wong",
+    "Dr. Benjamin Foster",
+    "Dr. Elena Volkov",
+    "Dr. Fatima Al-Rashidi",
+    "Dr. Olivia Chambers",
+    "Dr. Priya Sharma",
+    "Lucas Zimmermann",
+    "Prof. Hans Weber",
+    "Prof. Michael O'Sullivan",
+    "Raj Krishnamurthy"
+   ],
+   "first_last": [
+    "Anna | Kowalski",
+    "Benjamin | Foster",
+    "Christopher | Wong",
+    "Elena | Volkov",
+    "Fatima | Al-Rashidi",
+    "Hans | Weber",
+    "Lucas | Zimmermann",
+    "Michael | O'Sullivan",
+    "Olivia | Chambers",
+    "Priya | Sharma",
+    "Raj | Krishnamurthy"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  },
+  "research_report_p1": {
+   "raw_spans": [
+    "Anna Kowalski",
+    "Christopher Wong",
+    "Dr. Benjamin Foster",
+    "Dr. Fatima Al-Rashidi",
+    "Dr. James Chen",
+    "Dr. Olivia Chambers",
+    "Margaret Thompson",
+    "Prof. Michael O'Sullivan"
+   ],
+   "first_last": [
+    "Anna | Kowalski",
+    "Benjamin | Foster",
+    "Christopher | Wong",
+    "Fatima | Al-Rashidi",
+    "James | Chen",
+    "Margaret | Thompson",
+    "Michael | O'Sullivan",
+    "Olivia | Chambers"
+   ],
+   "missed": [],
+   "false_positives": [],
+   "partial": []
+  }
+ }
+}
