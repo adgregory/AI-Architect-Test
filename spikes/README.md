@@ -26,4 +26,6 @@ uv run python spikes/NN-short-name/<script>.py
 
 | # | Question | Status | Decision |
 |---|----------|--------|----------|
-| 01 | [OCR engine selection](01-ocr/README.md): Tesseract vs PaddleOCR (native/ONNX) vs Docling | planned | — |
+| 01 | [OCR engine selection](01-ocr/README.md): Tesseract vs PaddleOCR (native/ONNX) vs Docling | running | — |
+| 02 | [Person-name NER](02-ner/README.md): spaCy sm/trf vs BERT-NER vs GLiNER (local, no LLM call) | planned | — |
+| 03 | [Text embeddings](03-embeddings/README.md): 7 English models, semantic separation + retrieval | planned | — |

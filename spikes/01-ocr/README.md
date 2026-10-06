@@ -1,6 +1,6 @@
 # Spike 01 — OCR engine selection
 
-**Status:** planned
+**Status:** running
 
 ## Question
 
