@@ -87,8 +87,9 @@ class QdrantVectorStore:
 
 
 # --------------------------------------------------------------------------- #
-# Functional API (backwards compatible). `client` is a lazy proxy (no connection
-# at import); the adapter resolves `client` and `get_embeddings` at call time.
+# Scaffold API: module-level functions from the original code, kept because the provided
+# tests call or patch them. `client` is a lazy proxy (no connection at import); the adapter
+# resolves `client` and `get_embeddings` at call time.
 # --------------------------------------------------------------------------- #
 client = Lazy(default_qdrant_client)
 

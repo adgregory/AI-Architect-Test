@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # Model artifacts generated locally (e.g. GLiNER ONNX export)
     models_dir: Path = Path(".models")
 
-    # OCR — `chosen` engine by default (spike 01); `tesseract` is the fallback
+    # OCR — RapidOCR (PP-OCRv5 on ONNX) by default (spike 01); `tesseract` is the fallback
     ocr_engine: Literal["rapidocr", "tesseract"] = "rapidocr"
     ocr_dpi: int = Field(150, ge=72, le=600, description="Render resolution for OCR")
     ocr_tighten_boxes: bool = Field(True, description="Shrink word boxes vertically to the ink they contain")
@@ -75,7 +75,7 @@ class Settings(BaseSettings):
     llm_temperature: float = Field(0.1, ge=0.0, le=2.0)
     llm_max_output_tokens: int = Field(1024, ge=64)
 
-    # LLM (OpenAI-compatible chat completions API)
+    # Inline backend only (ANSWER_BACKEND=inline): OpenAI-compatible chat completions API
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-3.5-turbo"
     llm_api_key: SecretStr | None = Field(None, validation_alias="OPENAI_API_KEY")

@@ -60,8 +60,9 @@ class SentenceTransformerEmbeddingService:
 
 
 # --------------------------------------------------------------------------- #
-# Functional API (backwards compatible), backed by the embedding service the
-# factory builds from Settings — loaded once, lazily, never per call.
+# Scaffold API: module-level functions from the original code, kept because the provided
+# tests call or patch them. Backed by the embedding service the factory builds from
+# Settings — loaded once, lazily, never per call.
 # --------------------------------------------------------------------------- #
 model = Lazy(default_embedding_service)
 

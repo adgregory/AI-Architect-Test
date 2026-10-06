@@ -105,9 +105,9 @@ class GLiNERNERService:
 
 
 # --------------------------------------------------------------------------- #
-# Functional API (backwards compatible), backed by the reference spaCy
-# implementation the provided tests exercise. `nlp` is a lazy proxy: the model
-# loads on first use, not at import; the adapter resolves `nlp` at call time.
+# Scaffold API: module-level functions from the original code, kept because the provided
+# tests call or patch them; backed by the reference spaCy implementation. `nlp` is a lazy
+# proxy: the model loads on first use, not at import; the adapter resolves it at call time.
 # The application uses the engine selected in Settings (app/core/factories.py).
 # --------------------------------------------------------------------------- #
 nlp = Lazy(default_spacy_model)

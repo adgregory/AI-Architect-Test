@@ -238,8 +238,8 @@ class RapidOCRService(_PageWiseOCR):
 
 
 # --------------------------------------------------------------------------- #
-# Functional API (backwards compatible): module-level entry points backed by
-# the reference Tesseract implementation, which the provided tests exercise.
+# Scaffold API: module-level functions from the original code, kept because the provided
+# tests call or patch them; backed by the reference Tesseract implementation.
 # The application itself uses the engine selected in Settings (see
 # app/core/factories.py).
 # --------------------------------------------------------------------------- #

@@ -49,5 +49,5 @@ class TokenSortNameMatcher:
         return matches
 
 
-# Functional API (backwards compatible).
+# Scaffold API: module-level function from the original code, kept for the provided tests.
 fuzzy_match_names = TokenSortNameMatcher(SIMILARITY_THRESHOLD).match

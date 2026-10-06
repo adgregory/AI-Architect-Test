@@ -103,8 +103,9 @@ class RAGService:
 
 
 # --------------------------------------------------------------------------- #
-# Functional API (backwards compatible). The adapter resolves its collaborators
-# (embedding, retrieval, API key) at call time.
+# Scaffold API: module-level functions from the original code, kept because the provided
+# tests call or patch them. The adapter resolves its collaborators (embedding, retrieval,
+# API key) at call time.
 # --------------------------------------------------------------------------- #
 class _ModuleRAG:
     def generate_answer(self, question: str) -> dict:

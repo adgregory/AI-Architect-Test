@@ -59,8 +59,9 @@ class ConsecutiveWordNameLocator:
 
 
 # --------------------------------------------------------------------------- #
-# Functional API (backwards compatible): NER + OCR boxes + locator. The adapter
-# resolves extract_names / get_word_bounding_boxes at call time.
+# Scaffold API: module-level functions from the original code, kept because the provided
+# tests call or patch them. The adapter resolves extract_names / get_word_bounding_boxes
+# at call time, so those patches take effect.
 # --------------------------------------------------------------------------- #
 class _ModuleNameBoxes:
     def __init__(self, locator: NameLocator):

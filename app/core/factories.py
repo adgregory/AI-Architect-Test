@@ -222,7 +222,7 @@ class LLMClientFactory:
 
 
 # --------------------------------------------------------------------------- #
-# Defaults used by the backwards-compatible functional API
+# Defaults for the scaffold API (module-level functions kept for the provided tests)
 # --------------------------------------------------------------------------- #
 def default_spacy_model(settings: Settings | None = None) -> Language:
     return spacy_model((settings or get_settings()).spacy_model)

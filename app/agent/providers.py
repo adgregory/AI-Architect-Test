@@ -1,8 +1,9 @@
 """Strands model providers, selected by configuration.
 
-Locally the agent uses Gemini on Vertex AI with Application Default Credentials; in AWS it
-runs on AgentCore Runtime with a Bedrock model authorised by the runtime's IAM role. Only
-the provider changes — prompts, retrieval and streaming are identical.
+Locally the agent uses Gemini on Vertex AI when Application Default Credentials are mounted
+(docker-compose.gcp.yml), otherwise no LLM (extractive answers); in AWS it runs on AgentCore
+Runtime with a Bedrock model authorised by the runtime's IAM role. Only the provider
+changes — prompts, retrieval and streaming are identical.
 """
 
 from __future__ import annotations
