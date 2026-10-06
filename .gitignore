@@ -184,3 +184,6 @@ Taskfile.yml
 
 # Local runtime data
 .data/
+
+# macOS
+.DS_Store
